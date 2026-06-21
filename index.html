@@ -440,15 +440,160 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 </div>
 
 <div class="payment-modal-overlay" id="paymentOverlay" onclick="closePaymentModal()"></div>
-<div class="payment-modal" id="paymentModal">
-<h3>Unlock Excel Export</h3>
-<p>Send <strong>150 ETB</strong> via TeleBirr to:</p>
-<p style="font-size:18px;font-weight:bold;text-align:center">+251913265488</p>
-<p>Then enter your TeleBirr transaction ID below:</p>
-<input type="text" id="transactionId" placeholder="e.g. CI2A3B4C5D6">
-<div class="pay-error" id="payError">Please enter a valid transaction ID.</div>
-<button class="btn-export" onclick="verifyPayment()" style="width:100%">Unlock & Download</button>
-<button class="btn-recalc" onclick="closePaymentModal()" style="width:100%;margin-top:8px">Cancel</button>
+<div class="payment-modal" id="paymentModal" style="
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  max-width: 420px;
+  width: 90%;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  font-family: 'Inter', sans-serif;
+">
+  <!-- Header -->
+  <div style="text-align:center; margin-bottom: 24px;">
+    <div style="
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #c8922a, #f0c060);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+    ">📊</div>
+    <h3 style="
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    ">Unlock Excel Export</h3>
+    <p style="font-size: 13px; color: #4a4a6a;">
+      Get your full professional BOQ in Excel format
+    </p>
+  </div>
+
+  <!-- Price Badge -->
+  <div style="
+    background: linear-gradient(135deg, #1a1a2e, #2d2d4e);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 20px;
+  ">
+    <p style="font-size: 12px; color: #aaa; margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase;">One-time payment</p>
+    <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;">150 ETB</p>
+    <p style="font-size: 12px; color: #aaa; margin-top: 4px;">via TeleBirr</p>
+  </div>
+
+  <!-- Telebirr Number -->
+  <div style="
+    border: 2px dashed #c8922a;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 20px;
+    background: rgba(200,146,42,0.05);
+  ">
+    <p style="font-size: 12px; color: #4a4a6a; margin-bottom: 6px;">Send to TeleBirr number</p>
+    <p style="
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      font-family: 'Space Grotesk', sans-serif;
+      letter-spacing: 1px;
+    ">+251 913 265 488</p>
+  </div>
+
+  <!-- Transaction ID Input -->
+  <div style="margin-bottom: 8px;">
+    <label style="
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a4a6a;
+      display: block;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    ">TeleBirr Transaction ID</label>
+    <input 
+      type="text" 
+      id="transactionId" 
+      placeholder="e.g. CI2A3B4C5D6"
+      style="
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #e2ddd6;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: 'Inter', sans-serif;
+        color: #1a1a2e;
+        outline: none;
+        transition: border-color 0.2s;
+      "
+      onfocus="this.style.borderColor='#c8922a'"
+      onblur="this.style.borderColor='#e2ddd6'"
+    >
+  </div>
+
+  <!-- Error -->
+  <div id="payError" style="
+    display: none;
+    background: #fff0f0;
+    border: 1px solid #c0392b;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #c0392b;
+    margin-bottom: 12px;
+  ">⚠️ Please enter a valid transaction ID.</div>
+
+  <!-- Buttons -->
+  <button onclick="verifyPayment()" style="
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #c8922a, #f0c060);
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a2e;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 10px;
+    transition: opacity 0.2s;
+  " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+    🔓 Unlock & Download
+  </button>
+
+  <button onclick="closePaymentModal()" style="
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1.5px solid #e2ddd6;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a4a6a;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  " onmouseover="this.style.background='#f7f5f0'" onmouseout="this.style.background='transparent'">
+    Cancel
+  </button>
+
+  <!-- Footer note -->
+  <p style="
+    text-align: center;
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 16px;
+    line-height: 1.5;
+  ">🔒 Your BOQ data stays private on your device.<br>Payment unlocks the Excel download instantly.</p>
+
 </div>
 
 <header>
