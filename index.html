@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EthioBuild BOQ Calculator</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="description" content="EthioBuild — Free Bill of Quantities (BOQ) calculator for Ethiopian construction projects. Get accurate cost estimates, professional Excel exports, and Ethiopian-standard BOQ structure in minutes.">
+<meta name="keywords" content="BOQ Ethiopia, construction cost estimator, bill of quantities, Ethiopian construction, Addis Ababa construction cost, building cost calculator">
+<meta property="og:title" content="EthioBuild — Ethiopian Construction Cost Calculator">
+<meta property="og:description" content="Get accurate, professional Bill of Quantities for your construction project in minutes. Built for Ethiopian standards.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://addisboq.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:       #1a1a2e;
+    --ink-light: #4a4a6a;
+    --gold:      #c8922a;
+    --gold-light:#f0c060;
+    --surface:   #f7f5f0;
+    --card:      #ffffff;
+    --border:    #e2ddd6;
+    --green:     #2d6a4f;
+    --green-light:#52b788;
+    --red:       #c0392b;
+    --radius:    10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .logo-mark {
+    width: 40px; height: 40px;
+    background: var(--gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 18px; color: var(--ink);
+  }
+  .logo-text { flex: 1; }
+  .logo-text h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700; color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .logo-text p { font-size: 11px; color: #aaa; margin-top: 1px; }
+
+  .header-badge {
+    background: rgba(200,146,42,0.15);
+    border: 1px solid var(--gold);
+    color: var(--gold-light);
+    font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    background: var(--ink);
+    padding: 0 24px 16px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    border: 2px solid #444; color: #666;
+    transition: all 0.3s; cursor: pointer; flex-shrink: 0;
+  }
+  .step-dot.active { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+  .step-dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .step-line { flex: 1; height: 2px; background: #333; border-radius: 1px; }
+  .step-line.done { background: var(--green); }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+
+  /* STEP PANELS */
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+
+  .step-header {
+    margin-bottom: 20px;
+  }
+  .step-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .step-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700; color: var(--ink);
+    line-height: 1.2;
+  }
+  .step-sub { font-size: 13px; color: var(--ink-light); margin-top: 6px; }
+
+  /* CARD */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--ink-light); text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+
+  /* FORM FIELDS */
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 13px; font-weight: 500; color: var(--ink);
+    margin-bottom: 6px;
+  }
+  label .hint {
+    font-weight: 400; color: var(--ink-light); font-size: 12px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; color: var(--ink);
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(200,146,42,0.12);
+  }
+  input::placeholder { color: #bbb; }
+
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute; right: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-light); pointer-events: none; font-size: 12px;
+  }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  /* RADIO CARDS */
+  .radio-group { display: grid; gap: 8px; }
+  .radio-group.cols-2 { grid-template-columns: 1fr 1fr; }
+  .radio-group.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .radio-card {
+    display: flex; flex-direction: column;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .radio-card input { position: absolute; opacity: 0; width: 0; }
+  .radio-card:has(input:checked) {
+    border-color: var(--gold);
+    background: rgba(200,146,42,0.06);
+  }
+  .radio-card .rc-label {
+    font-size: 13px; font-weight: 600; color: var(--ink);
+  }
+  .radio-card .rc-sub {
+    font-size: 11px; color: var(--ink-light); margin-top: 2px;
+  }
+  .radio-card:has(input:checked) .rc-label { color: var(--gold); }
+
+  /* NUMBER STEPPER */
+  .stepper {
+    display: flex; align-items: center; gap: 0;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    overflow: hidden; height: 44px;
+  }
+  .stepper button {
+    width: 44px; height: 100%;
+    background: var(--surface); border: none;
+    font-size: 18px; color: var(--ink-light);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .stepper button:hover { background: var(--border); }
+  .stepper input {
+    flex: 1; border: none; border-left: 1.5px solid var(--border);
+    border-right: 1.5px solid var(--border);
+    border-radius: 0; text-align: center;
+    font-size: 15px; font-weight: 600;
+    height: 100%; padding: 0;
+  }
+  .stepper input:focus { box-shadow: none; border-color: var(--border); }
+
+  /* NAVIGATION BUTTONS */
+  .nav-buttons {
+    display: flex; gap: 12px; margin-top: 24px;
+  }
+  .btn {
+    flex: 1; padding: 14px 20px;
+    border-radius: 8px; font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-primary {
+    background: var(--gold); color: var(--ink);
+  }
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-secondary {
+    background: var(--card); color: var(--ink);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--surface); }
+  .btn-calculate {
+    background: var(--green); color: #fff;
+    font-size: 15px;
+  }
+  .btn-calculate:hover { background: #245a41; }
+
+  /* ========== BOQ OUTPUT ========== */
+  #boq-output { display: none; }
+
+  .boq-group-header{background:var(--ink);color:#fff;font-size:15px;font-weight:700;padding:10px 16px;margin-top:24px;letter-spacing:1px;border-left:5px solid var(--gold);}
+  
+  .boq-header {
+    background: var(--ink);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    color: #fff;
+  }
+  .boq-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px; font-weight: 700;
+  }
+  .boq-meta {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    margin-top: 12px;
+  }
+  .boq-meta-item { font-size: 12px; color: #aaa; }
+  .boq-meta-item span { color: #fff; font-weight: 500; }
+
+  .boq-grand-total {
+    background: linear-gradient(135deg, var(--gold), #e8a030);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .boq-grand-total .gt-label {
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    opacity: 0.8;
+  }
+  .boq-grand-total .gt-amount {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px; font-weight: 700; color: var(--ink);
+  }
+  .boq-grand-total .gt-vat {
+    font-size: 12px; color: var(--ink); opacity: 0.7; margin-top: 2px;
+  }
+
+  .boq-section { margin-bottom: 16px; }
+  .boq-section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: var(--ink-light); text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-radius: 6px 6px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+
+  .boq-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+    font-size: 12px;
+  }
+  .boq-table th {
+    background: #f0ece6;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600; color: var(--ink-light);
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .boq-table th:last-child,
+  .boq-table td:last-child { text-align: right; }
+  .boq-table th:nth-child(3),
+  .boq-table td:nth-child(3) { text-align: center; }
+  .boq-table th:nth-child(4),
+  .boq-table td:nth-child(4) { text-align: right; }
+
+  .boq-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #f0ede8;
+    color: var(--ink); vertical-align: top;
+  }
+  .boq-table tr:last-child td { border-bottom: none; }
+  .boq-table tr:hover td { background: #faf8f5; }
+
+  .boq-table .subtotal td {
+    background: #f5f2ec;
+    font-weight: 600; color: var(--ink);
+    font-size: 12px;
+  }
+  .item-no { color: var(--ink-light); font-size: 11px; }
+  .amount { font-weight: 600; color: var(--green); }
+
+  /* SECTION SUMMARY CARDS */
+  .section-summary {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px; margin-bottom: 20px;
+  }
+  .ss-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .ss-card .ss-label { font-size: 11px; color: var(--ink-light); font-weight: 500; }
+  .ss-card .ss-amount {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--ink); margin-top: 4px;
+  }
+  .ss-card .ss-pct { font-size: 11px; color: var(--gold); margin-top: 2px; }
+
+  /* ACTION BUTTONS */
+  .action-row {
+    display: flex; gap: 10px; margin-top: 20px;
+  }
+  .btn-export {
+    flex: 1; background: var(--green); color: #fff;
+    padding: 14px; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-recalc {
+    background: var(--card); color: var(--ink);
+    border: 1.5px solid var(--border);
+    padding: 14px 20px; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* UNIT RATES BADGE */
+  .rates-notice {
+    background: rgba(200,146,42,0.08);
+    border: 1px solid rgba(200,146,42,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px; color: var(--ink-light);
+    margin-bottom: 16px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .rates-notice .rn-icon { font-size: 16px; flex-shrink: 0; }
+
+  
+/* HAMBURGER MENU */
+.menu-btn{background:none;border:none;color:#fff;font-size:24px;cursor:pointer}
+.side-menu{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#fff;z-index:999;padding:20px;box-shadow:2px 0 20px rgba(0,0,0,.2);transition:.3s}
+.side-menu.open{left:0}
+.side-menu a{display:block;padding:12px 0;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--border)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;z-index:998}
+.footer{margin-top:40px;padding:20px;text-align:center;color:var(--ink-light);font-size:12px}
+.developer-credit{display: inline-block;margin-top: 10px;padding:4px 12px;background:#f5f5f5; border-radius: 6px;font-size: 11px;color: var(--ink-light); font-family: Georgia, 'Times New Roman', Times, serif;}
+
+.payment-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:1001;width:90%;max-width:360px;display:none}
+.payment-modal h3{margin-top:0}
+.payment-modal input{width:100%;padding:10px;margin:10px 0;border:1px solid var(--border);border-radius:6px;box-sizing:border-box}
+.payment-modal .pay-error{color:#c0392b;font-size:13px;display:none;margin-bottom:8px}
+.payment-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none}
+
+@media (max-width: 480px) {
+    .field-row { grid-template-columns: 1fr; }
+    .field-row-3 { grid-template-columns: 1fr 1fr; }
+    .radio-group.cols-3 { grid-template-columns: 1fr 1fr; }
+    .section-summary { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+<div class="side-menu" id="sideMenu">
+<h3>EthioBuild</h3>
+<a href='#'>Home</a>
+<a href='#'>New BOQ</a>
+<a href='mailto:addiss1993@gmail.com?subject=Customer Support - EthioBuild'>Customer Support</a>
+<a href='mailto:addiss1993@gmail.com?subject=Contact - EthioBuild'>Contact Organization</a>
+<a href='mailto:addiss1993@gmail.com?subject=Bug Report - EthioBuild'>Report a Bug</a>
+<a href='#' onclick="toggleWhatsComing()">What's Coming</a>
+<a href='#'>Request a Feature</a>
+<a href='#'>About</a>
+<a href='#'>Terms & Disclaimer</a>
+</div>
+<div class="overlay" id="whatsComingOverlay" onclick="toggleWhatsComing()"></div>
+<div class="side-menu" id="whatsComingModal" style="left:-280px;">
+<h3>Upcoming Professional Features</h3>
+<p>Traditional Ethiopian BOQ Structure, Consultant-Grade Excel Export, PDF Reports,
+Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works, and Glazing Sections.</p>
+</div>
+
+<div class="payment-modal-overlay" id="paymentOverlay" onclick="closePaymentModal()"></div>
+<div class="payment-modal" id="paymentModal" style="
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  max-width: 420px;
+  width: 90%;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  font-family: 'Inter', sans-serif;
+">
+  <!-- Header -->
+  <div style="text-align:center; margin-bottom: 24px;">
+    <div style="
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #c8922a, #f0c060);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+    ">📊</div>
+    <h3 style="
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    ">Unlock Excel Export</h3>
+    <p style="font-size: 13px; color: #4a4a6a;">
+      Get your full professional BOQ in Excel format
+    </p>
+  </div>
+
+  <!-- Price Badge -->
+  <div style="
+    background: linear-gradient(135deg, #1a1a2e, #2d2d4e);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 20px;
+  ">
+    <p style="font-size: 12px; color: #aaa; margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase;">One-time payment</p>
+    <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;">200 ETB</p>
+    <p style="font-size: 12px; color: #aaa; margin-top: 4px;">via TeleBirr</p>
+  </div>
+
+  <!-- Steps -->
+  <div style="margin-bottom: 20px;">
+
+    <!-- Step 1 -->
+    <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
+      <div style="width:24px;height:24px;border-radius:50%;background:#c8922a;color:#1a1a2e;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+      <div style="flex:1;">
+        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">Send 200 ETB via TeleBirr</p>
+        <div style="border:2px dashed #c8922a;border-radius:8px;padding:10px 14px;background:rgba(200,146,42,0.05);text-align:center;">
+          <p style="font-size:11px;color:#4a4a6a;margin-bottom:2px;">TeleBirr number</p>
+          <p style="font-size:20px;font-weight:700;color:#1a1a2e;font-family:'Space Grotesk',sans-serif;letter-spacing:1px;">+251 913 265 488</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="display:flex; gap:12px; align-items:flex-start;">
+      <div style="width:24px;height:24px;border-radius:50%;background:#c8922a;color:#1a1a2e;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+      <div style="flex:1;">
+        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">Enter your TeleBirr transaction ID below and click Unlock</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Transaction ID Input -->
+  <div style="margin-bottom: 8px;">
+    <label style="
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a4a6a;
+      display: block;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    ">TeleBirr Transaction ID</label>
+    <input 
+      type="text" 
+      id="transactionId" 
+      placeholder="e.g. DFN76I7LTE"
+      style="
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #e2ddd6;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: 'Inter', sans-serif;
+        color: #1a1a2e;
+        outline: none;
+        transition: border-color 0.2s;
+      "
+      onfocus="this.style.borderColor='#c8922a'"
+      onblur="this.style.borderColor='#e2ddd6'"
+    >
+  </div>
+
+  <!-- Error -->
+  <div id="payError" style="
+    display: none;
+    background: #fff0f0;
+    border: 1px solid #c0392b;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #c0392b;
+    margin-bottom: 12px;
+  ">⚠️ Please enter a valid transaction ID.</div>
+
+  <!-- Buttons -->
+  <button onclick="verifyPayment()" style="
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #c8922a, #f0c060);
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a2e;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 10px;
+    transition: opacity 0.2s;
+  " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+    🔓 Unlock & Download
+  </button>
+
+  <button onclick="closePaymentModal()" style="
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1.5px solid #e2ddd6;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a4a6a;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  " onmouseover="this.style.background='#f7f5f0'" onmouseout="this.style.background='transparent'">
+    Cancel
+  </button>
+
+  <!-- Footer note -->
+  <p style="
+    text-align: center;
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 16px;
+    line-height: 1.5;
+  ">🔒 Your payment is verified instantly and securely. Your BOQ data stays private on your device.</p>
+
+</div>
+
+<header>
+<button class="menu-btn" onclick="toggleMenu()">☰</button>
+  <div class="logo-mark">EB</div>
+  <div class="logo-text">
+    <h1>EthioBuild</h1>
+    <p>Professional Construction Cost Estimation Platform</p>
+  </div>
+  <div class="header-badge">Pro version</div>
+</header>
+
+<!-- PROGRESS -->
+<div class="progress-bar" id="progress-bar">
+  <div class="step-dot active" id="dot-1" onclick="goToStep(1)">1</div>
+  <div class="step-line" id="line-1"></div>
+  <div class="step-dot" id="dot-2" onclick="goToStep(2)">2</div>
+  <div class="step-line" id="line-2"></div>
+  <div class="step-dot" id="dot-3" onclick="goToStep(3)">3</div>
+  <div class="step-line" id="line-3"></div>
+  <div class="step-dot" id="dot-4" onclick="goToStep(4)">4</div>
+  <div class="step-line" id="line-4"></div>
+  <div class="step-dot" id="dot-5" onclick="goToStep(5)">5</div>
+</div>
+
+<main>
+
+
+
+<!-- ===== STEP 1: PROJECT INFO ===== -->
+<div class="step-panel active" id="step-1">
+  <div class="step-header">
+    <div class="step-eyebrow">Step 1 of 5</div>
+    <div class="step-title">Project Information</div>
+    <div class="step-sub">Basic details about your building project.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Project Details</div>
+    <div class="field">
+      <label>Project Name</label>
+      <input type="text" id="project-name" placeholder="e.g. Villa G+3 — Hawassa">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Client Name</label>
+        <input type="text" id="client-name" placeholder="Client">
+      </div>
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="text" id="client-phone" placeholder="+251...">
+      </div>
+    </div>
+<div class="field-row">
+      <div class="field">
+        <label>City</label>
+        <div class="select-wrap">
+          <select id="city">
+            <option value="hawassa">Hawassa</option>
+            <option value="addis">Addis Ababa</option>
+            <option value="bahirdar">Bahir Dar</option>
+            <option value="adama">Adama</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Sub-location <span class="hint">(optional)</span></label>
+        <input type="text" id="sublocation" placeholder="e.g. Alamura">
+      </div>
+    </div>
+    <div class="field">
+      <label>Building Use</label>
+      <div class="radio-group cols-2">
+        <label class="radio-card">
+          <input type="radio" name="building-use" value="villa" checked>
+          <span class="rc-label">🏠 Villa</span>
+          <span class="rc-sub">Private residential</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="building-use" value="apartment">
+          <span class="rc-label">🏢 Apartment</span>
+          <span class="rc-sub">Multi-family</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="building-use" value="commercial">
+          <span class="rc-label">🏪 Commercial</span>
+          <span class="rc-sub">Shops / mixed use</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="building-use" value="office">
+          <span class="rc-label">🏦 Office</span>
+          <span class="rc-sub">Office building</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="btn btn-primary" onclick="goToStep(2)">Next: Structure →</button>
+  </div>
+</div>
+
+<!-- ===== STEP 2: STRUCTURE ===== -->
+<div class="step-panel" id="step-2">
+  <div class="step-header">
+    <div class="step-eyebrow">Step 2 of 5</div>
+    <div class="step-title">Building Structure</div>
+    <div class="step-sub">Dimensions and structural system of the building.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Floor Configuration</div>
+    <div class="field">
+      <label>Built-up Area per Floor <span class="hint">(m²)</span></label>
+      <input type="number" id="floor-area" placeholder="e.g. 110" min="20">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Floors Above Ground</label>
+        <div class="stepper">
+          <button onclick="step('floors-above', -1)">−</button>
+          <input type="number" id="floors-above" value="3" min="0" max="20">
+          <button onclick="step('floors-above', 1)">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Basement Floors</label>
+        <div class="stepper">
+          <button onclick="step('floors-basement', -1)">−</button>
+          <input type="number" id="floors-basement" value="0" min="0" max="5">
+          <button onclick="step('floors-basement', 1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Average Floor-to-Floor Height <span class="hint">(m)</span></label>
+      <input type="number" id="floor-height" placeholder="e.g. 3.2" step="0.1" value="3.2">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Foundation Type</div>
+    <div class="radio-group cols-3">
+      <label class="radio-card">
+        <input type="radio" name="foundation" value="isolated" checked>
+        <span class="rc-label">Isolated</span>
+        <span class="rc-sub">Pad footings</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="foundation" value="strip">
+        <span class="rc-label">Strip</span>
+        <span class="rc-sub">Rubble/strip</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="foundation" value="mat">
+        <span class="rc-label">Mat</span>
+        <span class="rc-sub">Raft slab</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+    <button class="btn btn-primary" onclick="goToStep(3)">Next: Finishes →</button>
+  </div>
+</div>
+
+<!-- ===== STEP 3: FINISHES ===== -->
+<div class="step-panel" id="step-3">
+  <div class="step-header">
+    <div class="step-eyebrow">Step 3 of 5</div>
+    <div class="step-title">Finishes & Materials</div>
+    <div class="step-sub">Wall, roof, floor, and paint specifications.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">External Wall Material</div>
+    <div class="radio-group cols-3">
+      <label class="radio-card">
+        <input type="radio" name="ext-wall-material" value="hcb20" checked>
+        <span class="rc-label">HCB 20cm</span>
+        <span class="rc-sub">Standard block</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="ext-wall-material" value="hcb15">
+        <span class="rc-label">HCB 15cm</span>
+        <span class="rc-sub">Thinner block</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="ext-wall-material" value="stone">
+        <span class="rc-label">Stone Masonry</span>
+        <span class="rc-sub">Dressed stone</span>
+      </label>
+    </div>
+  </div>
+<div class="card">
+    <div class="card-title">Outer Door & Window Profile</div>
+    <div class="radio-group cols-3">
+      <label class="radio-card">
+        <input type="radio" name="door-window-profile" value="aluminum" checked>
+        <span class="rc-label">Aluminium</span>
+        <span class="rc-sub">Standard aluminium profile</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="door-window-profile" value="ltz">
+        <span class="rc-label">LTZ Steel</span>
+        <span class="rc-sub">Locally welded steel profile</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="door-window-profile" value="emitation">
+        <span class="rc-label">Emitation</span>
+        <span class="rc-sub">Emitation profile</span>
+      </label>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Internal Partition Wall</div>
+    <div class="radio-group cols-3">
+      <label class="radio-card">
+        <input type="radio" name="int-wall-material" value="hcb15" checked>
+        <span class="rc-label">HCB 15cm</span>
+        <span class="rc-sub">Block partition</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="int-wall-material" value="hcb10">
+        <span class="rc-label">HCB 10cm</span>
+        <span class="rc-sub">Thin partition</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="int-wall-material" value="gypsum">
+        <span class="rc-label">Gypsum Board</span>
+        <span class="rc-sub">Lightweight</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Roof Type</div>
+    <div class="radio-group cols-2">
+      <label class="radio-card">
+        <input type="radio" name="roof-type" value="cis" checked>
+        <span class="rc-label">CIS G-28</span>
+        <span class="rc-sub">Corrugated iron sheet</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="roof-type" value="ega">
+          <span class="rc-label">EGA-600</span>
+        <span class="rc-sub">Steel sheet</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="roof-type" value="flat">
+        <span class="rc-label">Flat Slab</span>
+        <span class="rc-sub">RC roof slab</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="roof-type" value="decra">
+        <span class="rc-label">Decra Tile</span>
+        <span class="rc-sub">Premium steel tile</span>
+      </label>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Steel Roof Truss</div>
+    <div class="radio-group cols-2">
+      <label class="radio-card">
+        <input type="radio" name="steel-truss" value="yes">
+        <span class="rc-label">Yes</span>
+        <span class="rc-sub">Steel trusses (for steel/EGA/Decra roofs)</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="steel-truss" value="no" checked>
+        <span class="rc-label">No</span>
+        <span class="rc-sub">Timber/Eucalyptus trusses or N/A</span>
+      </label>
+    </div>
+  </div>
+
+<div class="card">
+    <div class="card-title">Mechanical Installation (Elevator)</div>
+    <div class="radio-group cols-2">
+      <label class="radio-card">
+        <input type="radio" name="mechanical" value="yes">
+        <span class="rc-label">Yes</span>
+        <span class="rc-sub">Elevator & mechanical works</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="mechanical" value="no" checked>
+        <span class="rc-label">No</span>
+        <span class="rc-sub">Not applicable</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Floor Finish</div>
+    <div class="radio-group cols-2">
+      <label class="radio-card">
+        <input type="radio" name="floor-finish" value="tiles" checked>
+        <span class="rc-label">Ceramic Tiles</span>
+        <span class="rc-sub">Standard quality</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="floor-finish" value="marble">
+        <span class="rc-label">Marble</span>
+        <span class="rc-sub">Floor, sills, stairs</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="floor-finish" value="terrazzo">
+        <span class="rc-label">Terrazzo</span>
+        <span class="rc-sub">Cast in-situ</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="floor-finish" value="screed">
+        <span class="rc-label">Screed Only</span>
+        <span class="rc-sub">Plain cement screed</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Paint Quality</div>
+    <div class="field">
+      <label>External Paint</label>
+      <div class="radio-group cols-3">
+        <label class="radio-card">
+          <input type="radio" name="ext-paint" value="local" checked>
+          <span class="rc-label">Local</span>
+          <span class="rc-sub">Economy</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="ext-paint" value="medium">
+          <span class="rc-label">Medium</span>
+          <span class="rc-sub">Jotun / equiv.</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="ext-paint" value="premium">
+          <span class="rc-label">Premium</span>
+          <span class="rc-sub">Dulux / equiv.</span>
+        </label>
+      </div>
+    </div>
+    <div class="field" style="margin-top:16px">
+      <label>Internal Paint</label>
+      <div class="radio-group cols-3">
+        <label class="radio-card">
+          <input type="radio" name="int-paint" value="local" checked>
+          <span class="rc-label">Local</span>
+          <span class="rc-sub">Economy</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="int-paint" value="medium">
+          <span class="rc-label">Medium</span>
+          <span class="rc-sub">Jotun / equiv.</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="int-paint" value="premium">
+          <span class="rc-label">Premium</span>
+          <span class="rc-sub">Dulux / equiv.</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+    <button class="btn btn-primary" onclick="goToStep(4)">Next: MEP →</button>
+  </div>
+</div>
+
+<!-- ===== STEP 4: MEP — ELECTRICAL & SANITARY ===== -->
+<div class="step-panel" id="step-4">
+  <div class="step-header">
+    <div class="step-eyebrow">Step 4 of 5</div>
+    <div class="step-title">Electrical & Sanitary</div>
+    <div class="step-sub">MEP installations — electrical wiring and plumbing/sanitary works.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Electrical Installation</div>
+    <div class="field">
+      <label>Electrical Standard</label>
+      <div class="radio-group cols-3">
+        <label class="radio-card">
+          <input type="radio" name="electrical-grade" value="basic" checked>
+          <span class="rc-label">Basic</span>
+          <span class="rc-sub">Economy wiring</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="electrical-grade" value="standard">
+          <span class="rc-label">Standard</span>
+          <span class="rc-sub">Full fit-out</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="electrical-grade" value="premium">
+          <span class="rc-label">Premium</span>
+          <span class="rc-sub">Smart / imported</span>
+        </label>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>Include Earthing & Lightning Protection?</label>
+      <div class="radio-group cols-2">
+        <label class="radio-card">
+          <input type="radio" name="earthing" value="yes" checked>
+          <span class="rc-label">Yes</span>
+          <span class="rc-sub">Recommended</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="earthing" value="no">
+          <span class="rc-label">No</span>
+          <span class="rc-sub">Skip</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Sanitary & Plumbing Works</div>
+    <div class="field">
+      <label>Sanitary Fitting Quality</label>
+      <div class="radio-group cols-3">
+        <label class="radio-card">
+          <input type="radio" name="sanitary-grade" value="local" checked>
+          <span class="rc-label">Local</span>
+          <span class="rc-sub">Economy fixtures</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="sanitary-grade" value="medium">
+          <span class="rc-label">Medium</span>
+          <span class="rc-sub">Standard imported</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="sanitary-grade" value="premium">
+          <span class="rc-label">Premium</span>
+          <span class="rc-sub">European / high-end</span>
+        </label>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>Number of Wet Rooms (bathrooms + kitchens)</label>
+      <div class="stepper">
+        <button onclick="step('wet-rooms', -1)">−</button>
+        <input type="number" id="wet-rooms" value="3" min="1" max="20">
+        <button onclick="step('wet-rooms', 1)">+</button>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>Include Septic Tank / Soakpit?</label>
+      <div class="radio-group cols-2">
+        <label class="radio-card">
+          <input type="radio" name="septic" value="yes" checked>
+          <span class="rc-label">Yes</span>
+          <span class="rc-sub">Septic + soakpit</span>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="septic" value="no">
+          <span class="rc-label">No</span>
+          <span class="rc-sub">Municipal sewer</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+    <button class="btn btn-primary" onclick="goToStep(5)">Next: Review →</button>
+  </div>
+</div>
+<div class="step-panel" id="step-5">
+  <div class="step-header">
+    <div class="step-eyebrow">Step 5 of 5</div>
+    <div class="step-title">Review & Calculate</div>
+    <div class="step-sub">Confirm your inputs, then generate the BOQ.</div>
+  </div>
+
+  <div class="card" id="review-card">
+    <div class="card-title">Summary of Inputs</div>
+    <div id="review-content"></div>
+  </div>
+
+  <div class="rates-notice">
+    <span class="rn-icon">📋</span>
+    <div>Unit rates are based on current Ethiopian market prices as of June 2026. Rates are updated periodically to reflect inflation. Always verify with local suppliers before procurement.</div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
+    <button class="btn btn-calculate" onclick="calculateBOQ()">⚡ Generate BOQ</button>
+  </div>
+</div>
+
+<!-- ===== BOQ OUTPUT ===== -->
+<div id="boq-output">
+
+  <div class="boq-header">
+    <h2 id="boq-title">BOQ — Villa G+3</h2>
+    <div class="boq-meta">
+      <div class="boq-meta-item">Location: <span id="boq-location">—</span></div>
+      <div class="boq-meta-item">Total Area: <span id="boq-area">—</span></div>
+      <div class="boq-meta-item">Date: <span id="boq-date">—</span></div>
+    </div>
+  </div>
+  <div style="display:flex; gap:10px; margin:16px 0;">
+    <button class="btn-export" onclick="openPaymentModal()">📥 Export to Excel</button>
+    <button class="btn-recalc" onclick="window.print()">📄 Export PDF</button>
+  </div>
+
+  <div class="section-summary" id="section-summary"></div>
+
+  <div class="boq-grand-total">
+    <div>
+      <div class="gt-label">GRAND TOTAL (incl. VAT 15%)</div>
+      <div class="gt-vat" id="boq-vat-line">—</div>
+    </div>
+    <div class="gt-amount" id="boq-grand-total">—</div>
+  </div>
+
+  <div id="boq-sections"></div>
+
+  <div class="action-row">
+    <button class="btn-export" onclick="openPaymentModal()">📥 Export to Excel</button><button class="btn-recalc" onclick="window.print()">📄 Export PDF</button>
+    <button class="btn-recalc" onclick="recalculate()">↩ Edit Inputs</button>
+  </div>
+
+</div>
+
+<div class="footer">
+EthioBuild BOQ Calculator <br>
+Prices are based on June 2026. Final quantities must be verified by a licensed engineer.
+<div class="developer-credit">Developed by Addis Engineering.</div>
+
+</div></main>
+
+<script>
+
+function toggleMenu(){
+document.getElementById('sideMenu').classList.toggle('open');
+document.getElementById('overlay').style.display=
+document.getElementById('sideMenu').classList.contains('open')?'block':'none';
+}
+function toggleWhatsComing(){
+  document.getElementById('whatsComingModal').classList.toggle('open');
+  document.getElementById('whatsComingOverlay').style.display=
+  document.getElementById('whatsComingModal').classList.contains('open')?'block':'none';
+}
+
+// ============================================================
+// UNIT RATES (ETB) — Edit these to update for inflation
+// ============================================================
+const RATES = {
+  // City multipliers (relative to Hawassa = 1.0)
+  cityMultiplier: { hawassa: 1.0, addis: 1.18, bahirdar: 1.05, adama: 1.02 },
+
+  // Excavation (per m3)
+  excavation_bulk: 452,
+  excavation_pit: 462,
+  excavation_trench: 470,
+  fill_compacted: 3026,
+  cart_away: 412,
+  hardcore: 1345,
+
+  // Concrete (per m3)
+  concrete_c15: 3417,
+  concrete_c25_foundation: 18266,
+  concrete_c25_column: 19126,
+  concrete_c25_beam: 18559,
+  concrete_c25_slab: 18559,
+  formwork: 1254,
+
+  // Rebar (per kg)
+  rebar_8mm: 325,
+  rebar_10mm: 325,
+  rebar_12mm: 325,
+  rebar_14mm: 325,
+  rebar_16mm: 325,
+  rebar_20mm: 328,
+
+  // Masonry (per m3)
+  stone_masonry_below: 7804,
+  stone_masonry_above: 8102,
+
+  // HCB walls (per m2)
+  hcb_20cm: 1970,
+  hcb_15cm: 1345,
+  hcb_10cm: 1112,
+  gypsum_board: 720,
+  stone_wall_ext: 1450,
+
+  // Roofing (per m2)
+  roof_cis: 2147,
+  roof_ega: 2745,
+  roof_flat_slab: 18559, // per m3
+  roof_decra: 2900,
+
+  // Floor finishes (per m2)
+  floor_tiles: 4210,
+  floor_marble: 5680,
+  floor_terrazzo: 1670,
+  floor_screed: 745,
+
+  // Plastering (per m2)
+  plaster_cement: 817.33,
+  plaster_gypsum: 480,
+
+  // Paint (per m2)
+  paint_local: 85,
+  paint_medium: 145,
+  paint_premium: 210,
+
+  // Electrical (per m2 of built-up area)
+  elec_basic: 420,
+  elec_standard: 780,
+  elec_premium: 1350,
+  earthing_lump: 18500,  // lump per building
+
+  // Sanitary / Plumbing (per wet room)
+  sanitary_local_per_room: 28000,
+  sanitary_medium_per_room: 52000,
+  sanitary_premium_per_room: 95000,
+  // Cold water supply (per m2)
+  cold_water_per_m2: 180,
+  // Drainage (per m2)
+  drainage_per_m2: 220,
+  // Septic tank & soakpit (lump)
+  septic_tank: 115000,
+};
+
+// ============================================================
+// STEP NAVIGATION
+// ============================================================
+let currentStep = 1;
+
+function goToStep(n) {
+  if (n === 5) populateReview();
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  document.getElementById('boq-output').style.display = 'none';
+
+  for (let i = 1; i <= 5; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.classList.remove('active', 'done');
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('active');
+    if (i < 5) {
+      const line = document.getElementById('line-' + i);
+      line.classList.toggle('done', i < n);
+    }
+  }
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function step(id, delta) {
+  const el = document.getElementById(id);
+  const val = parseInt(el.value) + delta;
+  const min = parseInt(el.min || 0);
+  const max = parseInt(el.max || 999);
+  if (val >= min && val <= max) el.value = val;
+}
+
+// ============================================================
+// REVIEW PANEL
+// ============================================================
+function getRadio(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : '';
+}
+function getRadioLabel(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  if (!el) return '—';
+  const card = el.closest('.radio-card');
+  return card ? card.querySelector('.rc-label').textContent.trim() : el.value;
+}
+
+function populateReview() {
+  const rows = [
+    ['Project Name', document.getElementById('project-name').value || '(unnamed)'],
+    ['City', document.getElementById('city').options[document.getElementById('city').selectedIndex].text],
+    ['Sub-location', document.getElementById('sublocation').value || '—'],
+    ['Building Use', getRadioLabel('building-use')],
+    ['Floor Area', document.getElementById('floor-area').value + ' m² per floor'],
+    ['Floors Above Ground', document.getElementById('floors-above').value],
+    ['Basement Floors', document.getElementById('floors-basement').value],
+    ['Floor Height', document.getElementById('floor-height').value + ' m'],
+    ['Foundation', getRadioLabel('foundation')],
+    ['External Wall', getRadioLabel('ext-wall-material')],
+    ['Internal Partition', getRadioLabel('int-wall-material')],
+    ['Roof Type', getRadioLabel('roof-type')],
+    ['Floor Finish', getRadioLabel('floor-finish')],
+    ['External Paint', getRadioLabel('ext-paint')],
+    ['Internal Paint', getRadioLabel('int-paint')],
+    ['Electrical Grade', getRadioLabel('electrical-grade')],
+    ['Earthing / Lightning', getRadio('earthing') === 'yes' ? 'Yes' : 'No'],
+    ['Sanitary Grade', getRadioLabel('sanitary-grade')],
+    ['Wet Rooms', document.getElementById('wet-rooms').value],
+    ['Septic Tank', getRadio('septic') === 'yes' ? 'Yes — include' : 'No — municipal sewer'],
+  ];
+  const html = rows.map(([k, v]) =>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="color:var(--ink-light)">${k}</span>
+      <span style="font-weight:500">${v}</span>
+    </div>`
+  ).join('');
+  document.getElementById('review-content').innerHTML = html;
+}
+
+// ============================================================
+// CALCULATION ENGINE
+// ============================================================
+function fmt(n) {
+  return 'ETB ' + Math.round(n).toLocaleString('en-ET');
+}
+function fmtN(n, dec=2) {
+  return parseFloat(n.toFixed(dec)).toLocaleString('en-ET');
+}
+
+function calculateBOQ() {
+  // --- Gather inputs ---
+  const city        = document.getElementById('city').value;
+  const floorArea   = parseFloat(document.getElementById('floor-area').value) || 110;
+  const floorsAbove = parseInt(document.getElementById('floors-above').value) || 3;
+  const floorsBase  = parseInt(document.getElementById('floors-basement').value) || 0;
+  const floorH      = parseFloat(document.getElementById('floor-height').value) || 3.2;
+  const foundation  = getRadio('foundation');
+  const extWallMat  = getRadio('ext-wall-material');
+  const doorWindowProfile  = getRadio('door-window-profile');
+  const intWallMat  = getRadio('int-wall-material');
+  const roofType    = getRadio('roof-type');
+  const steelTruss   = getRadio('steel-truss') === 'yes';
+  const withMechanical  = getRadio('mechanical') === 'yes' && floorsAbove >=4;
+  const floorFin    = getRadio('floor-finish');
+  const extPaint    = getRadio('ext-paint');
+  const intPaint    = getRadio('int-paint');
+  const elecGrade   = getRadio('electrical-grade');
+  const withEarthing= getRadio('earthing') === 'yes';
+  const sanitaryGrade = getRadio('sanitary-grade');
+  const wetRooms    = parseInt(document.getElementById('wet-rooms').value) || 3;
+  const withSeptic  = getRadio('septic') === 'yes';
+  const projName    = document.getElementById('project-name').value || 'Unnamed Project';
+  const cityLabel   = document.getElementById('city').options[document.getElementById('city').selectedIndex].text;
+  const subloc      = document.getElementById('sublocation').value;
+
+  const cm = RATES.cityMultiplier[city] || 1.0;
+  const R  = {}; // city-adjusted rates
+  Object.keys(RATES).forEach(k => {
+    R[k] = typeof RATES[k] === 'number' ? RATES[k] * cm : RATES[k];
+  });
+
+  const totalFloors = floorsAbove + floorsBase;
+  const totalArea   = floorArea * totalFloors;
+  const perimeter   = Math.sqrt(floorArea) * 4; // approx
+  const roofArea    = floorArea * 1.15; // 15% slope allowance
+
+  // ---- A. SUBSTRUCTURE ----
+  const sections = [];
+
+  // 1. Excavation
+  const bulkExcVol    = floorArea * 0.5;
+  const pitExcVol     = floorArea * 0.63;
+  const trenchVol     = perimeter * 0.5 * 0.5;
+  const fillVol       = pitExcVol * 0.8;
+  const cartVol       = bulkExcVol + pitExcVol + trenchVol;
+  const hardcoreVol   = floorArea * 0.25 * 0.1;
+
+  const excItems = [
+    { no:'1.01', desc:'Site clearing and removing top soil (20cm)', unit:'m²', qty: floorArea, rate: R.excavation_bulk * 0.14 },
+    { no:'1.02', desc:'Bulk excavation in ordinary soil (depth ≤ 1.5m)', unit:'m³', qty: bulkExcVol, rate: R.excavation_bulk },
+    { no:'1.03', desc:'Pit excavation in ordinary soil (depth ≤ 1.5m)', unit:'m³', qty: pitExcVol, rate: R.excavation_pit },
+    { no:'1.04', desc:'Trench excavation for foundation wall', unit:'m³', qty: trenchVol, rate: R.excavation_trench },
+    { no:'1.05', desc:'Fill and compact from granular material (quarry)', unit:'m³', qty: fillVol, rate: R.fill_compacted },
+    { no:'1.06', desc:'Load and cart away excavated material', unit:'m³', qty: cartVol, rate: R.cart_away },
+    { no:'1.07', desc:'25cm thick basaltic hardcore, well rolled', unit:'m³', qty: hardcoreVol, rate: R.hardcore },
+  ];
+  sections.push({ title: '1. Excavation & Earthwork', items: excItems });
+
+  // 2. Foundation Concrete
+  const leanConc  = floorArea * 0.18; // m2
+  const footingV  = (foundation === 'mat') ? floorArea * 0.25 : floorArea * 0.095;
+  const gradeBeamV = floorArea * 0.053;
+  const fndColV   = floorArea * 0.031;
+  const rebarFoundKg = footingV * 95 + gradeBeamV * 80;
+
+  const foundConc = [
+    { no:'2.01', desc:'5cm lean concrete C-5 (150 kg cement/m³) under foundation', unit:'m²', qty: leanConc, rate: R.concrete_c15 * 0.05 + 200 },
+    { no:'2.02', desc:'C-25 concrete to footing pad / mat foundation', unit:'m³', qty: footingV, rate: R.concrete_c25_foundation },
+    { no:'2.03', desc:'C-25 concrete to grade beams', unit:'m³', qty: gradeBeamV, rate: R.concrete_c25_beam },
+    { no:'2.04', desc:'C-25 concrete to foundation columns', unit:'m³', qty: fndColV, rate: R.concrete_c25_column },
+    { no:'2.05', desc:'Formwork to footing and grade beam', unit:'m²', qty: (footingV + gradeBeamV) * 4.2, rate: R.formwork },
+    { no:'2.06', desc:'Steel reinforcement bars 8mm (sub-structure)', unit:'kg', qty: rebarFoundKg * 0.55, rate: R.rebar_8mm },
+    { no:'2.07', desc:'Steel reinforcement bars 12mm (sub-structure)', unit:'kg', qty: rebarFoundKg * 0.25, rate: R.rebar_12mm },
+    { no:'2.08', desc:'Steel reinforcement bars 16mm (sub-structure)', unit:'kg', qty: rebarFoundKg * 0.20, rate: R.rebar_16mm },
+  ];
+  sections.push({ title: '2. Concrete Works', items: foundConc });
+
+  // 3. Stone Masonry
+  const stoneVol = trenchVol * 0.85;
+  const stoneMas = [
+    { no:'3.01', desc:'Basaltic stone masonry (1:4 mortar) below NGL', unit:'m³', qty: stoneVol * 0.83, rate: R.stone_masonry_below },
+    { no:'3.02', desc:'Fair-faced dressed stone masonry above NGL', unit:'m³', qty: stoneVol * 0.17, rate: R.stone_masonry_above },
+  ];
+  sections.push({ title: '3. Masonry Works', items: stoneMas });
+
+  // ---- B. SUPERSTRUCTURE ----
+  const colV   = floorArea * floorsAbove * 0.013;
+  const beamV  = floorArea * floorsAbove * 0.031;
+  const slabV  = floorArea * floorsAbove * 0.15;
+  const stairV = floorsAbove * 1.575;
+  const rebarSupKg = (colV * 130 + beamV * 110 + slabV * 85) ;
+
+  const superConc = [
+    { no:'1.01', desc:'C-25 concrete to elevation columns', unit:'m³', qty: colV, rate: R.concrete_c25_column },
+    { no:'1.02', desc:'C-25 concrete to beams', unit:'m³', qty: beamV, rate: R.concrete_c25_beam },
+    { no:'1.03', desc:'C-25 concrete to floor slabs (150mm)', unit:'m³', qty: slabV, rate: R.concrete_c25_slab },
+    { no:'1.04', desc:'C-25 concrete to staircase and landing', unit:'m³', qty: stairV, rate: R.concrete_c25_column },
+    { no:'1.05', desc:'Formwork to columns', unit:'m²', qty: colV * 16, rate: R.formwork },
+    { no:'1.06', desc:'Formwork to beams', unit:'m²', qty: beamV * 7.5, rate: R.formwork },
+    { no:'1.07', desc:'Formwork to floor slabs', unit:'m²', qty: floorArea * floorsAbove, rate: R.formwork },
+    { no:'1.08', desc:'Rebar 8mm deformed bars (superstructure)', unit:'kg', qty: rebarSupKg * 0.45, rate: R.rebar_8mm },
+    { no:'1.09', desc:'Rebar 10mm deformed bars', unit:'kg', qty: rebarSupKg * 0.12, rate: R.rebar_10mm },
+    { no:'1.10', desc:'Rebar 14mm deformed bars', unit:'kg', qty: rebarSupKg * 0.25, rate: R.rebar_14mm },
+    { no:'1.11', desc:'Rebar 16mm deformed bars', unit:'kg', qty: rebarSupKg * 0.18, rate: R.rebar_16mm },
+  ];
+  sections.push({ title: '1. Concrete Works', items: superConc });
+
+  // HCB / Wall material — separate external and internal
+  const extWallArea = perimeter * floorH * floorsAbove * 0.85; // 15% openings
+  const intWallArea = extWallArea * 0.65; // internal partitions ~ 65% of ext wall area
+  const extWallRateMap = { hcb20: R.hcb_20cm, hcb15: R.hcb_15cm, stone: R.stone_wall_ext };
+  const intWallRateMap = { hcb15: R.hcb_15cm, hcb10: R.hcb_10cm, gypsum: R.gypsum_board };
+  const wallItems = [
+    { no:'2.01', desc:`${getRadioLabel('ext-wall-material')} — external walls`, unit:'m²', qty: extWallArea, rate: extWallRateMap[extWallMat] || R.hcb_20cm },
+    { no:'2.02', desc:`${getRadioLabel('int-wall-material')} — internal partitions`, unit:'m²', qty: intWallArea, rate: intWallRateMap[intWallMat] || R.hcb_15cm },
+  ];
+  sections.push({ title: '2. Block & Wall Works', items: wallItems });
+
+  // Roofing
+  const roofRateMap = { cis: R.roof_cis, ega: R.roof_ega, decra: R.roof_decra };
+  const roofItems = [];
+  if (roofType === 'flat') {
+    const roofSlabV = floorArea * 0.15;
+    roofItems.push({ no:'3.01', desc:'C-25 concrete flat roof slab (150mm)', unit:'m³', qty: roofSlabV, rate: R.concrete_c25_slab });
+    roofItems.push({ no:'3.02', desc:'Formwork to roof slab', unit:'m²', qty: floorArea, rate: R.formwork });
+    roofItems.push({ no:'3.03', desc:'Rebar for roof slab', unit:'kg', qty: roofSlabV * 80, rate: R.rebar_8mm });
+    roofItems.push({ no:'3.04', desc:'Waterproofing membrane to roof slab', unit:'m²', qty: floorArea, rate: 450 * cm });
+  } else {
+    roofItems.push({ no:'3.01', desc:`${getRadioLabel('roof-type')} roof cover (horizontal projection)`, unit:'m²', qty: roofArea, rate: roofRateMap[roofType] });
+    roofItems.push({ no:'3.02', desc:'G-28 flat sheet flashing (900mm dev.)', unit:'ml', qty: perimeter * 0.55, rate: 1237 * cm });
+    roofItems.push({ no:'3.03', desc:'G-28 galvanized gutter (90cm dev.)', unit:'ml', qty: perimeter * 0.55, rate: 1016 * cm });
+    roofItems.push({ no:'3.04', desc:'Timber purlins and roof structure', unit:'m²', qty: roofArea, rate: 680 * cm });
+  }
+  sections.push({ title: '3. Roofing', items: roofItems });
+  // 4. Steel Structure (optional - steel roof trusses)
+if (steelTruss) {
+    const steelTrussWeight = roofArea * 12; // approx 12 kg/m2 for light steel trusses
+    const steelItems = [
+      { no:'4.01', desc:'Fabricated steel roof truss (angle/channel sections)', unit:'kg', qty: steelTrussWeight, rate: R.steel_truss || 350 * cm },
+      { no:'4.02', desc:'Steel purlins (C or Z section)', unit:'kg', qty: roofArea * 4, rate: R.steel_truss || 280 * cm },
+      { no:'4.03', desc:'Anti-rust primer and protective paint to steel work', unit:'m²', qty: roofArea * 0.3, rate: 180 * cm },
+    ];
+    sections.push({ title: '4. Steel Structure', items: steelItems });
+}
+// 5. Carpentry & Joinery
+const carpItems = [];
+if (!steelTruss) {
+    const trussSpan = Math.sqrt(floorArea); // approx span
+    carpItems.push({ no:'5.01', desc:'Eucalyptus pole truss — main truss (120mm dia.)', unit:'ml', qty: roofArea * 0.8, rate: R.eucalyptus_120mm || 95 * cm });
+    carpItems.push({ no:'5.02', desc:'Eucalyptus pole — king post & intermediate posts (100mm dia.)', unit:'ml', qty: roofArea * 0.5, rate: R.eucalyptus_100mm || 75 * cm });
+    carpItems.push({ no:'5.03', desc:'Eucalyptus pole — diagonal bracing (80mm dia.)', unit:'ml', qty: roofArea * 0.4, rate: R.eucalyptus_80mm || 55 * cm });
+}
+carpItems.push({ no:'5.04', desc:'Chipboard ceiling — top floor (12mm, supply & fix)', unit:'m²', qty: floorArea, rate: R.chipboard_ceiling || 650 * cm });
+carpItems.push({ no:'5.05', desc:'Wooden door frames (supply & fix)', unit:'No.', qty: Math.round(totalArea / 25), rate: R.door_frame_wood || 2800 * cm });
+carpItems.push({ no:'5.06', desc:'Wooden flush door leaves (supply & fix)', unit:'No.', qty: Math.round(totalArea / 25), rate: R.door_leaf_wood || 4500 * cm });
+sections.push({ title: '5. Carpentry & Joinery', items: carpItems });
+
+// 6. Aluminium Works (or LTZ / Emitation alternative)
+const extOpeningArea = extWallArea * 0.18; // approx 18% of ext wall area is openings (doors+windows)
+const profileRateMap = {
+  aluminum: R.aluminum_profile || 18000 * cm,
+  ltz: R.ltz_profile || 3200 * cm,
+  emitation: R.emitation_profile || 4000 * cm,
+};
+const profileLabelMap = {
+  aluminum: 'Aluminium',
+  ltz: 'LTZ Steel',
+  emitation: 'Emitation',
+};
+const aluminumItems = [
+  { no:'6.01', desc:`${profileLabelMap[doorWindowProfile]} profile — external windows (supply & fix)`, unit:'m²', qty: extOpeningArea * 0.6, rate: profileRateMap[doorWindowProfile] },
+  { no:'6.02', desc:`${profileLabelMap[doorWindowProfile]} profile — external doors (supply & fix)`, unit:'m²', qty: extOpeningArea * 0.4, rate: profileRateMap[doorWindowProfile] * 1.15 },
+  { no:'6.03', desc:'Glass for windows (5mm clear, supply & fix)', unit:'m²', qty: extOpeningArea * 0.6, rate: R.window_glass || 2500 * cm },
+];
+sections.push({ title: '6. Aluminium Works', items: aluminumItems });
+
+  // ---- 7 & 8. PLASTERING, FINISHING & PAINTING ----
+const totalFloorArea = floorArea * (floorsAbove + floorsBase);
+const floorFinRateMap = { tiles: R.floor_tiles, marble: R.floor_marble, terrazzo: R.floor_terrazzo, screed: R.floor_screed };
+const extPaintRateMap = { local: R.paint_local, medium: R.paint_medium, premium: R.paint_premium };
+const intPaintRateMap = { local: R.paint_local, medium: R.paint_medium, premium: R.paint_premium };
+const intWallAreaFinish = (extWallArea + intWallArea) * 1.1;
+
+// 7. Plastering & Finishing
+const plasterItems = [
+  { no:'7.01', desc:'12mm cement plaster to external walls (2 coats)', unit:'m²', qty: extWallArea, rate: R.plaster_cement * 1.15 },
+  { no:'7.02', desc:'Pointing to external masonry above NGL', unit:'m²', qty: extWallArea * 0.3, rate: R.plaster_cement * 0.6 },
+  { no:'7.03', desc:'12mm cement plaster to internal walls (2 coats)', unit:'m²', qty: intWallAreaFinish * 0.7, rate: R.plaster_cement },
+  { no:'7.04', desc:'Gypsum skim coat to internal walls', unit:'m²', qty: intWallAreaFinish * 0.7, rate: R.plaster_gypsum },
+  { no:'7.05', desc:'Cement sand screed (40mm) base layer to floors', unit:'m²', qty: totalFloorArea, rate: 220 * cm },
+  { no:'7.06', desc:`${getRadioLabel('floor-finish')} floor finish`, unit:'m²', qty: totalFloorArea, rate: floorFinRateMap[floorFin] },
+  { no:'7.07', desc:'Marble to stair risers and treads', unit:'m²', qty: floorsAbove * 3.2, rate: R.floor_marble || 2200 * cm },
+  { no:'7.08', desc:'Ceramic wall tiles in wet areas (bathroom/kitchen)', unit:'m²', qty: totalFloorArea * 0.15, rate: 1400 * cm },
+];
+sections.push({ title: '7. Plastering & Finishing', items: plasterItems });
+
+// 8. Painting
+const paintItems = [
+  { no:'8.01', desc:`External paint — ${getRadioLabel('ext-paint')} (2 coats)`, unit:'m²', qty: extWallArea, rate: extPaintRateMap[extPaint] },
+  { no:'8.02', desc:`Internal paint — ${getRadioLabel('int-paint')} (2 coats)`, unit:'m²', qty: intWallAreaFinish * 0.7, rate: intPaintRateMap[intPaint] },
+  { no:'8.03', desc:'Masonry paint to external masonry surface', unit:'m²', qty: extWallArea * 0.3, rate: extPaintRateMap[extPaint] * 0.85 },
+];
+sections.push({ title: '8. Painting', items: paintItems });
+
+  // ---- D. ELECTRICAL INSTALLATION ----
+  const elecRateMap = { basic: R.elec_basic, standard: R.elec_standard, premium: R.elec_premium };
+  const elecItems = [
+    { no:'1.01', desc:'PVC conduit wiring — lighting & power circuits (complete)', unit:'m²', qty: totalFloorArea, rate: elecRateMap[elecGrade] * 0.55 },
+    { no:'1.02', desc:'Electrical distribution board (MCB type, complete)', unit:'No.', qty: Math.ceil(floorsAbove / 2) + 1, rate: 18500 * cm },
+    { no:'1.03', desc:'Light switch points (single/double, complete)', unit:'No.', qty: Math.round(totalFloorArea / 12), rate: 850 * cm },
+    { no:'1.04', desc:'Socket outlet points — 13A, 3-pin (complete)', unit:'No.', qty: Math.round(totalFloorArea / 8), rate: 950 * cm },
+    { no:'1.05', desc:'Fluorescent / LED light fittings (supply & fix)', unit:'No.', qty: Math.round(totalFloorArea / 10), rate: (elecGrade === 'premium' ? 1800 : elecGrade === 'standard' ? 1100 : 650) * cm },
+    { no:'1.06', desc:'External security / compound lighting', unit:'No.', qty: Math.round(perimeter / 8), rate: 2200 * cm },
+  ];
+  if (withEarthing) {
+    elecItems.push({ no:'1.07', desc:'Earthing system and lightning protection (complete)', unit:'Lump', qty: 1, rate: R.earthing_lump * cm });
+  }
+  sections.push({ title: '9. ELECTRICAL INSTALLATION', items: elecItems });
+
+  // ---- E. SANITARY & PLUMBING WORKS ----
+  const sanRateMap = { local: R.sanitary_local_per_room, medium: R.sanitary_medium_per_room, premium: R.sanitary_premium_per_room };
+  const sanItems = [
+    { no:'1.01', desc:'Cold water supply pipework (HDPE/PPR, complete)', unit:'m²', qty: totalFloorArea, rate: R.cold_water_per_m2 * cm },
+    { no:'1.02', desc:'Hot water supply pipework and storage tank', unit:'m²', qty: totalFloorArea * 0.6, rate: R.cold_water_per_m2 * 1.4 * cm },
+    { no:'1.03', desc:`Sanitary fixtures — WC, basin, shower — ${getRadioLabel('sanitary-grade')} grade`, unit:'room', qty: wetRooms, rate: sanRateMap[sanitaryGrade] * cm },
+    { no:'1.04', desc:'Drainage pipework — soil & waste (PVC, complete)', unit:'m²', qty: totalFloorArea, rate: R.drainage_per_m2 * cm },
+    { no:'1.05', desc:'Floor drains and cleanouts (supply & fix)', unit:'No.', qty: wetRooms * 2, rate: 1200 * cm },
+    { no:'1.06', desc:'Kitchen sink and fittings (supply & fix)', unit:'No.', qty: Math.max(1, Math.round(wetRooms * 0.3)), rate: (sanitaryGrade === 'premium' ? 18000 : sanitaryGrade === 'medium' ? 9500 : 4500) * cm },
+    { no:'1.07', desc:'Rain water downpipes and surface drainage', unit:'ml', qty: perimeter * 0.5, rate: 680 * cm },
+  ];
+  if (withSeptic) {
+    sanItems.push({ no:'1.08', desc:'Septic tank and soakpit (complete — precast)', unit:'Lump', qty: 1, rate: R.septic_tank * cm });
+  }
+  sections.push({ title: '10. SANITARY INSTALLATION', items: sanItems });
+
+  // 11. Mechanical Installation (G+4 and above only)
+if (withMechanical) {
+  const liftCapacity = floorsAbove >= 7 ? 2 : 1; // 2 lifts for G+7 and above
+  const mechItems = [
+    { no:'11.01', desc:`Passenger elevator — ${floorsAbove} stops (supply, install & commission)`, unit:'No.', qty: liftCapacity, rate: R.elevator_lump || 8850000 * cm },
+    { no:'11.02', desc:'Elevator shaft RC walls and pit construction', unit:'m³', qty: floorsAbove * 2.4, rate: R.concrete_c25_column || 12500 * cm },
+    { no:'11.03', desc:'Elevator machine room (top floor, complete)', unit:'Lump', qty: 1, rate: R.elevator_machine_room || 185000 * cm },
+    { no:'11.04', desc:'RC shear walls surrounding elevator shaft', unit:'m³', qty: floorsAbove * 3.8, rate: R.concrete_c25_column || 12500 * cm },
+    { no:'11.05', desc:'Mechanical ventilation — fans and ductwork (complete)', unit:'m²', qty: totalFloorArea, rate: R.mechanical_ventilation || 320 * cm },
+  ];
+  sections.push({ title: '11. Mechanical Installation', items: mechItems });
+}
+
+  // ---- COMPUTE TOTALS ----
+  sections.forEach(sec => {
+    sec.items.forEach(item => {
+      item.amount = item.qty * item.rate;
+    });
+    sec.subtotal = sec.items.reduce((s, i) => s + i.amount, 0);
+  });
+
+  const subtotalAll = sections.reduce((s, sec) => s + sec.subtotal, 0);
+  const vat         = subtotalAll * 0.15;
+  const grandTotal  = subtotalAll + vat;
+const costPerM2=grandTotal/totalArea;
+
+  // ---- RENDER OUTPUT ----
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('boq-output').style.display = 'block';
+  document.getElementById('progress-bar').style.display = 'none';
+
+  document.getElementById('boq-title').textContent = projName;
+  const loc = [cityLabel, subloc].filter(Boolean).join(', ');
+  document.getElementById('boq-location').textContent = loc;
+  document.getElementById('boq-area').textContent = fmtN(totalArea, 0) + ' m² total';
+  document.getElementById('boq-date').textContent = new Date().toLocaleDateString('en-ET', { year:'numeric', month:'short', day:'numeric' });
+
+  // Grand total
+  document.getElementById('boq-grand-total').textContent = fmt(grandTotal);
+  document.getElementById('boq-vat-line').textContent = `Subtotal: ${fmt(subtotalAll)} + VAT: ${fmt(vat)} | Cost/m²: ${fmt(costPerM2)}`;
+
+  // Section summary cards
+  const summaryEl = document.getElementById('section-summary');
+  const sectionGroups = [
+    { label: 'Substructure', keys: [0, 1, 2] },
+    { label: 'Superstructure', keys: [3, 4, 5] },
+    { label: 'Finishing', keys: [6] },
+    { label: 'Electrical', keys: [7] },
+    { label: 'Sanitary', keys: [8] },
+  ];
+  summaryEl.innerHTML = sectionGroups.map(g => {
+    const total = g.keys.reduce((s, i) => s + (sections[i]?.subtotal || 0), 0);
+    const pct   = ((total / subtotalAll) * 100).toFixed(1);
+    return `<div class="ss-card">
+      <div class="ss-label">${g.label}</div>
+      <div class="ss-amount">${fmt(total)}</div>
+      <div class="ss-pct">${pct}% of total</div>
+    </div>`;
+  }).join('') + `<div class="ss-card" style="border-color:var(--gold);grid-column:1/-1">
+    <div class="ss-label">Subtotal (ex. VAT)</div>
+    <div class="ss-amount" style="color:var(--gold)">${fmt(subtotalAll)}</div>
+    <div class="ss-pct">Before VAT (15%)</div>
+  </div>`;
+
+  // BOQ sections
+  const sectionsEl = document.getElementById('boq-sections');
+  const groupHeaders = {
+    0: 'A. SUBSTRUCTURE',
+    3: 'B. SUPERSTRUCTURE',
+  };
+  sectionsEl.innerHTML = sections.map((sec, index) => `
+  ${groupHeaders[index] ? `<div class="boq-group-header">${groupHeaders[index]}</div>` : ''}
+    <div class="boq-section">
+      <div class="boq-section-title">${sec.title}</div>
+      <table class="boq-table">
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Description</th>
+            <th>Unit</th>
+            <th>Qty</th>
+            <th>Rate (ETB)</th>
+            <th>Amount (ETB)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sec.items.map(item => `
+            <tr>
+              <td class="item-no">${item.no}</td>
+              <td>${item.desc}</td>
+              <td style="text-align:center">${item.unit}</td>
+              <td style="text-align:right">${fmtN(item.qty)}</td>
+              <td style="text-align:right">${fmtN(item.rate, 0)}</td>
+              <td class="amount">${fmtN(item.amount, 0)}</td>
+            </tr>
+          `).join('')}
+          <tr class="subtotal">
+            <td colspan="5" style="text-align:right">Section Subtotal</td>
+            <td>${fmtN(sec.subtotal, 0)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `).join('');
+
+  // Store data for export
+  window._boqData = { projName, loc, totalArea, sections, subtotalAll, vat, grandTotal, city: cityLabel };
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+// EXCEL EXPORT (using SheetJS via CDN)
+// ============================================================
+
+function openPaymentModal(){
+document.getElementById('paymentModal').style.display='block';
+document.getElementById('paymentOverlay').style.display='block';
+}
+
+function closePaymentModal(){
+document.getElementById('paymentModal').style.display='none';
+document.getElementById('paymentOverlay').style.display='none';
+document.getElementById('payError').style.display='none';
+document.getElementById('transactionId').value='';
+}
+
+async function verifyPayment(){
+  const txId = document.getElementById('transactionId').value.trim();
+  const errorBox = document.getElementById('payError');
+
+  if(txId.length < 6){
+    errorBox.innerText = '⚠️ Please enter your TeleBirr transaction ID.';
+    errorBox.style.display='block';
+    return;
+  }
+
+  const btn = document.querySelector('#paymentModal button[onclick="verifyPayment()"]');
+  btn.disabled = true;
+  btn.innerText = '⏳ Verifying...';
+  errorBox.style.display='none';
+
+  try {
+    const response = await fetch('https://us-central1-addisboq.cloudfunctions.net/verifyTelebirr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transactionId: txId })
+    });
+
+    const result = await response.json();
+
+    if(result.valid){
+      closePaymentModal();
+      exportExcel();
+    } else {
+      errorBox.innerText = '⚠️ Payment not verified. Please check your transaction ID and try again.';
+      errorBox.style.display='block';
+    }
+  } catch(e) {
+    errorBox.innerText = '⚠️ Could not verify payment. Please check your internet and try again.';
+    errorBox.style.display='block';
+  } finally {
+    btn.disabled = false;
+    btn.innerText = '🔓 Unlock & Download';
+  }
+}
+
+function exportExcel() {
+  if (!window._boqData) return;
+  const d = window._boqData;
+
+  // Dynamically load SheetJS
+  if (!window.ExcelJS) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js';
+    script.onload = () => doExport(d);
+    document.head.appendChild(script);
+  } else {
+    doExport(d);
+  }
+}
+
+async function doExport(d) {
+  const workbook = new ExcelJS.Workbook();
+  const ws = workbook.addWorksheet('Bill of Quantities');
+  const today = new Date().toLocaleDateString('en-ET', { year:'numeric', month:'long', day:'numeric' });
+
+  // Column widths
+  ws.columns = [
+    { width: 10 },
+    { width: 52 },
+    { width: 8 },
+    { width: 12 },
+    { width: 14 },
+    { width: 16 },
+  ];
+
+  // Border styles
+  const dotted = { style: 'dotted', color: { argb: 'FF000000' } };
+  const thin   = { style: 'thin',   color: { argb: 'FF000000' } };
+  const medium = { style: 'medium', color: { argb: 'FF000000' } };
+
+  const dottedBorder = { top: dotted, bottom: dotted, left: dotted, right: dotted };
+  const thinBorder   = { top: thin,   bottom: thin,   left: thin,   right: thin   };
+  const mediumBorder = { top: medium, bottom: medium, left: medium, right: medium };
+
+  const tnr = 'Times New Roman';
+
+  function styleRow(row, options = {}) {
+    row.eachCell({ includeEmpty: true }, cell => {
+      cell.font = { name: tnr, size: options.fontSize || 10, bold: options.bold || false, color: { argb: options.fontColor || 'FF000000' } };
+      cell.border = options.border || dottedBorder;
+      cell.alignment = { vertical: 'middle', wrapText: options.wrap || false, horizontal: options.align || 'left' };
+      if (options.fill) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: options.fill } };
+    });
+  }
+
+  // ---- TITLE BLOCK ----
+  const titleRow = ws.addRow(['BILL OF QUANTITIES', '', '', '', '', '']);
+  ws.mergeCells(`A${titleRow.number}:F${titleRow.number}`);
+  styleRow(titleRow, { bold: true, fontSize: 14, fontColor: 'FFFFFFFF', fill: 'FF1a1a2e', border: mediumBorder, align: 'center' });
+  titleRow.height = 28;
+
+  ws.addRow([]);
+
+  ws.addRow(['Project Name:', d.projName, '', '', '', '']);
+  ws.addRow(['Location:', d.loc, '', '', '', '']);
+  ws.addRow(['Total Built-up Area:', d.totalArea + ' m²', '', '', '', '']);
+  ws.addRow(['Prepared Date:', today, '', '', '', '']);
+
+  ws.addRow([]);
+
+  // ---- COLUMN HEADERS ----
+  const headerRow = ws.addRow(['ITEM NO.', 'DESCRIPTION OF WORK', 'UNIT', 'QUANTITY', 'UNIT RATE (ETB)', 'AMOUNT (ETB)']);
+  styleRow(headerRow, { bold: true, fontSize: 10, fontColor: 'FFFFFFFF', fill: 'FF1a1a2e', border: thinBorder, align: 'center' });
+  headerRow.height = 28;
+
+  // ---- SECTIONS ----
+  const groupHeaders = { 0: 'A. SUBSTRUCTURE', 3: 'B. SUPERSTRUCTURE' };
+
+  d.sections.forEach((sec, si) => {
+    // Group header (A. SUBSTRUCTURE / B. SUPERSTRUCTURE)
+    if (groupHeaders[si]) {
+      const gRow = ws.addRow([groupHeaders[si], '', '', '', '', '']);
+      ws.mergeCells(`A${gRow.number}:F${gRow.number}`);
+      styleRow(gRow, { bold: true, fontSize: 12, border: mediumBorder });
+      gRow.height = 20;
+    }
+
+    // Section title
+    const secRow = ws.addRow([sec.title, '', '', '', '', '']);
+    ws.mergeCells(`A${secRow.number}:F${secRow.number}`);
+    styleRow(secRow, { bold: true, fontSize: 10, border: thinBorder });
+    secRow.height = 18;
+
+    // Items
+    sec.items.forEach(item => {
+      const row = ws.addRow([
+        item.no,
+        item.desc,
+        item.unit,
+        parseFloat(item.qty.toFixed(2)),
+        Math.round(item.rate),
+        Math.round(item.amount),
+      ]);
+      styleRow(row, { border: dottedBorder });
+      row.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
+      row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
+      row.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+      row.height = 16;
+    });
+
+    // Total Carried To Summary
+    const totRow = ws.addRow(['', 'Total Carried To Summary', '', '', '', Math.round(sec.subtotal)]);
+    styleRow(totRow, { bold: true, border: thinBorder });
+    totRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+    ws.mergeCells(`B${totRow.number}:E${totRow.number}`);
+    totRow.height = 18;
+
+    ws.addRow([]);
+  });
+  // ---- GRAND TOTALS ----
+  ws.addRow([]);
+  const subRow = ws.addRow(['', 'TOTAL CONSTRUCTION COST (Excl. VAT)', '', '', '', Math.round(d.subtotalAll)]);
+  styleRow(subRow, { bold: true, border: thinBorder });
+  subRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+
+  const vatRow = ws.addRow(['', 'VAT @ 15%', '', '', '', Math.round(d.vat)]);
+  styleRow(vatRow, { bold: true, border: thinBorder });
+  vatRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+
+  const grandRow = ws.addRow(['', 'GRAND TOTAL (Incl. VAT)', '', '', '', Math.round(d.grandTotal)]);
+  styleRow(grandRow, { bold: true, fontSize: 11, fontColor: 'FFFFFFFF', fill: 'FFc8922a', border: mediumBorder });
+  grandRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+  grandRow.height = 22;
+
+  // ---- SHEET 2: SUMMARY ----
+  const ws2 = workbook.addWorksheet('Summary');
+  ws2.columns = [
+    { width: 8 },
+    { width: 45 },
+    { width: 18 },
+  ];
+
+  const s1 = ws2.addRow(['BILL OF QUANTITIES — SUMMARY', '', '']);
+  ws2.mergeCells(`A${s1.number}:C${s1.number}`);
+  s1.getCell(1).font = { name: tnr, bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+  s1.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1a1a2e' } };
+  s1.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+  s1.getCell(1).border = mediumBorder;
+  s1.height = 26;
+
+  ws2.addRow([]);
+  ws2.addRow(['Project:', d.projName, '']);
+  ws2.addRow(['Location:', d.loc, '']);
+  ws2.addRow(['Date:', today, '']);
+  ws2.addRow([]);
+
+  const s2 = ws2.addRow(['NO.', 'DESCRIPTION', 'AMOUNT (ETB)']);
+  s2.eachCell({ includeEmpty: true }, cell => {
+    cell.font = { name: tnr, bold: true, size: 10, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1a1a2e' } };
+    cell.border = thinBorder;
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+  });
+  s2.height = 20;
+
+  const sumGroupHeaders = { 0: 'A. SUBSTRUCTURE', 3: 'B. SUPERSTRUCTURE' };
+  d.sections.forEach((sec, i) => {
+    if (sumGroupHeaders[i]) {
+      const gRow = ws2.addRow([sumGroupHeaders[i], '', '']);
+      ws2.mergeCells(`A${gRow.number}:C${gRow.number}`);
+      gRow.getCell(1).font = { name: tnr, bold: true, size: 11 };
+      gRow.getCell(1).border = thinBorder;
+      gRow.getCell(1).alignment = { vertical: 'middle' };
+      gRow.height = 18;
+    }
+    const row = ws2.addRow(['', sec.title, Math.round(sec.subtotal)]);
+    row.eachCell({ includeEmpty: true }, cell => {
+      cell.font = { name: tnr, size: 10 };
+      cell.border = dottedBorder;
+      cell.alignment = { vertical: 'middle' };
+    });
+    row.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+    row.height = 16;
+  });
+
+  ws2.addRow([]);
+
+  const subRow2 = ws2.addRow(['', 'TOTAL (Excl. VAT)', Math.round(d.subtotalAll)]);
+  subRow2.eachCell({ includeEmpty: true }, cell => {
+    cell.font = { name: tnr, bold: true, size: 10 };
+    cell.border = thinBorder;
+  });
+  subRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+
+  const vatRow2 = ws2.addRow(['', 'VAT @ 15%', Math.round(d.vat)]);
+  vatRow2.eachCell({ includeEmpty: true }, cell => {
+    cell.font = { name: tnr, bold: true, size: 10 };
+    cell.border = thinBorder;
+  });
+  vatRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+
+  const grandRow2 = ws2.addRow(['', 'GRAND TOTAL (Incl. VAT)', Math.round(d.grandTotal)]);
+  grandRow2.eachCell({ includeEmpty: true }, cell => {
+    cell.font = { name: tnr, bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFc8922a' } };
+    cell.border = mediumBorder;
+    cell.alignment = { horizontal: cell === grandRow2.getCell(3) ? 'right' : 'left', vertical: 'middle' };
+  });
+  grandRow2.height = 22;
+
+  // ---- EXPORT ----
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (d.projName || 'EthioBuild_BOQ') + '.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// RECALCULATE
+// ============================================================
+function recalculate() {
+  document.getElementById('boq-output').style.display = 'none';
+  document.getElementById('progress-bar').style.display = 'flex';
+  goToStep(1);
+}
+</script>
+
+</body>
+</html>
