@@ -1,0 +1,22 @@
+{
+  "name": "AddisBOQ - Ethiopian BOQ Calculator",
+  "short_name": "AddisBOQ",
+  "description": "Free Bill of Quantities calculator for Ethiopian construction projects.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
