@@ -497,7 +497,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     margin-bottom: 20px;
   ">
     <p style="font-size: 12px; color: #aaa; margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase;">One-time payment</p>
-    <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;">200 ETB</p>
+    <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;">250 ETB</p>
     <p style="font-size: 12px; color: #aaa; margin-top: 4px;">via TeleBirr</p>
   </div>
 
@@ -508,7 +508,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
       <div style="width:24px;height:24px;border-radius:50%;background:#c8922a;color:#1a1a2e;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
       <div style="flex:1;">
-        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">Send 200 ETB via TeleBirr</p>
+        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">Send 250 ETB via TeleBirr</p>
         <div style="border:2px dashed #c8922a;border-radius:8px;padding:10px 14px;background:rgba(200,146,42,0.05);text-align:center;">
           <p style="font-size:11px;color:#4a4a6a;margin-bottom:2px;">TeleBirr number</p>
           <p style="font-size:20px;font-weight:700;color:#1a1a2e;font-family:'Space Grotesk',sans-serif;letter-spacing:1px;">+251 913 265 488</p>
@@ -1129,7 +1129,9 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="gt-amount" id="boq-grand-total">—</div>
   </div>
 
-  <div id="boq-sections"></div>
+  <div style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;-webkit-overflow-scrolling:touch;user-select:none;-webkit-user-select:none;" oncontextmenu="return false;">
+    <div id="boq-sections"></div>
+  </div>
 
   <div class="action-row">
     <button class="btn-export" onclick="openPaymentModal()">📥 Export to Excel</button><button class="btn-recalc" onclick="window.print()">📄 Export PDF</button>
@@ -1139,7 +1141,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 </div>
 
 <div class="footer">
-EthioBuild BOQ Calculator <br>
+EthioBuild BOQ Calculator. <br>
 Prices are based on June 2026. Final quantities must be verified by a licensed engineer.
 <div class="developer-credit">Developed by Addis Engineering.</div>
 
@@ -1803,9 +1805,9 @@ async function doExport(d) {
 
   // ---- SECTIONS ----
   const groupHeaders = { 0: 'A. SUBSTRUCTURE', 3: 'B. SUPERSTRUCTURE' };
+  const sectionTotRowNums = []; // track "Total Carried To Summary" row numbers for summary sheet links
 
   d.sections.forEach((sec, si) => {
-    // Group header (A. SUBSTRUCTURE / B. SUPERSTRUCTURE)
     if (groupHeaders[si]) {
       const gRow = ws.addRow([groupHeaders[si], '', '', '', '', '']);
       ws.mergeCells(`A${gRow.number}:F${gRow.number}`);
@@ -1813,13 +1815,14 @@ async function doExport(d) {
       gRow.height = 20;
     }
 
-    // Section title
     const secRow = ws.addRow([sec.title, '', '', '', '', '']);
     ws.mergeCells(`A${secRow.number}:F${secRow.number}`);
     styleRow(secRow, { bold: true, fontSize: 10, border: thinBorder });
     secRow.height = 18;
 
-    // Items
+    // Track first item row for SUM range
+    let firstItemRow = null;
+
     sec.items.forEach(item => {
       const row = ws.addRow([
         item.no,
@@ -1827,8 +1830,11 @@ async function doExport(d) {
         item.unit,
         parseFloat(item.qty.toFixed(2)),
         Math.round(item.rate),
-        Math.round(item.amount),
-      ]);
+        0,
+    ]);
+    row.getCell(6).value = { formula: `D${row.number}*E${row.number}` };
+      
+      if (!firstItemRow) firstItemRow = row.number;
       styleRow(row, { border: dottedBorder });
       row.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
       row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
@@ -1836,26 +1842,36 @@ async function doExport(d) {
       row.height = 16;
     });
 
-    // Total Carried To Summary
-    const totRow = ws.addRow(['', 'Total Carried To Summary', '', '', '', Math.round(sec.subtotal)]);
+    const lastItemRow = ws.rowCount;
+    const totRow = ws.addRow(['', 'Total Carried To Summary', '', '', '',
+      firstItemRow ? { formula: `SUM(F${firstItemRow}:F${lastItemRow})` } : 0
+    ]);
     styleRow(totRow, { bold: true, border: thinBorder });
     totRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
     ws.mergeCells(`B${totRow.number}:E${totRow.number}`);
     totRow.height = 18;
+    sectionTotRowNums.push(totRow.number);
 
     ws.addRow([]);
   });
+
   // ---- GRAND TOTALS ----
   ws.addRow([]);
-  const subRow = ws.addRow(['', 'TOTAL CONSTRUCTION COST (Excl. VAT)', '', '', '', Math.round(d.subtotalAll)]);
+  const subRow = ws.addRow(['', 'TOTAL CONSTRUCTION COST (Excl. VAT)', '', '', '',
+    { formula: sectionTotRowNums.map(r => `F${r}`).join('+') }
+  ]);
   styleRow(subRow, { bold: true, border: thinBorder });
   subRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
 
-  const vatRow = ws.addRow(['', 'VAT @ 15%', '', '', '', Math.round(d.vat)]);
+  const vatRow = ws.addRow(['', 'VAT @ 15%', '', '', '',
+    { formula: `F${subRow.number}*0.15` }
+  ]);
   styleRow(vatRow, { bold: true, border: thinBorder });
   vatRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
 
-  const grandRow = ws.addRow(['', 'GRAND TOTAL (Incl. VAT)', '', '', '', Math.round(d.grandTotal)]);
+  const grandRow = ws.addRow(['', 'GRAND TOTAL (Incl. VAT)', '', '', '',
+    { formula: `F${subRow.number}+F${vatRow.number}` }
+  ]);
   styleRow(grandRow, { bold: true, fontSize: 11, fontColor: 'FFFFFFFF', fill: 'FFc8922a', border: mediumBorder });
   grandRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
   grandRow.height = 22;
@@ -1901,7 +1917,11 @@ async function doExport(d) {
       gRow.getCell(1).alignment = { vertical: 'middle' };
       gRow.height = 18;
     }
-    const row = ws2.addRow(['', sec.title, Math.round(sec.subtotal)]);
+    // Link to the "Total Carried To Summary" row in BOQ sheet
+    const boqTotRowNum = sectionTotRowNums[i];
+    const row = ws2.addRow(['', sec.title,
+      { formula: `'Bill of Quantities'!F${boqTotRowNum}` }
+    ]);
     row.eachCell({ includeEmpty: true }, cell => {
       cell.font = { name: tnr, size: 10 };
       cell.border = dottedBorder;
@@ -1913,21 +1933,27 @@ async function doExport(d) {
 
   ws2.addRow([]);
 
-  const subRow2 = ws2.addRow(['', 'TOTAL (Excl. VAT)', Math.round(d.subtotalAll)]);
+  const subRow2 = ws2.addRow(['', 'TOTAL (Excl. VAT)',
+    { formula: `'Bill of Quantities'!F${subRow.number}` }
+  ]);
   subRow2.eachCell({ includeEmpty: true }, cell => {
     cell.font = { name: tnr, bold: true, size: 10 };
     cell.border = thinBorder;
   });
   subRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
 
-  const vatRow2 = ws2.addRow(['', 'VAT @ 15%', Math.round(d.vat)]);
+  const vatRow2 = ws2.addRow(['', 'VAT @ 15%',
+    { formula: `'Bill of Quantities'!F${vatRow.number}` }
+  ]);
   vatRow2.eachCell({ includeEmpty: true }, cell => {
     cell.font = { name: tnr, bold: true, size: 10 };
     cell.border = thinBorder;
   });
   vatRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
 
-  const grandRow2 = ws2.addRow(['', 'GRAND TOTAL (Incl. VAT)', Math.round(d.grandTotal)]);
+  const grandRow2 = ws2.addRow(['', 'GRAND TOTAL (Incl. VAT)',
+    { formula: `'Bill of Quantities'!F${grandRow.number}` }
+  ]);
   grandRow2.eachCell({ includeEmpty: true }, cell => {
     cell.font = { name: tnr, bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFc8922a' } };
