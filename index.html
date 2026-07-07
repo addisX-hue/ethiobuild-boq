@@ -374,6 +374,53 @@
   }
   .ss-card .ss-pct { font-size: 11px; color: var(--gold); margin-top: 2px; }
 
+  /* COST BREAKDOWN CHART */
+  .cost-chart-wrap {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .cost-chart-canvas-box { width: 160px; height: 160px; flex-shrink: 0; margin: 0 auto; }
+  .cost-chart-legend { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 6px; }
+  .cost-chart-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink); }
+  .cost-chart-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  /* BOQ LOCK OVERLAY */
+  .boq-lock-wrap { position: relative; }
+  .boq-lock-blur {
+    filter: blur(6px);
+    -webkit-filter: blur(6px);
+    pointer-events: none;
+    user-select: none;
+  }
+  .boq-lock-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, rgba(250,250,248,0.15) 0%, rgba(250,250,248,0.92) 40%);
+    z-index: 5;
+  }
+  .boq-lock-card {
+    background: var(--card); border: 1px solid var(--gold); border-radius: var(--radius);
+    padding: 20px 24px; text-align: center; max-width: 280px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  .boq-lock-card .lock-icon { font-size: 28px; margin-bottom: 8px; }
+  .boq-lock-card .lock-title { font-weight: 700; font-size: 15px; color: var(--ink); margin-bottom: 4px; }
+  .boq-lock-card .lock-sub { font-size: 12px; color: var(--ink-light); margin-bottom: 14px; line-height: 1.4; }
+  .boq-lock-card .btn-export { width: 100%; }
+
+  /* SUMMARY SHEET (per-section totals, free) */
+  .summary-sheet {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 4px 16px; margin-bottom: 20px;
+  }
+  .summary-sheet-title { font-weight: 700; font-size: 15px; color: var(--ink); padding: 14px 0 6px; }
+  .summary-sheet-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px;
+  }
+  .summary-sheet-row .ss-name { color: var(--ink); }
+  .summary-sheet-row .ss-val { font-weight: 600; color: var(--ink); font-family: 'Space Grotesk', sans-serif; }
+
   /* ACTION BUTTONS */
   .action-row {
     display: flex; gap: 10px; margin-top: 20px;
@@ -565,6 +612,9 @@
     color: rgba(255,255,255,0.35);
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -619,8 +669,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       font-weight: 700;
       color: #1a1a2e;
       margin-bottom: 6px;
-    ">Unlock Excel Export</h3>
-    <p style="font-size: 13px; color: #4a4a6a;">
+    " id="modal-title">Unlock Excel Export</h3>
+    <p style="font-size: 13px; color: #4a4a6a;" id="modal-desc">
       Get your full professional BOQ in Excel format
     </p>
   </div>
@@ -634,7 +684,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     margin-bottom: 20px;
   ">
     <p style="font-size: 12px; color: #aaa; margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase;">One-time payment</p>
-    <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;">250 ETB</p>
+    <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;" id="modal-price">250 ETB</p>
     <p style="font-size: 12px; color: #aaa; margin-top: 4px;">via TeleBirr</p>
   </div>
 
@@ -645,7 +695,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
       <div style="width:24px;height:24px;border-radius:50%;background:#c8922a;color:#1a1a2e;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
       <div style="flex:1;">
-        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">Send 250 ETB via TeleBirr</p>
+        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;" id="modal-step1-text">Send 250 ETB via TeleBirr</p>
         <div style="border:2px dashed #c8922a;border-radius:8px;padding:10px 14px;background:rgba(200,146,42,0.05);text-align:center;">
           <p style="font-size:11px;color:#4a4a6a;margin-bottom:2px;">TeleBirr number</p>
           <p style="font-size:20px;font-weight:700;color:#1a1a2e;font-family:'Space Grotesk',sans-serif;letter-spacing:1px;">+251 913 265 488</p>
@@ -753,7 +803,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       cursor:pointer;font-family:'Inter',sans-serif;
       box-shadow:0 4px 16px rgba(45,106,79,0.3);
     ">
-      📥 Download Excel
+      📥 <span id="downloadBtnLabel">Download Excel</span>
     </button>
   </div>
 
@@ -902,6 +952,11 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
             <option value="addis">Addis Ababa</option>
             <option value="bahirdar">Bahir Dar</option>
             <option value="adama">Adama</option>
+            <option value="wolaitasodo">Wolaita Sodo</option>
+            <option value="arbaminch">Arba Minch</option>
+            <option value="diredawa">Dire Dawa</option>
+            <option value="harar">Harar</option>
+            <option value="jigjiga">Jigjiga</option>
           </select>
         </div>
       </div>
@@ -1343,8 +1398,15 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     </div>
   </div>
   <div style="display:flex; gap:10px; margin:16px 0;">
-    <button class="btn-export" onclick="openPaymentModal()">📥 Export to Excel</button>
-    <button class="btn-recalc" onclick="window.print()">📄 Export PDF</button>
+    <button class="btn-export" onclick="openPaymentModal('excel')">📥 Export to Excel</button>
+    <button class="btn-recalc" onclick="openPaymentModal('pdf')">📄 Export PDF</button>
+    <button class="btn-recalc" style="flex:0 0 auto;padding:10px 14px;" onclick="shareBoq()" title="Share">🔗</button>
+  </div>
+
+  <div class="cost-chart-wrap" id="cost-chart-wrap" style="display:none;">
+    <div style="flex-basis:100%;font-weight:700;font-size:15px;color:var(--ink);margin-bottom:4px;">Cost Breakdown</div>
+    <div class="cost-chart-canvas-box"><canvas id="cost-pie-chart"></canvas></div>
+    <div class="cost-chart-legend" id="cost-chart-legend"></div>
   </div>
 
   <div class="section-summary" id="section-summary"></div>
@@ -1357,12 +1419,26 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="gt-amount" id="boq-grand-total">—</div>
   </div>
 
-  <div style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;-webkit-overflow-scrolling:touch;user-select:none;-webkit-user-select:none;" oncontextmenu="return false;">
-    <div id="boq-sections"></div>
+  <div class="summary-sheet" id="summary-sheet"></div>
+
+  <div class="boq-lock-wrap">
+    <div class="boq-lock-blur" style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;-webkit-overflow-scrolling:touch;user-select:none;-webkit-user-select:none;" oncontextmenu="return false;" id="boq-scroll-container">
+      <div id="boq-sections"></div>
+    </div>
+    <div class="boq-lock-overlay" id="boq-lock-overlay">
+      <div class="boq-lock-card">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-title">Full itemized BOQ locked</div>
+        <div class="lock-sub">Export to Excel or PDF to unlock every line item, quantity, and rate — ready to hand to your contractor.</div>
+        <button class="btn-export" onclick="openPaymentModal('excel')">📥 Unlock — Export to Excel</button>
+        <button class="btn-recalc" style="width:100%;margin-top:8px;" onclick="openPaymentModal('pdf')">📄 Unlock — Export PDF</button>
+      </div>
+    </div>
   </div>
 
   <div class="action-row">
-    <button class="btn-export" onclick="openPaymentModal()">📥 Export to Excel</button><button class="btn-recalc" onclick="window.print()">📄 Export PDF</button>
+    <button class="btn-export" onclick="openPaymentModal('excel')">📥 Export to Excel</button><button class="btn-recalc" onclick="openPaymentModal('pdf')">📄 Export PDF</button>
+    <button class="btn-recalc" style="flex:0 0 auto;padding:10px 14px;" onclick="shareBoq()" title="Share">🔗</button>
     <button class="btn-recalc" onclick="recalculate()">↩ Edit Inputs</button>
   </div>
 
@@ -1393,7 +1469,7 @@ function toggleWhatsComing(){
 // ============================================================
 const RATES = {
   // City multipliers (relative to Hawassa = 1.0)
-  cityMultiplier: { hawassa: 1.0, addis: 1.18, bahirdar: 1.05, adama: 1.02 },
+  cityMultiplier: { hawassa: 1.0, addis: 1.18, bahirdar: 1.05, adama: 1.02, wolaitasodo: 0.98, arbaminch: 1.01, diredawa: 1.05, harar: 1.06, jigjiga: 1.09 },
 
   // Excavation (per m3)
   excavation_bulk: 452,
@@ -1619,6 +1695,12 @@ function fmtN(n, dec=2) {
 }
 
 function calculateBOQ() {
+  // Re-lock the itemized BOQ for this new calculation (payment only unlocks the current one)
+  const _lockContainer = document.getElementById('boq-scroll-container');
+  const _lockOverlay = document.getElementById('boq-lock-overlay');
+  if (_lockContainer) _lockContainer.classList.add('boq-lock-blur');
+  if (_lockOverlay) _lockOverlay.style.display = 'flex';
+
   // --- Gather inputs ---
   const city        = document.getElementById('city').value;
   const floorArea   = parseFloat(document.getElementById('floor-area').value) || 110;
@@ -1898,15 +1980,18 @@ const costPerM2=grandTotal/totalArea;
   // Section summary cards
   const summaryEl = document.getElementById('section-summary');
   const sectionGroups = [
-    { label: 'Substructure', keys: [0, 1, 2] },
-    { label: 'Superstructure', keys: [3, 4, 5] },
-    { label: 'Finishing', keys: [6] },
-    { label: 'Electrical', keys: [7] },
-    { label: 'Sanitary', keys: [8] },
+    { label: 'Substructure', match: t => /^1\. Excavation|^2\. Concrete Works|^3\. Masonry/.test(t) },
+    { label: 'Superstructure', match: t => /^1\. Concrete Works|Block & Wall|Roofing|Steel Structure|Carpentry|Aluminium/.test(t) },
+    { label: 'Finishing', match: t => /Plastering|Painting/.test(t) },
+    { label: 'Electrical', match: t => /ELECTRICAL/.test(t) },
+    { label: 'Sanitary', match: t => /SANITARY/.test(t) },
+    { label: 'Mechanical', match: t => /Mechanical Installation/.test(t) },
   ];
   summaryEl.innerHTML = sectionGroups.map(g => {
-    const total = g.keys.reduce((s, i) => s + (sections[i]?.subtotal || 0), 0);
-    const pct   = ((total / subtotalAll) * 100).toFixed(1);
+    const matched = sections.filter(sec => g.match(sec.title));
+    if (matched.length === 0) return '';
+    const total = matched.reduce((s, sec) => s + sec.subtotal, 0);
+    const pct   = subtotalAll ? ((total / subtotalAll) * 100).toFixed(1) : '0.0';
     return `<div class="ss-card">
       <div class="ss-label">${g.label}</div>
       <div class="ss-amount">${fmt(total)}</div>
@@ -1917,6 +2002,45 @@ const costPerM2=grandTotal/totalArea;
     <div class="ss-amount" style="color:var(--gold)">${fmt(subtotalAll)}</div>
     <div class="ss-pct">Before VAT (15%)</div>
   </div>`;
+
+  // Cost breakdown pie chart
+  const chartColors = ['#1a1a2e', '#c9a24b', '#4a7c6f', '#a85c4d', '#5b7fa6', '#8a6bb5'];
+  const chartData = sectionGroups
+    .map(g => ({ label: g.label, total: sections.filter(sec => g.match(sec.title)).reduce((s, sec) => s + sec.subtotal, 0) }))
+    .filter(d => d.total > 0);
+  const chartWrap = document.getElementById('cost-chart-wrap');
+  if (chartData.length && window.Chart) {
+    chartWrap.style.display = 'flex';
+    const legendEl = document.getElementById('cost-chart-legend');
+    legendEl.innerHTML = chartData.map((d, i) => `
+      <div class="cost-chart-legend-item">
+        <span class="cost-chart-swatch" style="background:${chartColors[i % chartColors.length]}"></span>
+        <span>${d.label} — ${fmt(d.total)} (${((d.total/subtotalAll)*100).toFixed(1)}%)</span>
+      </div>`).join('');
+    const ctx = document.getElementById('cost-pie-chart').getContext('2d');
+    if (window._costChartInstance) window._costChartInstance.destroy();
+    window._costChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: chartData.map(d => d.label),
+        datasets: [{ data: chartData.map(d => d.total), backgroundColor: chartColors, borderWidth: 0 }]
+      },
+      options: { plugins: { legend: { display: false }, tooltip: { enabled: true } }, cutout: '55%' }
+    });
+  }
+
+  // Summary sheet — per-section subtotals (free, no line items)
+  const summarySheetEl = document.getElementById('summary-sheet');
+  summarySheetEl.innerHTML = `<div class="summary-sheet-title">Summary Sheet</div>` +
+    sections.map(sec => `
+      <div class="summary-sheet-row">
+        <span class="ss-name">${sec.title.replace(/^\d+\.\s*/, '')}</span>
+        <span class="ss-val">${fmt(sec.subtotal)}</span>
+      </div>`).join('') +
+    `<div class="summary-sheet-row" style="border-top:2px solid var(--gold);font-weight:700;">
+      <span class="ss-name">TOTAL (Excl. VAT)</span>
+      <span class="ss-val" style="color:var(--gold)">${fmt(subtotalAll)}</span>
+    </div>`;
 
   // BOQ sections
   const sectionsEl = document.getElementById('boq-sections');
@@ -1969,7 +2093,15 @@ const costPerM2=grandTotal/totalArea;
 // EXCEL EXPORT (using SheetJS via CDN)
 // ============================================================
 
-function openPaymentModal(){
+function openPaymentModal(type){
+  window._exportType = type || 'excel';
+  const isPdf = window._exportType === 'pdf';
+  document.getElementById('modal-title').textContent = isPdf ? 'Unlock PDF Export' : 'Unlock Excel Export';
+  document.getElementById('modal-desc').textContent = isPdf
+    ? 'Get your full professional BOQ as a formatted PDF'
+    : 'Get your full professional BOQ in Excel format';
+  document.getElementById('modal-price').textContent = isPdf ? '150 ETB' : '300 ETB';
+  document.getElementById('modal-step1-text').textContent = isPdf ? 'Send 150 ETB via TeleBirr' : 'Send 300 ETB via TeleBirr';
 document.getElementById('paymentModal').style.display='block';
 document.getElementById('paymentOverlay').style.display='block';
 }
@@ -2015,10 +2147,12 @@ async function verifyPayment(){
       document.querySelector('#paymentModal button[onclick="verifyPayment()"]').style.display = 'none';
       document.querySelector('#paymentModal button[onclick="closePaymentModal()"]').style.display = 'none';
       document.getElementById('paySuccess').style.display = 'block';
-      const exportType = window._exportType || 'boq';
+      unlockBoqView();
+      const exportType = window._exportType || 'excel';
+      document.getElementById('downloadBtnLabel').textContent = exportType === 'pdf' ? 'Download PDF' : 'Download Excel';
       document.getElementById('downloadBtn').onclick = function() {
         closePaymentModal();
-        if(exportType === 'full') exportExcelFull();
+        if(exportType === 'pdf') exportPDF();
         else exportExcel();
       };
     } else {
@@ -2032,6 +2166,149 @@ async function verifyPayment(){
     btn.disabled = false;
     btn.innerText = '🔓 Unlock & Download';
   }
+}
+
+function unlockBoqView(){
+  const container = document.getElementById('boq-scroll-container');
+  const overlay = document.getElementById('boq-lock-overlay');
+  if (container) container.classList.remove('boq-lock-blur');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function shareBoq(){
+  const shareData = {
+    title: 'AddisBOQ — Bill of Quantities',
+    text: 'I generated a construction cost estimate on AddisBOQ.com — check it out:',
+    url: 'https://addisboq.com'
+  };
+  if (navigator.share) {
+    navigator.share(shareData).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(shareData.url).then(() => {
+      alert('Link copied — share it with a colleague!');
+    }).catch(() => {
+      prompt('Copy this link:', shareData.url);
+    });
+  }
+}
+
+function exportPDF(){
+  if (!window._boqData) return;
+  if (!window.jspdf) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.onload = () => {
+      const script2 = document.createElement('script');
+      script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+      script2.onload = () => doExportPDF(window._boqData);
+      document.head.appendChild(script2);
+    };
+    document.head.appendChild(script);
+  } else {
+    doExportPDF(window._boqData);
+  }
+}
+
+function doExportPDF(d){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 40;
+  const today = new Date().toLocaleDateString('en-ET', { year:'numeric', month:'long', day:'numeric' });
+  const fmtETB = n => 'ETB ' + Math.round(n).toLocaleString('en-US');
+
+  // Title block
+  doc.setFillColor(26, 26, 46);
+  doc.rect(0, 0, pageWidth, 60, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('BILL OF QUANTITIES', margin, 36);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('AddisBOQ.com — Professional Construction Cost Estimation', margin, 50);
+
+  doc.setTextColor(30,30,30);
+  let y = 80;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold'); doc.text('Project Name:', margin, y);
+  doc.setFont('helvetica', 'normal'); doc.text(String(d.projName || 'Unnamed Project'), margin + 100, y);
+  y += 16;
+  doc.setFont('helvetica', 'bold'); doc.text('Location:', margin, y);
+  doc.setFont('helvetica', 'normal'); doc.text(String(d.loc || d.city || '—'), margin + 100, y);
+  y += 16;
+  doc.setFont('helvetica', 'bold'); doc.text('Total Built-up Area:', margin, y);
+  doc.setFont('helvetica', 'normal'); doc.text(String(d.totalArea) + ' m²', margin + 100, y);
+  y += 16;
+  doc.setFont('helvetica', 'bold'); doc.text('Prepared Date:', margin, y);
+  doc.setFont('helvetica', 'normal'); doc.text(today, margin + 100, y);
+  y += 24;
+
+  const groupHeaders = { 0: 'A. SUBSTRUCTURE', 3: 'B. SUPERSTRUCTURE' };
+
+  d.sections.forEach((sec, si) => {
+    if (groupHeaders[si]) {
+      if (y > 750) { doc.addPage(); y = 40; }
+      doc.setFillColor(26,26,46);
+      doc.setTextColor(255,255,255);
+      doc.rect(margin, y - 12, pageWidth - margin*2, 18, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      doc.text(groupHeaders[si], margin + 6, y);
+      y += 16;
+      doc.setTextColor(30,30,30);
+    }
+    if (y > 760) { doc.addPage(); y = 40; }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text(sec.title, margin, y);
+    y += 8;
+
+    const rows = sec.items.map(item => [
+      item.no, item.desc, item.unit,
+      Number(item.qty).toLocaleString('en-US', {maximumFractionDigits:2}),
+      Math.round(item.rate).toLocaleString('en-US'),
+      Math.round(item.amount).toLocaleString('en-US')
+    ]);
+    rows.push(['', 'Section Subtotal', '', '', '', Math.round(sec.subtotal).toLocaleString('en-US')]);
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['No.', 'Description', 'Unit', 'Qty', 'Rate (ETB)', 'Amount (ETB)']],
+      body: rows,
+      styles: { font: 'helvetica', fontSize: 8, cellPadding: 4 },
+      headStyles: { fillColor: [26,26,46], textColor: 255, fontStyle: 'bold' },
+      footStyles: { fontStyle: 'bold' },
+      didParseCell: function(data) {
+        if (data.row.index === rows.length - 1) {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [245, 240, 225];
+        }
+      },
+      columnStyles: { 0: {cellWidth:30}, 2: {cellWidth:35}, 3: {cellWidth:55,halign:'right'}, 4: {cellWidth:65,halign:'right'}, 5: {cellWidth:70,halign:'right'} }
+    });
+    y = doc.lastAutoTable.finalY + 20;
+  });
+
+  if (y > 700) { doc.addPage(); y = 40; }
+  doc.setFillColor(200,146,42);
+  doc.rect(margin, y - 14, pageWidth - margin*2, 60, 'F');
+  doc.setTextColor(26,26,46);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+  doc.text('Subtotal (Excl. VAT):', margin + 10, y);
+  doc.text(fmtETB(d.subtotalAll), pageWidth - margin - 10, y, { align: 'right' });
+  y += 16;
+  doc.text('VAT @ 15%:', margin + 10, y);
+  doc.text(fmtETB(d.vat), pageWidth - margin - 10, y, { align: 'right' });
+  y += 18;
+  doc.setFontSize(13);
+  doc.text('GRAND TOTAL:', margin + 10, y);
+  doc.text(fmtETB(d.grandTotal), pageWidth - margin - 10, y, { align: 'right' });
+
+  doc.setTextColor(120,120,120);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+  doc.text('Prices are estimates. Final quantities must be verified by a licensed engineer. Developed by Addis Engineering.', margin, doc.internal.pageSize.getHeight() - 20);
+
+  doc.save((d.projName || 'BOQ').replace(/[^a-z0-9]/gi, '_') + '_BOQ.pdf');
 }
 
 function exportExcel() {
