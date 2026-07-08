@@ -727,6 +727,10 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <input 
       type="text" 
       id="transactionId" 
+      name="teleBirrTxnRef"
+      autocomplete="off"
+      autocapitalize="characters"
+      spellcheck="false"
       placeholder="e.g. DFN76I7LTE"
       style="
         width: 100%;
@@ -850,7 +854,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="welcome-title-am">የህንፃ ወጪ ግምት<br>በደቂቃዎች</div>
     <div class="welcome-title-en">Professional BOQ Calculator for Ethiopian Construction</div>
     <div style="display:flex;justify-content:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
-      <span style="font-size:12px;color:rgba(255,255,255,0.6);">🏙️ 4 ከተሞች</span>
+      <span style="font-size:12px;color:rgba(255,255,255,0.6);">🏙️ 9 ከተሞች</span>
       <span style="font-size:12px;color:rgba(255,255,255,0.6);">🏗️ እስከ 10 ወለል</span>
       <span style="font-size:12px;color:rgba(255,255,255,0.6);">⚡ ከ 5 ደቂቃ በታች</span>
     </div>
@@ -931,16 +935,16 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="card-title">Project Details <span style="font-size:11px;color:var(--ink-light);">(የፕሮጀክት ዝርዝር)</span></div>
     <div class="field">
       <label>Project Name <span class="hint">(የፕሮጀክት ስም)</span></label>
-      <input type="text" id="project-name" placeholder="e.g. Villa G+3 — Hawassa">
+      <input type="text" id="project-name" autocomplete="off" placeholder="e.g. Villa G+3 — Hawassa">
     </div>
     <div class="field-row">
       <div class="field">
         <label>Client Name <span class="hint">(የደንበኛ ስም)</span></label>
-        <input type="text" id="client-name" placeholder="Client">
+        <input type="text" id="client-name" autocomplete="off" placeholder="Client">
       </div>
       <div class="field">
         <label>Phone Number <span class="hint">(ስልክ ቁጥር)</span></label>
-        <input type="text" id="client-phone" placeholder="+251...">
+        <input type="text" id="client-phone" autocomplete="off" inputmode="tel" placeholder="+251...">
       </div>
     </div>
 <div class="field-row">
@@ -962,7 +966,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       </div>
       <div class="field">
         <label>Sub-location <span class="hint">(ሰፈር — optional)</span></label>
-        <input type="text" id="sublocation" placeholder="e.g. Alamura">
+        <input type="text" id="sublocation" autocomplete="off" placeholder="e.g. Alamura">
       </div>
     </div>
     <div class="field">
@@ -1009,14 +1013,14 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="card-title">Floor Configuration <span style="font-size:11px;color:var(--ink-light);">(የወለል አቀማመጥ)</span></div>
     <div class="field">
       <label>Built-up Area per Floor <span class="hint">(m²)</span></label>
-      <input type="number" id="floor-area" placeholder="e.g. 110" min="20">
+      <input type="number" id="floor-area" autocomplete="off" placeholder="e.g. 110" min="20">
     </div>
     <div class="field-row">
       <div class="field">
         <label>Floors Above Ground <span class="hint">(ወለል ብዛት)</span></label>
         <div class="stepper">
           <button onclick="step('floors-above', -1)">−</button>
-          <input type="number" id="floors-above" value="3" min="0" max="20">
+          <input type="number" id="floors-above" autocomplete="off" value="3" min="0" max="20">
           <button onclick="step('floors-above', 1)">+</button>
         </div>
       </div>
@@ -1024,14 +1028,14 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
         <label>Basement Floors <span class="hint">(ምድር ቤት)</span></label>
         <div class="stepper">
           <button onclick="step('floors-basement', -1)">−</button>
-          <input type="number" id="floors-basement" value="0" min="0" max="5">
+          <input type="number" id="floors-basement" autocomplete="off" value="0" min="0" max="5">
           <button onclick="step('floors-basement', 1)">+</button>
         </div>
       </div>
     </div>
     <div class="field">
       <label>Average Floor-to-Floor Height <span class="hint">(m)</span></label>
-      <input type="number" id="floor-height" placeholder="e.g. 3.2" step="0.1" value="3.2">
+      <input type="number" id="floor-height" autocomplete="off" placeholder="e.g. 3.2" step="0.1" value="3.2">
     </div>
   </div>
 
@@ -1337,7 +1341,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       <label>Number of Wet Rooms <span class="hint">(ሽንት ቤት + ኩሽና ብዛት)</span></label>
       <div class="stepper">
         <button onclick="step('wet-rooms', -1)">−</button>
-        <input type="number" id="wet-rooms" value="3" min="1" max="20">
+        <input type="number" id="wet-rooms" autocomplete="off" value="3" min="1" max="20">
         <button onclick="step('wet-rooms', 1)">+</button>
       </div>
     </div>
@@ -2599,7 +2603,7 @@ function recalculate() {
     <div style="background:rgba(255,255,255,0.06);border-radius:14px;padding:18px;margin-bottom:16px;">
       <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">ባህሪያት / Features</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 4 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር) Cost calculation in 4 cities</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 9 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ) Cost calculation in 9 cities</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እስከ 10 ወለል ድረስ / Up to 10 floors above ground</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>Excel export with live formulas (BOQ + Materials)</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>ያለ Internet BOQ ማስላት ይቻላል / Works offline</span></div>
