@@ -1537,6 +1537,70 @@ const RATES = {
   elec_premium: 1350,
   earthing_lump: 18500,  // lump per building
 
+  // MLPP (Main Lighting & Power Panel) — 1 per project, rate by MCCB rating (ETB per unit, complete panel)
+  mlpp_100A: 40500,
+  mlpp_125A: 49000,
+  mlpp_160A: 58500,
+  mlpp_200A: 70000,
+  mlpp_250A: 84500,
+  mlpp_300A: 100000,
+
+  // SDB (Sub Distribution Board) — 1 per floor, standard spec
+  sdb_standard: 5000,
+
+  // Feeder power cables (ETB per linear meter, by conductor size) + PVC conduit protection
+  feeder_5x16: 950,
+  feeder_5x10: 620,
+  feeder_5x6: 410,
+  feeder_3x50_25: 2650,
+  feeder_3x70_50: 3800,
+  pvc_conduit_80: 50,
+  pvc_conduit_110: 70,
+
+  manhole_electrical: 4000, // 1 per project
+
+  // Sanitary — granular fixtures (ETB, sample rates x2 per instruction — outdated source)
+  san_basin: 5000,
+  san_wc: 7000,
+  san_paper_holder: 1300,
+  san_mirror: 1300,
+  san_towel_rail: 1700,
+  san_soap_holder: 700,
+  san_floor_gully: 1300,
+  san_cleanout_100: 700,
+  san_cleanout_75: 700,
+  san_urinal: 5200,
+  san_water_heater: 50000,
+  san_lab_sink: 7000,
+  san_fire_ext: 25000,
+  san_washing_trough: 9000,
+
+  // Water supply PPR pipe (ETB/m, x2) — commercial baseline, scaled by building-use factor
+  san_ppr_20: 240,
+  san_ppr_25: 280,
+  san_ppr_32: 330,
+  san_ppr_40: 420,
+  san_angle_valve: 900,
+  san_service_valve_20: 1000,
+  san_service_valve_25: 1100,
+  san_service_valve_32: 1600,
+
+  // Waste/vent/rainwater pipe (ETB/m or per unit, x2) — commercial baseline, scaled by building-use factor
+  san_waste_50: 170,
+  san_waste_75: 190,
+  san_waste_110: 250,
+  san_vent_cap: 1300,
+  san_storm_110: 220,
+  san_storm_75: 170,
+  san_drain_ditch: 3000,
+
+  // Elevated water tank (fiber, no supporting structure) — capacity/price by building type + floor tier
+  san_tank_res_1floor: 30000,
+  san_tank_res_g1g2: 35000,
+  san_tank_res_above_g2: 50000,
+  san_tank_apt_office: 98000,
+  san_tank_commercial: 200000,
+
   // Sanitary / Plumbing (per wet room)
   sanitary_local_per_room: 28000,
   sanitary_medium_per_room: 52000,
@@ -1723,6 +1787,7 @@ function calculateBOQ() {
   const intPaint    = getRadio('int-paint');
   const elecGrade   = getRadio('electrical-grade');
   const withEarthing= getRadio('earthing') === 'yes';
+  const buildingUse = getRadio('building-use');
   const sanitaryGrade = getRadio('sanitary-grade');
   const wetRooms    = parseInt(document.getElementById('wet-rooms').value) || 3;
   const withSeptic  = getRadio('septic') === 'yes';
@@ -1911,32 +1976,142 @@ sections.push({ title: '8. Painting', items: paintItems });
 
   // ---- D. ELECTRICAL INSTALLATION ----
   const elecRateMap = { basic: R.elec_basic, standard: R.elec_standard, premium: R.elec_premium };
+  const elecFloorCount = floorsAbove + floorsBase + 1; // +1 for ground floor (SDB/MLPP sizing)
+
+  // MLPP — 1 per project, MCCB rating varies by building type + total floor count
+  const mlppTierTable = {
+    villa:      [[3,'100A'], [6,'125A'], [Infinity,'125A']],
+    office:     [[3,'125A'], [6,'160A'], [10,'200A'], [Infinity,'250A']],
+    apartment:  [[3,'160A'], [6,'200A'], [10,'250A'], [Infinity,'300A']],
+    commercial: [[3,'160A'], [6,'200A'], [10,'250A'], [Infinity,'300A']],
+  };
+  const mlppTiers = mlppTierTable[buildingUse] || mlppTierTable.villa;
+  const mlppRating = mlppTiers.find(t => elecFloorCount <= t[0])[1];
+  const mlppRateKey = 'mlpp_' + mlppRating;
+
+  // Feeder cable base lengths (Commercial baseline) + building-use factor
+  const feederFactorMap = { villa: 0.5, office: 0.6, apartment: 0.8, commercial: 1.0 };
+  const feederFactor = feederFactorMap[buildingUse] ?? 1.0;
+  const feederBase = { c5x6: 25, c5x10: 30, c5x16: 40, c3x50_25: 90, c3x70_50: 130 };
+
+  const mlppSubSpecTable = {
+    '100A': '1 pc 100A main MCCB, 3 Phase\n2 pcs 32A MCB, 3 Phase\n1 pc ammeter (0-150A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
+    '125A': '1 pc 125A main MCCB, 3 Phase\n3 pcs 32A MCB, 3 Phase\n1 pc ammeter (0-200A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
+    '160A': '1 pc 160A main MCCB, 3 Phase\n3 pcs 50A MCB, 3 Phase\n1 pc ammeter (0-250A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
+    '200A': '1 pc 200A main MCCB, 3 Phase\n4 pcs 50A MCB, 3 Phase\n1 pc ammeter (0-320A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
+    '250A': '1 pc 250A main MCCB, 3 Phase\n4 pcs 63A MCB, 3 Phase\n1 pc ammeter (0-400A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
+    '300A': '1 pc 300A main MCCB, 3 Phase\n5 pcs 63A MCB, 3 Phase\n1 pc ammeter (0-500A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
+  };
+  const sdbSubSpec = '1 pc 50A main MCB, 3 Phase\n8 pcs 10A MCB, 1 Phase\n4 pcs 16A MCB, 1 Phase';
+
   const elecItems = [
-    { no:'1.01', desc:'PVC conduit wiring — lighting & power circuits (complete)', unit:'m²', qty: totalFloorArea, rate: elecRateMap[elecGrade] * 0.55 },
-    { no:'1.02', desc:'Electrical distribution board (MCB type, complete)', unit:'No.', qty: Math.ceil(floorsAbove / 2) + 1, rate: 18500 * cm },
-    { no:'1.03', desc:'Light switch points (single/double, complete)', unit:'No.', qty: Math.round(totalFloorArea / 12), rate: 850 * cm },
-    { no:'1.04', desc:'Socket outlet points — 13A, 3-pin (complete)', unit:'No.', qty: Math.round(totalFloorArea / 8), rate: 950 * cm },
-    { no:'1.05', desc:'Fluorescent / LED light fittings (supply & fix)', unit:'No.', qty: Math.round(totalFloorArea / 10), rate: (elecGrade === 'premium' ? 1800 : elecGrade === 'standard' ? 1100 : 650) * cm },
-    { no:'1.06', desc:'External security / compound lighting', unit:'No.', qty: Math.round(perimeter / 8), rate: 2200 * cm },
+    { no:'9.01', desc:'Main Lighting & Power Panel (MLPP), floor standing, sheet steel enclosure, lockable door, complete consisting of:\n' + mlppSubSpecTable[mlppRating], unit:'No.', qty: 1, rate: R[mlppRateKey] * cm },
+    { no:'9.02', desc:'Sub Distribution Board (SDB), flush mounted, sheet steel enclosure, lockable door, complete consisting of:\n' + sdbSubSpec, unit:'No.', qty: elecFloorCount, rate: R.sdb_standard * cm },
+    { no:'9.03', desc:'Feeder cable (5x16)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x16 * feederFactor), rate: R.feeder_5x16 * cm },
+    { no:'9.04', desc:'Feeder cable (5x10)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x10 * feederFactor), rate: R.feeder_5x10 * cm },
+    { no:'9.05', desc:'Feeder cable (5x6)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x6 * feederFactor), rate: R.feeder_5x6 * cm },
+    { no:'9.06', desc:'Feeder cable (3x50/25+1x25)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c3x50_25 * feederFactor), rate: R.feeder_3x50_25 * cm },
+    { no:'9.07', desc:'Feeder cable (3x70/50+1x50)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c3x70_50 * feederFactor), rate: R.feeder_3x70_50 * cm },
+    { no:'9.08', desc:'PVC conduit 80mm diameter (feeder cable protection)', unit:'ml', qty: Math.round((feederBase.c5x16 + feederBase.c5x10) * feederFactor), rate: R.pvc_conduit_80 * cm },
+    { no:'9.09', desc:'PVC conduit 110mm diameter (feeder cable protection)', unit:'ml', qty: Math.round((feederBase.c3x50_25 + feederBase.c3x70_50) * feederFactor), rate: R.pvc_conduit_110 * cm },
+    { no:'9.10', desc:'PVC insulated wiring — lighting & power circuits, in conduit, complete', unit:'m²', qty: totalFloorArea, rate: elecRateMap[elecGrade] * 0.55 },
+    { no:'9.11', desc:'Flush mounted light switch points (single/double/2-way, complete)', unit:'No.', qty: Math.round(totalFloorArea / 12), rate: 850 * cm },
+    { no:'9.12', desc:'Flush mounted socket outlet points — 13A, 3-pin (complete)', unit:'No.', qty: Math.round(totalFloorArea / 8), rate: 950 * cm },
+    { no:'9.13', desc:'Fluorescent / LED light fittings (supply & fix)', unit:'No.', qty: Math.round(totalFloorArea / 10), rate: (elecGrade === 'premium' ? 1800 : elecGrade === 'standard' ? 1100 : 650) * cm },
+    { no:'9.14', desc:'External security / compound lighting', unit:'No.', qty: Math.round(perimeter / 8), rate: 2200 * cm },
+    { no:'9.15', desc:'Manhole in bricks, 600x600x600mm, with reinforced concrete cover', unit:'No.', qty: 1, rate: R.manhole_electrical * cm },
   ];
   if (withEarthing) {
-    elecItems.push({ no:'1.07', desc:'Earthing system and lightning protection (complete)', unit:'Lump', qty: 1, rate: R.earthing_lump * cm });
+    elecItems.push({ no:'9.16', desc:'Earthing system and lightning protection (complete)', unit:'Lump', qty: 1, rate: R.earthing_lump * cm });
   }
   sections.push({ title: '9. ELECTRICAL INSTALLATION', items: elecItems });
 
   // ---- E. SANITARY & PLUMBING WORKS ----
-  const sanRateMap = { local: R.sanitary_local_per_room, medium: R.sanitary_medium_per_room, premium: R.sanitary_premium_per_room };
+  const fixturesPerRoom = (buildingUse === 'commercial' || buildingUse === 'apartment') ? 2 : 1;
+  const fixtureSetCount = wetRooms * fixturesPerRoom;
+  const sanFloorCount = floorsAbove + floorsBase + 1; // ground floor included, same convention as electrical
+
+  // Urinals: villa=1/floor, apartment=4/floor if floorArea>200 else 2/floor, commercial/office=2/floor
+  let urinalPerFloor;
+  if (buildingUse === 'villa') urinalPerFloor = 1;
+  else if (buildingUse === 'apartment') urinalPerFloor = floorArea > 200 ? 4 : 2;
+  else urinalPerFloor = 2; // commercial, office
+  const urinalQty = urinalPerFloor * sanFloorCount;
+
+  // Fire extinguisher: 1 per floor, excluded for residential
+  const includeFireExt = buildingUse !== 'villa';
+
+  // Lab sink & washing trough: commercial, office, apartment only (not residential)
+  const includeLabSink = buildingUse !== 'villa';
+
+  // Elevated water tank — fiber, capacity/price by building type + floor tier (no supporting structure)
+  let tankRateKey;
+  if (buildingUse === 'commercial') tankRateKey = 'san_tank_commercial';
+  else if (buildingUse === 'apartment' || buildingUse === 'office') tankRateKey = 'san_tank_apt_office';
+  else if (sanFloorCount === 1) tankRateKey = 'san_tank_res_1floor';
+  else if (sanFloorCount <= 3) tankRateKey = 'san_tank_res_g1g2'; // G+1, G+2 = 2-3 total floors
+  else tankRateKey = 'san_tank_res_above_g2';
+
+  // Water supply / waste pipe — same base-length x building-factor pattern as electrical feeder cables
+  const sanPipeFactorMap = { villa: 0.5, office: 0.6, apartment: 0.8, commercial: 1.0 };
+  const sanPipeFactor = sanPipeFactorMap[buildingUse] ?? 1.0;
+  const pprBase = { d20: 154, d25: 142, d32: 84, d40: 40 };
+  const wasteBase = { d50: 127, d75: 49, d110: 34 };
+  const stormBase = { d110: 232, d75: 223 };
+  const ditchBase = 45;
+
+  const tankCapacityLabel = {
+    san_tank_res_1floor: '2,000L', san_tank_res_g1g2: '3,000L', san_tank_res_above_g2: '5,000L',
+    san_tank_apt_office: '10,000L', san_tank_commercial: '20,000L',
+  }[tankRateKey];
+
   const sanItems = [
-    { no:'1.01', desc:'Cold water supply pipework (HDPE/PPR, complete)', unit:'m²', qty: totalFloorArea, rate: R.cold_water_per_m2 * cm },
-    { no:'1.02', desc:'Hot water supply pipework and storage tank', unit:'m²', qty: totalFloorArea * 0.6, rate: R.cold_water_per_m2 * 1.4 * cm },
-    { no:'1.03', desc:`Sanitary fixtures — WC, basin, shower — ${getRadioLabel('sanitary-grade')} grade`, unit:'room', qty: wetRooms, rate: sanRateMap[sanitaryGrade] * cm },
-    { no:'1.04', desc:'Drainage pipework — soil & waste (PVC, complete)', unit:'m²', qty: totalFloorArea, rate: R.drainage_per_m2 * cm },
-    { no:'1.05', desc:'Floor drains and cleanouts (supply & fix)', unit:'No.', qty: wetRooms * 2, rate: 1200 * cm },
-    { no:'1.06', desc:'Kitchen sink and fittings (supply & fix)', unit:'No.', qty: Math.max(1, Math.round(wetRooms * 0.3)), rate: (sanitaryGrade === 'premium' ? 18000 : sanitaryGrade === 'medium' ? 9500 : 4500) * cm },
-    { no:'1.07', desc:'Rain water downpipes and surface drainage', unit:'ml', qty: perimeter * 0.5, rate: 680 * cm },
+    // 10.1 Fixtures — per wet room set
+    { no:'10.01', desc:'Hand wash basin, vitreous china, complete with mixer tap, P-trap & accessories', unit:'No.', qty: fixtureSetCount, rate: R.san_basin * cm },
+    { no:'10.02', desc:'Water closet (WC), low flush cistern, complete with seat & cover', unit:'No.', qty: fixtureSetCount, rate: R.san_wc * cm },
+    { no:'10.03', desc:'Toilet paper holder', unit:'No.', qty: fixtureSetCount, rate: R.san_paper_holder * cm },
+    { no:'10.04', desc:'Mirror, 6mm crystal glass, with clips', unit:'No.', qty: fixtureSetCount, rate: R.san_mirror * cm },
+    { no:'10.05', desc:'Towel rail, chrome plated', unit:'No.', qty: fixtureSetCount, rate: R.san_towel_rail * cm },
+    { no:'10.06', desc:'Soap holder, vitreous china', unit:'No.', qty: fixtureSetCount, rate: R.san_soap_holder * cm },
+    { no:'10.07', desc:'Floor gully drain, uPVC, with P-trap & cover', unit:'No.', qty: wetRooms, rate: R.san_floor_gully * cm },
+    { no:'10.08', desc:'Slab clean-out, screw type, Dia. 100mm', unit:'No.', qty: Math.ceil(wetRooms / 2), rate: R.san_cleanout_100 * cm },
+    { no:'10.09', desc:'Slab clean-out, screw type, Dia. 75mm', unit:'No.', qty: Math.ceil(wetRooms / 2), rate: R.san_cleanout_75 * cm },
+    { no:'10.10', desc:'Urinal, vitreous china, complete with cistern & flush valve', unit:'No.', qty: urinalQty, rate: R.san_urinal * cm },
+    { no:'10.11', desc:'Electric water heater, 200L capacity, complete', unit:'No.', qty: wetRooms, rate: R.san_water_heater * cm },
+    { no:'10.12', desc:'Elevated water storage tank, fiber, ' + tankCapacityLabel + ' capacity', unit:'No.', qty: 1, rate: R[tankRateKey] * cm },
   ];
+  if (includeLabSink) {
+    sanItems.push({ no:'10.13', desc:'Stainless steel laboratory sink, single bowl, complete with mixer', unit:'No.', qty: 1, rate: R.san_lab_sink * cm });
+    sanItems.push({ no:'10.14', desc:'Washing trough, precast reinforced concrete, complete', unit:'No.', qty: 1, rate: R.san_washing_trough * cm });
+  }
+  if (includeFireExt) {
+    sanItems.push({ no:'10.15', desc:'Fire extinguisher, 6kg chemical powder', unit:'No.', qty: sanFloorCount, rate: R.san_fire_ext * cm });
+  }
+
+  // 10.2 Water supply pipe (PPR) + valves
+  sanItems.push(
+    { no:'10.16', desc:'PPR water supply pipe, PN-20, Dia. 20mm', unit:'ml', qty: Math.round(pprBase.d20 * sanPipeFactor), rate: R.san_ppr_20 * cm },
+    { no:'10.17', desc:'PPR water supply pipe, PN-20, Dia. 25mm', unit:'ml', qty: Math.round(pprBase.d25 * sanPipeFactor), rate: R.san_ppr_25 * cm },
+    { no:'10.18', desc:'PPR water supply pipe, PN-20, Dia. 32mm', unit:'ml', qty: Math.round(pprBase.d32 * sanPipeFactor), rate: R.san_ppr_32 * cm },
+    { no:'10.19', desc:'PPR water supply pipe, PN-20, Dia. 40mm', unit:'ml', qty: Math.round(pprBase.d40 * sanPipeFactor), rate: R.san_ppr_40 * cm },
+    { no:'10.20', desc:'Angle valve, Dia. 15mm, before fixtures', unit:'No.', qty: fixtureSetCount, rate: R.san_angle_valve * cm },
+    { no:'10.21', desc:'Bronze service valve, Dia. 20mm', unit:'No.', qty: sanFloorCount * 3, rate: R.san_service_valve_20 * cm },
+    { no:'10.22', desc:'Bronze service valve, Dia. 25mm', unit:'No.', qty: sanFloorCount * 2, rate: R.san_service_valve_25 * cm },
+  );
+
+  // 10.3 Waste, vent & rainwater pipes
+  sanItems.push(
+    { no:'10.23', desc:'uPVC waste pipe, PN-6, Dia. 50mm', unit:'ml', qty: Math.round(wasteBase.d50 * sanPipeFactor), rate: R.san_waste_50 * cm },
+    { no:'10.24', desc:'uPVC waste pipe, PN-6, Dia. 75mm', unit:'ml', qty: Math.round(wasteBase.d75 * sanPipeFactor), rate: R.san_waste_75 * cm },
+    { no:'10.25', desc:'uPVC waste pipe, PN-6, Dia. 110mm', unit:'ml', qty: Math.round(wasteBase.d110 * sanPipeFactor), rate: R.san_waste_110 * cm },
+    { no:'10.26', desc:'Vent cap, uPVC, Dia. 50mm', unit:'No.', qty: wetRooms, rate: R.san_vent_cap * cm },
+    { no:'10.27', desc:'Storm water down pipe, uPVC, Dia. 110mm', unit:'ml', qty: Math.round(stormBase.d110 * sanPipeFactor), rate: R.san_storm_110 * cm },
+    { no:'10.28', desc:'Storm water down pipe, uPVC, Dia. 75mm', unit:'ml', qty: Math.round(stormBase.d75 * sanPipeFactor), rate: R.san_storm_75 * cm },
+    { no:'10.29', desc:'Galvanized grill covered drainage ditch', unit:'ml', qty: Math.round(ditchBase * sanPipeFactor), rate: R.san_drain_ditch * cm },
+  );
+
   if (withSeptic) {
-    sanItems.push({ no:'1.08', desc:'Septic tank and soakpit (complete — precast)', unit:'Lump', qty: 1, rate: R.septic_tank * cm });
+    sanItems.push({ no:'10.30', desc:'Septic tank and soakpit (complete — precast)', unit:'Lump', qty: 1, rate: R.septic_tank * cm });
   }
   sections.push({ title: '10. SANITARY INSTALLATION', items: sanItems });
 
@@ -1961,9 +2136,11 @@ if (withMechanical) {
     sec.subtotal = sec.items.reduce((s, i) => s + i.amount, 0);
   });
 
-  const subtotalAll = sections.reduce((s, sec) => s + sec.subtotal, 0);
-  const vat         = subtotalAll * 0.15;
-  const grandTotal  = subtotalAll + vat;
+  const subtotalAll  = sections.reduce((s, sec) => s + sec.subtotal, 0);
+  const contingency  = subtotalAll * 0.02;
+  const subtotalPlusContingency = subtotalAll + contingency;
+  const vat           = subtotalPlusContingency * 0.15;
+  const grandTotal     = subtotalPlusContingency + vat;
 const costPerM2=grandTotal/totalArea;
 
   // ---- RENDER OUTPUT ----
@@ -1979,7 +2156,7 @@ const costPerM2=grandTotal/totalArea;
 
   // Grand total
   document.getElementById('boq-grand-total').textContent = fmt(grandTotal);
-  document.getElementById('boq-vat-line').textContent = `Subtotal: ${fmt(subtotalAll)} + VAT: ${fmt(vat)} | Cost/m²: ${fmt(costPerM2)}`;
+  document.getElementById('boq-vat-line').textContent = `Subtotal: ${fmt(subtotalAll)} + Contingency (2%): ${fmt(contingency)} + VAT: ${fmt(vat)} | Cost/m²: ${fmt(costPerM2)}`;
 
   // Section summary cards
   const summaryEl = document.getElementById('section-summary');
@@ -2071,7 +2248,7 @@ const costPerM2=grandTotal/totalArea;
           ${sec.items.map(item => `
             <tr>
               <td class="item-no">${item.no}</td>
-              <td>${item.desc}</td>
+              <td style="white-space:pre-line">${item.desc}</td>
               <td style="text-align:center">${item.unit}</td>
               <td style="text-align:right">${fmtN(item.qty)}</td>
               <td style="text-align:right">${fmtN(item.rate, 0)}</td>
@@ -2088,7 +2265,7 @@ const costPerM2=grandTotal/totalArea;
   `).join('');
 
   // Store data for export
-  window._boqData = { projName, loc, totalArea, sections, subtotalAll, vat, grandTotal, city: cityLabel };
+  window._boqData = { projName, loc, totalArea, sections, subtotalAll, contingency, subtotalPlusContingency, vat, grandTotal, city: cityLabel };
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2293,13 +2470,16 @@ function doExportPDF(d){
     y = doc.lastAutoTable.finalY + 20;
   });
 
-  if (y > 700) { doc.addPage(); y = 40; }
+  if (y > 680) { doc.addPage(); y = 40; }
   doc.setFillColor(200,146,42);
-  doc.rect(margin, y - 14, pageWidth - margin*2, 60, 'F');
+  doc.rect(margin, y - 14, pageWidth - margin*2, 78, 'F');
   doc.setTextColor(26,26,46);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
   doc.text('Subtotal (Excl. VAT):', margin + 10, y);
   doc.text(fmtETB(d.subtotalAll), pageWidth - margin - 10, y, { align: 'right' });
+  y += 16;
+  doc.text('Contingency (2%):', margin + 10, y);
+  doc.text(fmtETB(d.contingency), pageWidth - margin - 10, y, { align: 'right' });
   y += 16;
   doc.text('VAT @ 15%:', margin + 10, y);
   doc.text(fmtETB(d.vat), pageWidth - margin - 10, y, { align: 'right' });
@@ -2330,6 +2510,32 @@ function exportExcel() {
   }
 }
 
+function numberToWordsETB(amount) {
+  const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function threeDigits(n) {
+    let s = '';
+    if (n >= 100) { s += ones[Math.floor(n/100)] + ' Hundred '; n %= 100; }
+    if (n >= 20) { s += tens[Math.floor(n/10)] + ' '; n %= 10; }
+    if (n > 0) { s += ones[n] + ' '; }
+    return s;
+  }
+  function convert(n) {
+    if (n === 0) return 'Zero';
+    let s = '';
+    const billions = Math.floor(n / 1e9); n %= 1e9;
+    const millions  = Math.floor(n / 1e6); n %= 1e6;
+    const thousands = Math.floor(n / 1e3); n %= 1e3;
+    if (billions)  s += threeDigits(billions) + 'Billion ';
+    if (millions)  s += threeDigits(millions) + 'Million ';
+    if (thousands) s += threeDigits(thousands) + 'Thousand ';
+    if (n)         s += threeDigits(n);
+    return s.trim();
+  }
+  const rounded = Math.round(amount);
+  return 'Birr ' + convert(rounded) + ' Only';
+}
+
 async function doExport(d) {
   const workbook = new ExcelJS.Workbook();
   const ws = workbook.addWorksheet('Bill of Quantities');
@@ -2344,6 +2550,19 @@ async function doExport(d) {
     { width: 14 },
     { width: 16 },
   ];
+
+  // ---- PAGE SETUP (print-ready) ----
+  ws.pageSetup = {
+    paperSize: 9, // A4
+    orientation: 'landscape',
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    margins: { left: 0.4, right: 0.4, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 },
+  };
+  ws.headerFooter = {
+    oddFooter: '&L' + (d.projName || 'BOQ') + ' — AddisBOQ.com &C&P of &N &R Generated ' + new Date().toLocaleDateString(),
+  };
 
   // Border styles
   const dotted = { style: 'dotted', color: { argb: 'FF000000' } };
@@ -2385,6 +2604,34 @@ async function doExport(d) {
   styleRow(headerRow, { bold: true, fontSize: 10, fontColor: 'FFFFFFFF', fill: 'FF1a1a2e', border: thinBorder, align: 'center' });
   headerRow.height = 28;
 
+  // Freeze the header row so it stays visible when scrolling, and repeat it on every printed page
+  ws.views = [{ state: 'frozen', ySplit: headerRow.number }];
+  ws.pageSetup.printTitlesRow = `${headerRow.number}:${headerRow.number}`;
+
+  // ---- PRELIMINARIES (listed, unpriced — contractor to price) ----
+  const prelimRow = ws.addRow(['PRELIMINARIES', '', '', '', '', '']);
+  ws.mergeCells(`A${prelimRow.number}:F${prelimRow.number}`);
+  styleRow(prelimRow, { bold: true, fontSize: 11, border: mediumBorder });
+  prelimRow.height = 20;
+
+  const prelimItems = [
+    'Site mobilization and demobilization',
+    "Contractor's site office, store & welfare facilities",
+    'Temporary site fencing, hoarding & security',
+    'Temporary water & electricity supply for construction',
+    'Insurance — all risk, third party & workmen\'s compensation',
+    'Project signboard',
+    'Health & safety compliance and site supervision',
+    'As-built drawings and handover documentation',
+  ];
+  prelimItems.forEach((desc, i) => {
+    const row = ws.addRow([`P.${i+1}`, desc, 'item', '', 'By Contractor', '']);
+    styleRow(row, { border: dottedBorder, fontColor: 'FF6a6a6a' });
+    row.getCell(5).font = { name: tnr, size: 9, italic: true, color: { argb: 'FF6a6a6a' } };
+    row.height = 16;
+  });
+  ws.addRow([]);
+
   // ---- SECTIONS ----
   const groupHeaders = { 0: 'A. SUBSTRUCTURE', 3: 'B. SUPERSTRUCTURE' };
   const sectionTotRowNums = []; // track "Total Carried To Summary" row numbers for summary sheet links
@@ -2405,7 +2652,7 @@ async function doExport(d) {
     // Track first item row for SUM range
     let firstItemRow = null;
 
-    sec.items.forEach(item => {
+    sec.items.forEach((item, itemIdx) => {
       const row = ws.addRow([
         item.no,
         item.desc,
@@ -2417,11 +2664,17 @@ async function doExport(d) {
     row.getCell(6).value = { formula: `D${row.number}*E${row.number}` };
       
       if (!firstItemRow) firstItemRow = row.number;
-      styleRow(row, { border: dottedBorder });
-      row.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
-      row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
-      row.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
-      row.height = 16;
+      const rowFill = itemIdx % 2 === 1 ? 'FFF7F5F0' : null;
+      styleRow(row, { border: dottedBorder, fill: rowFill });
+      const descLineCount = String(item.desc).split('\n').length;
+      row.getCell(2).alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
+      row.getCell(4).alignment = { horizontal: 'right', vertical: descLineCount > 1 ? 'top' : 'middle' };
+      row.getCell(5).alignment = { horizontal: 'right', vertical: descLineCount > 1 ? 'top' : 'middle' };
+      row.getCell(6).alignment = { horizontal: 'right', vertical: descLineCount > 1 ? 'top' : 'middle' };
+      row.getCell(4).numFmt = '#,##0.00';
+      row.getCell(5).numFmt = '#,##0.00';
+      row.getCell(6).numFmt = '#,##0.00';
+      row.height = descLineCount > 1 ? descLineCount * 14 : 16;
     });
 
     const lastItemRow = ws.rowCount;
@@ -2444,19 +2697,45 @@ async function doExport(d) {
   ]);
   styleRow(subRow, { bold: true, border: thinBorder });
   subRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+  subRow.getCell(6).numFmt = '#,##0.00';
+
+  const contRow = ws.addRow(['', 'CONTINGENCY @ 2%', '', '', '',
+    { formula: `F${subRow.number}*0.02` }
+  ]);
+  styleRow(contRow, { bold: true, border: thinBorder });
+  contRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+  contRow.getCell(6).numFmt = '#,##0.00';
+
+  const baseRow = ws.addRow(['', 'SUB-TOTAL (Incl. Contingency)', '', '', '',
+    { formula: `F${subRow.number}+F${contRow.number}` }
+  ]);
+  styleRow(baseRow, { bold: true, border: thinBorder });
+  baseRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+  baseRow.getCell(6).numFmt = '#,##0.00';
 
   const vatRow = ws.addRow(['', 'VAT @ 15%', '', '', '',
-    { formula: `F${subRow.number}*0.15` }
+    { formula: `F${baseRow.number}*0.15` }
   ]);
   styleRow(vatRow, { bold: true, border: thinBorder });
   vatRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+  vatRow.getCell(6).numFmt = '#,##0.00';
 
   const grandRow = ws.addRow(['', 'GRAND TOTAL (Incl. VAT)', '', '', '',
-    { formula: `F${subRow.number}+F${vatRow.number}` }
+    { formula: `F${baseRow.number}+F${vatRow.number}` }
   ]);
   styleRow(grandRow, { bold: true, fontSize: 11, fontColor: 'FFFFFFFF', fill: 'FFc8922a', border: mediumBorder });
   grandRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
+  grandRow.getCell(6).numFmt = '#,##0.00';
   grandRow.height = 22;
+
+  // ---- AMOUNT IN WORDS ----
+  const wordsRow = ws.addRow(['', 'Amount in Words: ' + numberToWordsETB(d.grandTotal), '', '', '', '']);
+  ws.mergeCells(`B${wordsRow.number}:F${wordsRow.number}`);
+  styleRow(wordsRow, { fontSize: 9, border: dottedBorder });
+  wordsRow.getCell(2).font = { name: tnr, size: 9, italic: true };
+  wordsRow.height = 16;
+
+  ws.addRow([]);
 
   // ---- SHEET 2: SUMMARY ----
   const ws2 = workbook.addWorksheet('Summary');
@@ -2524,6 +2803,15 @@ async function doExport(d) {
   });
   subRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
 
+  const contRow2 = ws2.addRow(['', 'CONTINGENCY @ 2%',
+    { formula: `'Bill of Quantities'!F${contRow.number}` }
+  ]);
+  contRow2.eachCell({ includeEmpty: true }, cell => {
+    cell.font = { name: tnr, bold: true, size: 10 };
+    cell.border = thinBorder;
+  });
+  contRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+
   const vatRow2 = ws2.addRow(['', 'VAT @ 15%',
     { formula: `'Bill of Quantities'!F${vatRow.number}` }
   ]);
@@ -2543,6 +2831,73 @@ async function doExport(d) {
     cell.alignment = { horizontal: cell === grandRow2.getCell(3) ? 'right' : 'left', vertical: 'middle' };
   });
   grandRow2.height = 22;
+
+  ws2.addRow([]);
+  const wordsRow2 = ws2.addRow(['', 'Amount in Words: ' + numberToWordsETB(d.grandTotal), '']);
+  ws2.mergeCells(`B${wordsRow2.number}:C${wordsRow2.number}`);
+  wordsRow2.getCell(2).font = { name: tnr, size: 9, italic: true };
+  wordsRow2.height = 16;
+
+  ws2.addRow([]);
+  ws2.addRow([]);
+
+  // ---- SIGNATURE BLOCK (Summary sheet — final signed page) ----
+  const sig2Header = ws2.addRow(['Prepared By', '', 'Approved By']);
+  sig2Header.eachCell({ includeEmpty: true }, cell => { cell.font = { name: tnr, bold: true, size: 10 }; cell.border = { top: thin }; });
+  ws2.addRow([]);
+  const sig2Line = ws2.addRow(['_______________________', '', '_______________________']);
+  sig2Line.eachCell({ includeEmpty: true }, cell => { cell.font = { name: tnr, size: 10 }; });
+  const sig2Name = ws2.addRow(['Name & Signature', '', 'Name & Signature']);
+  sig2Name.eachCell({ includeEmpty: true }, cell => { cell.font = { name: tnr, size: 8, color: { argb: 'FF6a6a6a' } }; });
+  ws2.addRow([]);
+  const sig2Date = ws2.addRow(['Date: ____________', '', 'Date: ____________']);
+  sig2Date.eachCell({ includeEmpty: true }, cell => { cell.font = { name: tnr, size: 9 }; });
+
+  // Number formatting on all Summary sheet amount cells
+  ws2.getColumn(3).numFmt = '#,##0.00';
+
+  // Summary sheet page setup
+  ws2.pageSetup = {
+    paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+    margins: { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 },
+  };
+  ws2.headerFooter = {
+    oddFooter: '&L' + (d.projName || 'BOQ') + ' — AddisBOQ.com &C&P of &N &R Generated ' + new Date().toLocaleDateString(),
+  };
+
+  // ---- SHEET 3: NOTES ----
+  const ws3 = workbook.addWorksheet('Notes');
+  ws3.columns = [{ width: 100 }];
+  const n1 = ws3.addRow(['NOTES & GENERAL PREAMBLES']);
+  n1.getCell(1).font = { name: tnr, bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+  n1.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1a1a2e' } };
+  n1.getCell(1).alignment = { vertical: 'middle' };
+  n1.height = 26;
+  ws3.addRow([]);
+  const notes = [
+    '1. This Bill of Quantities has been prepared based on the project parameters entered by the user (floor area, number of floors, materials, and finishes grade) and standard construction rates for the specified city.',
+    '2. All quantities are estimated using standard engineering formulas and typical construction ratios. They have not been measured from architectural or structural drawings and must be verified by a licensed engineer before use in tendering, procurement, or construction.',
+    '3. All rates are current as of the preparation date shown on the Summary sheet and are subject to market fluctuation. Rates should be re-verified against current supplier and contractor quotations before use.',
+    '4. Preliminaries (site mobilization, temporary facilities, insurance, etc.) are listed for completeness but left unpriced — to be priced by the appointed Contractor based on project-specific conditions.',
+    '5. A contingency allowance of 2% has been included on the total construction cost to account for unforeseen items. This is indicative and may be adjusted based on project risk and complexity.',
+    '6. VAT has been calculated at the standard Ethiopian rate of 15%, applied to the construction cost inclusive of contingency.',
+    '7. This document is generated by AddisBOQ.com and is intended as a preliminary cost estimation tool. It does not replace a full quantity survey or detailed design-stage BOQ prepared by a licensed Quantity Surveyor or Structural Engineer.',
+  ];
+  notes.forEach(text => {
+    const r = ws3.addRow([text]);
+    r.getCell(1).font = { name: tnr, size: 10 };
+    r.getCell(1).alignment = { wrapText: true, vertical: 'top' };
+    r.height = 34;
+  });
+
+  // ---- PRINT AREA (explicit, dynamic to actual content) ----
+  ws.pageSetup.printArea = `A1:F${ws.rowCount}`;
+  ws2.pageSetup.printArea = `A1:C${ws2.rowCount}`;
+  ws3.pageSetup = {
+    paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+    margins: { left: 0.6, right: 0.6, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 },
+    printArea: `A1:A${ws3.rowCount}`,
+  };
 
   // ---- EXPORT ----
   const buffer = await workbook.xlsx.writeBuffer();
