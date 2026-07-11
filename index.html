@@ -676,16 +676,28 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
   </div>
 
   <!-- Price Badge -->
-  <div style="
+  <div id="modal-price-box" style="
+    position: relative;
     background: linear-gradient(135deg, #1a1a2e, #2d2d4e);
     border-radius: 12px;
     padding: 16px;
     text-align: center;
     margin-bottom: 20px;
+    overflow: visible;
   ">
+    <div id="modal-save-badge" style="display:none; position:absolute; top:-10px; right:-8px; background:#c0392b; color:#fff; font-size:11px; font-weight:800; padding:5px 10px; border-radius:20px; box-shadow:0 3px 8px rgba(0,0,0,0.25); letter-spacing:0.3px;">SAVE 17%</div>
+    <p id="modal-offer-label" style="font-size: 10px; color: #f0c060; margin-bottom: 6px; letter-spacing: 0.5px; font-weight: 700; text-transform: uppercase; display:none;">🔥 Limited-Time Introductory Offer</p>
     <p style="font-size: 12px; color: #aaa; margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase;">One-time payment</p>
+    <p id="modal-price-old" style="font-size: 15px; font-weight: 600; color: #8a8a9a; text-decoration: line-through; margin-bottom: 2px; display:none;"></p>
     <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;" id="modal-price">250 ETB</p>
+    <p id="modal-save-line" style="font-size: 12px; color: #6fcf97; font-weight: 600; margin-top: 2px; display:none;"></p>
     <p style="font-size: 12px; color: #aaa; margin-top: 4px;">via TeleBirr</p>
+    <p id="modal-discount-countdown" style="font-size: 11px; color: #f0c060; margin-top: 8px; font-weight: 600; display:none;"></p>
+    <div id="modal-trust-icons" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.12); justify-content:space-between; gap:6px;">
+      <span style="font-size:10px; color:rgba(255,255,255,0.65);">⚡ Instant verification</span>
+      <span style="font-size:10px; color:rgba(255,255,255,0.65);">✔️ One-time payment</span>
+      <span style="font-size:10px; color:rgba(255,255,255,0.65);">🚫 No subscription</span>
+    </div>
   </div>
 
   <!-- Steps -->
@@ -1402,8 +1414,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     </div>
   </div>
   <div style="display:flex; gap:10px; margin:16px 0;">
-    <button class="btn-export" onclick="openPaymentModal('excel')">📥 Export to Excel</button>
-    <button class="btn-recalc" onclick="openPaymentModal('pdf')">📄 Export PDF</button>
+    <button class="btn-export" id="excel-btn-top" onclick="openPaymentModal('excel')">📥 Export to Excel</button>
+    <button class="btn-recalc" onclick="openPaymentModal('pdf')">📄 PDF</button>
     <button class="btn-recalc" style="flex:0 0 auto;padding:10px 14px;" onclick="shareBoq()" title="Share">🔗</button>
   </div>
 
@@ -1425,6 +1437,15 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 
   <div class="summary-sheet" id="summary-sheet"></div>
 
+  <div style="display:flex; align-items:center; gap:12px; margin:22px 0 14px;">
+    <div style="flex:1; height:1px; background:var(--border);"></div>
+    <div style="text-align:center;">
+      <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:var(--ink);">Want the complete BOQ?</div>
+      <div style="font-size:12px; color:var(--ink-light); margin-top:2px;">Every line item, quantity, and rate — ready for your contractor</div>
+    </div>
+    <div style="flex:1; height:1px; background:var(--border);"></div>
+  </div>
+
   <div class="boq-lock-wrap">
     <div class="boq-lock-blur" style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;-webkit-overflow-scrolling:touch;user-select:none;-webkit-user-select:none;" oncontextmenu="return false;" id="boq-scroll-container">
       <div id="boq-sections"></div>
@@ -1432,16 +1453,16 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="boq-lock-overlay" id="boq-lock-overlay">
       <div class="boq-lock-card">
         <div class="lock-icon">🔒</div>
-        <div class="lock-title">Full itemized BOQ locked</div>
-        <div class="lock-sub">Export to Excel or PDF to unlock every line item, quantity, and rate — ready to hand to your contractor.</div>
-        <button class="btn-export" onclick="openPaymentModal('excel')">📥 Unlock — Export to Excel</button>
-        <button class="btn-recalc" style="width:100%;margin-top:8px;" onclick="openPaymentModal('pdf')">📄 Unlock — Export PDF</button>
+        <div class="lock-title">The full BOQ is ready for you</div>
+        <div class="lock-sub">Get every line item, quantity, and rate — ready to hand to your contractor.</div>
+        <button class="btn-export" id="excel-btn-lock" onclick="openPaymentModal('excel')">📥 Get Full Itemized BOQ</button>
+        <button class="btn-recalc" style="width:100%;margin-top:8px;" onclick="openPaymentModal('pdf')">📄 PDF</button>
       </div>
     </div>
   </div>
 
   <div class="action-row">
-    <button class="btn-export" onclick="openPaymentModal('excel')">📥 Export to Excel</button><button class="btn-recalc" onclick="openPaymentModal('pdf')">📄 Export PDF</button>
+    <button class="btn-export" id="excel-btn-bottom" onclick="openPaymentModal('excel')">📥 Export to Excel</button><button class="btn-recalc" onclick="openPaymentModal('pdf')">📄 PDF</button>
     <button class="btn-recalc" style="flex:0 0 auto;padding:10px 14px;" onclick="shareBoq()" title="Share">🔗</button>
     <button class="btn-recalc" onclick="recalculate()">↩ Edit Inputs</button>
   </div>
@@ -1485,19 +1506,19 @@ const RATES = {
 
   // Concrete (per m3)
   concrete_c15: 3417,
-  concrete_c25_foundation: 18266,
-  concrete_c25_column: 19126,
-  concrete_c25_beam: 18559,
-  concrete_c25_slab: 18559,
+  concrete_c25_foundation: 15625,
+  concrete_c25_column: 16714,
+  concrete_c25_beam: 16250,
+  concrete_c25_slab: 16250,
   formwork: 1254,
 
   // Rebar (per kg)
-  rebar_8mm: 325,
-  rebar_10mm: 325,
-  rebar_12mm: 325,
-  rebar_14mm: 325,
-  rebar_16mm: 325,
-  rebar_20mm: 328,
+  rebar_8mm: 257,
+  rebar_10mm: 257,
+  rebar_12mm: 257,
+  rebar_14mm: 257,
+  rebar_16mm: 257,
+  rebar_20mm: 257,
 
   // Masonry (per m3)
   stone_masonry_below: 7804,
@@ -1511,8 +1532,10 @@ const RATES = {
   stone_wall_ext: 1450,
 
   // Roofing (per m2)
-  roof_cis: 2147,
-  roof_ega: 2745,
+  roof_cis: 1018,
+  roof_ega: 1610,
+  steel_truss: 290,
+  steel_purlin: 290, // TODO: needs its own confirmed rate — currently mirroring truss
   roof_flat_slab: 18559, // per m3
   roof_decra: 2900,
 
@@ -1908,8 +1931,8 @@ function calculateBOQ() {
 if (steelTruss) {
     const steelTrussWeight = roofArea * 12; // approx 12 kg/m2 for light steel trusses
     const steelItems = [
-      { no:'4.01', desc:'Fabricated steel roof truss (angle/channel sections)', unit:'kg', qty: steelTrussWeight, rate: R.steel_truss || 350 * cm },
-      { no:'4.02', desc:'Steel purlins (C or Z section)', unit:'kg', qty: roofArea * 4, rate: R.steel_truss || 280 * cm },
+      { no:'4.01', desc:'Fabricated steel roof truss (angle/channel sections)', unit:'kg', qty: steelTrussWeight, rate: R.steel_truss * cm },
+      { no:'4.02', desc:'Steel purlins (C or Z section)', unit:'kg', qty: roofArea * 4, rate: R.steel_purlin * cm },
       { no:'4.03', desc:'Anti-rust primer and protective paint to steel work', unit:'m²', qty: roofArea * 0.3, rate: 180 * cm },
     ];
     sections.push({ title: '4. Steel Structure', items: steelItems });
@@ -2156,6 +2179,7 @@ const costPerM2=grandTotal/totalArea;
 
   // Grand total
   document.getElementById('boq-grand-total').textContent = fmt(grandTotal);
+  updateExcelButtonLabels();
   document.getElementById('boq-vat-line').textContent = `Subtotal: ${fmt(subtotalAll)} + Contingency (2%): ${fmt(contingency)} + VAT: ${fmt(vat)} | Cost/m²: ${fmt(costPerM2)}`;
 
   // Section summary cards
@@ -2274,20 +2298,140 @@ const costPerM2=grandTotal/totalArea;
 // EXCEL EXPORT (using SheetJS via CDN)
 // ============================================================
 
+// Detect if running as an installed app (TWA or installed PWA) vs. a normal browser tab.
+// Play Store policy requires purchases like this to happen outside the app's own installed view.
+function isStandaloneApp() {
+  return window.matchMedia('(display-mode: standalone)').matches
+    || document.referrer.startsWith('android-app://');
+}
+
+// Collect every input/radio field on the form into a plain object, for passing through a URL.
+function serializeFormState() {
+  const state = {};
+  ['project-name','client-name','client-phone','sublocation','city','floor-area','floors-above','floors-basement','floor-height','wet-rooms'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) state[id] = el.value;
+  });
+  ['building-use','door-window-profile','earthing','electrical-grade','ext-paint','ext-wall-material','floor-finish','foundation','int-paint','mechanical','roof-type','sanitary-grade','septic','steel-truss'].forEach(name => {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    if (checked) state[name] = checked.value;
+  });
+  return state;
+}
+
+// Restore form fields from URL params (used when landing back on addisboq.com from the app's external redirect).
+function restoreFormStateFromParams(params) {
+  ['project-name','client-name','client-phone','sublocation','city','floor-area','floors-above','floors-basement','floor-height','wet-rooms'].forEach(id => {
+    if (params.has(id)) {
+      const el = document.getElementById(id);
+      if (el) el.value = params.get(id);
+    }
+  });
+  ['building-use','door-window-profile','earthing','electrical-grade','ext-paint','ext-wall-material','floor-finish','foundation','int-paint','mechanical','roof-type','sanitary-grade','septic','steel-truss'].forEach(name => {
+    if (params.has(name)) {
+      const radio = document.querySelector(`input[name="${name}"][value="${params.get(name)}"]`);
+      if (radio) radio.checked = true;
+    }
+  });
+}
+
+function updateExcelButtonLabels() {
+  const discountEndsAt = new Date('2026-07-30T23:59:59+03:00');
+  const discountActive = new Date() < discountEndsAt;
+  const label = discountActive ? '📥 Full Itemized BOQ — 250 ETB' : '📥 Full Itemized BOQ — 300 ETB';
+  const lockLabel = discountActive ? '📥 Get Full Itemized BOQ — 250 ETB' : '📥 Get Full Itemized BOQ — 300 ETB';
+  const topBtn = document.getElementById('excel-btn-top');
+  const lockBtn = document.getElementById('excel-btn-lock');
+  const bottomBtn = document.getElementById('excel-btn-bottom');
+  if (topBtn) topBtn.textContent = label;
+  if (lockBtn) lockBtn.textContent = lockLabel;
+  if (bottomBtn) bottomBtn.textContent = label;
+}
+
 function openPaymentModal(type){
   window._exportType = type || 'excel';
+
+  // If running as an installed app, hand the purchase off to a real browser tab instead of
+  // completing it inside the app's own view (keeps us outside Play Store's in-app purchase rules).
+  if (isStandaloneApp()) {
+    const state = serializeFormState();
+    const params = new URLSearchParams(state);
+    params.set('autopay', window._exportType);
+    window.location.href = 'https://pay.addisboq.com/?' + params.toString();
+    return;
+  }
+
   const isPdf = window._exportType === 'pdf';
   document.getElementById('modal-title').textContent = isPdf ? 'Unlock PDF Export' : 'Unlock Excel Export';
   document.getElementById('modal-desc').textContent = isPdf
     ? 'Get your full professional BOQ as a formatted PDF'
     : 'Get your full professional BOQ in Excel format';
-  document.getElementById('modal-price').textContent = isPdf ? '150 ETB' : '300 ETB';
-  document.getElementById('modal-step1-text').textContent = isPdf ? 'Send 150 ETB via TeleBirr' : 'Send 300 ETB via TeleBirr';
+
+  const discountEndsAt = new Date('2026-07-30T23:59:59+03:00'); // East Africa Time
+  const discountActive = !isPdf && new Date() < discountEndsAt;
+  const excelPrice = discountActive ? 250 : 300;
+
+  const oldPriceEl = document.getElementById('modal-price-old');
+  const countdownEl = document.getElementById('modal-discount-countdown');
+  const saveBadgeEl = document.getElementById('modal-save-badge');
+  const offerLabelEl = document.getElementById('modal-offer-label');
+  const saveLineEl = document.getElementById('modal-save-line');
+  const trustIconsEl = document.getElementById('modal-trust-icons');
+
+  // Trust icons show for every payment (Excel or PDF), discount-specific elements only for active Excel discount
+  trustIconsEl.style.display = 'flex';
+
+  if (isPdf) {
+    oldPriceEl.style.display = 'none';
+    countdownEl.style.display = 'none';
+    saveBadgeEl.style.display = 'none';
+    offerLabelEl.style.display = 'none';
+    saveLineEl.style.display = 'none';
+    document.getElementById('modal-price').textContent = '150 ETB';
+    document.getElementById('modal-step1-text').textContent = 'Send 150 ETB via TeleBirr';
+    if (window._discountCountdownInterval) clearInterval(window._discountCountdownInterval);
+  } else if (discountActive) {
+    oldPriceEl.style.display = 'block';
+    oldPriceEl.textContent = '300 ETB';
+    document.getElementById('modal-price').textContent = excelPrice + ' ETB';
+    document.getElementById('modal-step1-text').textContent = 'Send ' + excelPrice + ' ETB via TeleBirr';
+    saveBadgeEl.style.display = 'block';
+    offerLabelEl.style.display = 'block';
+    saveLineEl.style.display = 'block';
+    saveLineEl.textContent = 'You save 50 ETB';
+    countdownEl.style.display = 'block';
+    if (window._discountCountdownInterval) clearInterval(window._discountCountdownInterval);
+    const updateCountdown = () => {
+      const now = new Date();
+      const diff = discountEndsAt - now;
+      if (diff <= 0) {
+        countdownEl.textContent = '';
+        clearInterval(window._discountCountdownInterval);
+        return;
+      }
+      const days = Math.floor(diff / (1000*60*60*24));
+      const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+      const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+      countdownEl.textContent = `⏳ Ends July 30 • ${days}d ${hours}h ${mins}m left`;
+    };
+    updateCountdown();
+    window._discountCountdownInterval = setInterval(updateCountdown, 60000);
+  } else {
+    oldPriceEl.style.display = 'none';
+    countdownEl.style.display = 'none';
+    saveBadgeEl.style.display = 'none';
+    offerLabelEl.style.display = 'none';
+    saveLineEl.style.display = 'none';
+    document.getElementById('modal-price').textContent = '300 ETB';
+    document.getElementById('modal-step1-text').textContent = 'Send 300 ETB via TeleBirr';
+    if (window._discountCountdownInterval) clearInterval(window._discountCountdownInterval);
+  }
 document.getElementById('paymentModal').style.display='block';
 document.getElementById('paymentOverlay').style.display='block';
 }
 
 function closePaymentModal(){
+  if (window._discountCountdownInterval) clearInterval(window._discountCountdownInterval);
   document.getElementById('paySuccess').style.display = 'none';
   const verifyBtn = document.querySelector('#paymentModal button[onclick="verifyPayment()"]');
   const cancelBtn = document.querySelector('#paymentModal button[onclick="closePaymentModal()"]');
@@ -2918,6 +3062,21 @@ function recalculate() {
   document.getElementById('progress-bar').style.display = 'flex';
   goToStep(1);
 }
+
+// If we've landed here via the external payment redirect (from the installed app),
+// restore the person's inputs, recalculate their BOQ, and jump straight to payment.
+(function handleAutopayLanding() {
+  const params = new URLSearchParams(window.location.search);
+  const autopayType = params.get('autopay');
+  if (!autopayType) return;
+  document.addEventListener('DOMContentLoaded', () => {
+    restoreFormStateFromParams(params);
+    calculateBOQ();
+    openPaymentModal(autopayType);
+    // Clean the URL so a refresh doesn't re-trigger this
+    window.history.replaceState({}, document.title, window.location.pathname);
+  });
+})();
 </script>
 <script>
   if ('serviceWorker' in navigator) {
