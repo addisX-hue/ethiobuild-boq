@@ -2353,7 +2353,10 @@ function openPaymentModal(type){
 
   // If running as an installed app, hand the purchase off to a real browser tab instead of
   // completing it inside the app's own view (keeps us outside Play Store's in-app purchase rules).
-  if (isStandaloneApp()) {
+  // DISABLED FOR NOW: pay.addisboq.com doesn't exist yet — re-enable once that subdomain is live,
+  // otherwise this breaks Excel/PDF for anyone who has the site installed to their home screen.
+  const PAY_SUBDOMAIN_READY = false;
+  if (PAY_SUBDOMAIN_READY && isStandaloneApp()) {
     const state = serializeFormState();
     const params = new URLSearchParams(state);
     params.set('autopay', window._exportType);
