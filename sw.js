@@ -1,4 +1,4 @@
-const CACHE_NAME = 'addisboq-v8';
+const CACHE_NAME = 'addisboq-v9';
 const ASSETS = [
   '/',
   '/index.html',
@@ -25,9 +25,22 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch — serve from cache, fall back to network
+// Fetch — stale-while-revalidate: serve cached copy instantly, quietly fetch
+// a fresh copy in the background and save it for next time. Falls back to
+// network if nothing's cached yet (e.g. first visit).
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    caches.open(CACHE_NAME).then(cache =>
+      cache.match(event.request).then(cached => {
+        const networkFetch = fetch(event.request).then(response => {
+          if (response && response.status === 200) {
+            cache.put(event.request, response.clone());
+          }
+          return response;
+        }).catch(() => cached); // offline and nothing new — fall back to cache
+
+        return cached || networkFetch;
+      })
+    )
   );
 });

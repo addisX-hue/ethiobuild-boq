@@ -618,6 +618,21 @@
 </head>
 <body>
 
+<div id="update-banner" style="
+  display:none;
+  background:linear-gradient(135deg,#1a1a2e,#2d2d4e);
+  color:#fff; padding:12px 16px;
+  align-items:center; justify-content:space-between; gap:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+  font-family:'Inter',sans-serif;
+">
+  <span style="font-size:13px;">🔄 A new version is available</span>
+  <button onclick="applyPendingUpdate()" style="
+    background:#c8922a; color:#1a1a2e; border:none; border-radius:6px;
+    padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0;
+  ">Update now</button>
+</div>
+
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 <div class="side-menu" id="sideMenu">
 <h3>EthioBuild</h3>
@@ -3082,8 +3097,49 @@ function recalculate() {
 })();
 </script>
 <script>
+  let _pendingUpdate = false;
+
+  function isPaymentModalOpen() {
+    const modal = document.getElementById('paymentModal');
+    return modal && modal.style.display === 'block';
+  }
+
+  function showUpdateBanner() {
+    if (isPaymentModalOpen()) {
+      _pendingUpdate = true; // wait until they close the modal
+      return;
+    }
+    const banner = document.getElementById('update-banner');
+    if (banner) banner.style.display = 'flex';
+  }
+
+  function applyPendingUpdate() {
+    window.location.reload();
+  }
+
+  // If the update banner was held back because payment was in progress,
+  // show it as soon as the modal closes.
+  const _originalClosePaymentModal = window.closePaymentModal;
+  window.closePaymentModal = function() {
+    if (typeof _originalClosePaymentModal === 'function') _originalClosePaymentModal();
+    if (_pendingUpdate) {
+      _pendingUpdate = false;
+      showUpdateBanner();
+    }
+  };
+
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      // A new worker just took control (fetched fresh content in the background) —
+      // let the person know, gently, rather than forcing a reload.
+      let hasControllerAlready = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (hasControllerAlready) {
+          showUpdateBanner();
+        }
+        hasControllerAlready = true;
+      });
+    });
   }
 </script>
 <!-- ===== ABOUT SCREEN ===== -->
