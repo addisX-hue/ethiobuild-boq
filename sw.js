@@ -1,7 +1,8 @@
-const CACHE_NAME = 'addisboq-v9';
+const CACHE_NAME = 'addisboq-v10';
 const ASSETS = [
   '/',
   '/index.html',
+  '/sitelog.html',
   '/icon-192.jpg',
   '/icon-512.jpg',
   '/manifest.json'
@@ -25,22 +26,21 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch — stale-while-revalidate: serve cached copy instantly, quietly fetch
-// a fresh copy in the background and save it for next time. Falls back to
-// network if nothing's cached yet (e.g. first visit).
+// Fetch — network-first: always try to get the freshest version from the
+// server first. Only fall back to the cached copy if the network request
+// fails (e.g. offline, or spotty connection) — this guarantees people
+// always see the current live site when they have a connection, at the
+// cost of a real network round-trip on every load.
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.open(CACHE_NAME).then(cache =>
-      cache.match(event.request).then(cached => {
-        const networkFetch = fetch(event.request).then(response => {
-          if (response && response.status === 200) {
-            cache.put(event.request, response.clone());
-          }
-          return response;
-        }).catch(() => cached); // offline and nothing new — fall back to cache
-
-        return cached || networkFetch;
+    fetch(event.request)
+      .then(response => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
       })
-    )
+      .catch(() => caches.match(event.request))
   );
 });

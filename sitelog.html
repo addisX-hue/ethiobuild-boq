@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SiteLog — Daily Report, Subcontractor Measurement, Payments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#101E3D;
+    --navy-2:#182B52;
+    --paper:#F6F3EC;
+    --card:#FFFFFF;
+    --orange:#FF6B35;
+    --orange-dark:#E4551F;
+    --steel:#5B6B7C;
+    --green:#3F8F5F;
+    --red:#C94A3B;
+    --line:#DCD5C6;
+    --ink:#1B2430;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, rgba(16,30,61,0.035) 0px, rgba(16,30,61,0.035) 1px, transparent 1px, transparent 28px),
+      repeating-linear-gradient(90deg, rgba(16,30,61,0.035) 0px, rgba(16,30,61,0.035) 1px, transparent 1px, transparent 28px),
+      var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Space Grotesk', sans-serif;
+    letter-spacing:0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  button{font-family:inherit; cursor:pointer;}
+  input, select{font-family:'IBM Plex Sans', sans-serif;}
+
+  /* ---------- Header ---------- */
+  header{
+    background:var(--navy);
+    color:#fff;
+    padding:18px 24px 0 24px;
+    position:sticky; top:0; z-index:50;
+    box-shadow:0 2px 10px rgba(0,0,0,0.15);
+  }
+  .brand-row{
+    display:flex; align-items:baseline; justify-content:space-between;
+    max-width:1180px; margin:0 auto; flex-wrap:wrap; gap:8px;
+  }
+  .brand{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700; font-size:22px; letter-spacing:0.04em;
+    display:flex; align-items:center; gap:10px;
+  }
+  .brand .mark{
+    width:11px;height:11px;background:var(--orange); display:inline-block;
+    transform:rotate(45deg);
+  }
+  .brand small{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:400; font-size:11px; color:#AEB9CF; letter-spacing:0.06em;
+    text-transform:uppercase;
+  }
+  .tabs{
+    max-width:1180px; margin:14px auto 0 auto;
+    display:flex; gap:2px;
+  }
+  .tab-btn{
+    background:transparent; border:none; color:#AEB9CF;
+    padding:12px 20px; font-size:14px; font-weight:600;
+    border-bottom:3px solid transparent;
+    letter-spacing:0.02em;
+  }
+  .tab-btn.active{ color:#fff; border-bottom-color:var(--orange); }
+  .tab-btn:hover{ color:#fff; }
+
+  /* ---------- Layout ---------- */
+  main{ max-width:1180px; margin:0 auto; padding:24px 24px 80px 24px; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  .grid-2{ display:grid; grid-template-columns:1.15fr 0.85fr; gap:20px; align-items:start; }
+  @media(max-width:860px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:20px;
+    margin-bottom:18px;
+  }
+  .card-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px; gap:10px; flex-wrap:wrap;
+  }
+  .card-head h2{
+    font-size:14px; text-transform:uppercase; letter-spacing:0.09em;
+    margin:0; color:var(--navy); font-weight:700;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px;
+    color:var(--orange-dark); letter-spacing:0.08em; text-transform:uppercase;
+    display:block; margin-bottom:4px;
+  }
+
+  /* dimension-line divider — signature element */
+  .dim-divider{
+    display:flex; align-items:center; gap:8px; margin:22px 0 16px 0;
+    color:var(--steel); font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+  }
+  .dim-divider::before, .dim-divider::after{
+    content:""; flex:1; height:1px; background:var(--line);
+    background-image:linear-gradient(90deg, var(--steel) 0 6px, transparent 6px);
+    background-size:12px 1px; opacity:0.55;
+  }
+
+  label{ display:block; font-size:12px; font-weight:600; color:var(--steel); margin-bottom:4px; }
+  input[type=text], input[type=number], input[type=date], select, textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:2px;
+    font-size:14px; background:#FCFBF8; color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus, button:focus-visible{
+    outline:2px solid var(--orange); outline-offset:1px; border-color:var(--orange);
+  }
+  .field{ margin-bottom:12px; }
+  .row{ display:grid; gap:10px; }
+  .row-2{ grid-template-columns:1fr 1fr; }
+  .row-3{ grid-template-columns:1fr 1fr 1fr; }
+  .row-4{ grid-template-columns:1.4fr 1fr 0.8fr 0.7fr; }
+  @media(max-width:600px){ .row-3, .row-4{ grid-template-columns:1fr 1fr; } }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--navy); color:#fff; border:none;
+    padding:10px 16px; font-size:13px; font-weight:600; border-radius:2px;
+    letter-spacing:0.02em;
+  }
+  .btn:hover{ background:var(--navy-2); }
+  .btn-orange{ background:var(--orange); }
+  .btn-orange:hover{ background:var(--orange-dark); }
+  .btn-ghost{
+    background:transparent; color:var(--steel); border:1px solid var(--line);
+  }
+  .btn-ghost:hover{ border-color:var(--steel); color:var(--ink); }
+  .btn-sm{ padding:6px 10px; font-size:12px; }
+  .btn-danger{ background:transparent; color:var(--red); border:1px solid rgba(201,74,59,0.3); }
+  .btn-danger:hover{ background:rgba(201,74,59,0.06); }
+  .btn-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+
+  .list-row{
+    display:flex; align-items:center; gap:10px; padding:9px 0;
+    border-bottom:1px solid var(--line); font-size:13.5px;
+  }
+  .list-row:last-child{ border-bottom:none; }
+  .list-row .grow{ flex:1; }
+  .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; padding:2px 7px;
+    border-radius:10px; background:#EEF1F6; color:var(--steel); text-transform:uppercase;
+  }
+  .tag-green{ background:rgba(63,143,95,0.12); color:var(--green); }
+  .tag-orange{ background:rgba(255,107,53,0.12); color:var(--orange-dark); }
+
+  .empty{
+    text-align:center; padding:28px 10px; color:var(--steel); font-size:13px;
+    border:1px dashed var(--line); border-radius:2px; background:#FCFBF8;
+  }
+
+  select#projectSelect, select#subSelect{
+    background:#fff; font-weight:600;
+  }
+  .project-bar{
+    display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;
+    background:var(--card); border:1px solid var(--line); padding:14px 18px; margin-bottom:20px;
+  }
+  .project-bar .field{ margin-bottom:0; min-width:220px; flex:1; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th{
+    text-align:left; font-family:'IBM Plex Mono', monospace; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.06em; color:var(--steel);
+    padding:7px 8px; border-bottom:2px solid var(--ink);
+  }
+  td{ padding:8px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td{ border-bottom:none; }
+  .num{ font-family:'IBM Plex Mono', monospace; text-align:right; }
+
+  .gauge{
+    height:6px; background:#EEEAE0; border-radius:3px; overflow:hidden; margin-top:6px;
+  }
+  .gauge > div{ height:100%; background:var(--orange); }
+  .gauge.over > div{ background:var(--red); }
+
+  .stat-row{ display:flex; gap:18px; flex-wrap:wrap; margin-top:6px; }
+  .stat{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--steel); }
+  .stat b{ color:var(--ink); font-size:14px; display:block; }
+
+  .hint{ font-size:12px; color:var(--steel); margin-top:4px; }
+
+  /* Printable areas */
+  #printArea{ display:none; }
+  @media print{
+    header, .no-print{ display:none !important; }
+    body{ background:#fff; }
+    main{ padding:0; max-width:none; }
+    .view{ display:none !important; }
+    #printArea{ display:block !important; }
+  }
+  .print-doc{ padding:20px; font-family:'IBM Plex Sans', sans-serif; }
+  .print-doc h1{ font-size:20px; margin-bottom:2px; }
+  .print-doc .sub{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:#555; margin-bottom:18px; }
+  .print-doc table{ margin-top:8px; }
+  .print-doc th{ border-bottom:2px solid #000; }
+
+  @media (prefers-reduced-motion: no-preference){
+    .card{ transition:border-color 0.15s ease; }
+  }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- ============ LANDING / CODE ENTRY SCREEN ============ -->
+<div id="landingScreen" style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background:var(--paper);">
+  <div style="max-width:420px; width:100%;">
+    <div style="text-align:center; margin-bottom:28px;">
+      <div class="brand" style="justify-content:center; font-size:26px; color:var(--navy);"><span class="mark"></span>SITELOG</div>
+      <p style="color:var(--steel); font-size:13px; margin-top:6px;">Daily Report · Subcontractor Measurement · Payments</p>
+      <div style="display:inline-flex; align-items:center; gap:6px; background:var(--orange); color:#fff; font-size:12px; font-weight:700; padding:6px 14px; border-radius:20px; margin-top:14px;">
+        🎉 Try free for 14 days — no card required
+      </div>
+    </div>
+
+    <div class="card" id="landingCreateCard">
+      <div class="card-head"><div><span class="eyebrow">New</span><h2>Create a Project</h2></div></div>
+      <div class="field"><label>Project name</label><input type="text" id="newProjNameInput" placeholder="e.g. Villa G+2 — Bole"></div>
+      <p class="hint" style="margin-bottom:12px;">You'll get a unique project code — save it, it's the only way to access your data. 14 days free, then 2,000 ETB / 30 days.</p>
+      <button class="btn btn-orange" id="createProjectBtn" style="width:100%; justify-content:center;">Create Project</button>
+    </div>
+
+    <div class="dim-divider">or</div>
+
+    <div class="card" id="landingEnterCard">
+      <div class="card-head"><div><span class="eyebrow">Existing</span><h2>Enter Project Code</h2></div></div>
+      <div class="field"><input type="text" id="enterCodeInput" placeholder="e.g. SL-7X92-QK" class="mono" style="text-transform:uppercase;"></div>
+      <button class="btn btn-ghost" id="enterProjectBtn" style="width:100%; justify-content:center;">Open Project</button>
+      <p class="hint" id="landingError" style="color:var(--red); display:none;"></p>
+    </div>
+
+    <p class="hint" style="text-align:center; margin-top:20px;">Lost your code? Message us on WhatsApp with your project name and we'll help you recover it.</p>
+  </div>
+</div>
+
+<!-- ============ CODE REVEAL SCREEN (shown once, right after creating) ============ -->
+<div id="codeRevealScreen" style="display:none; min-height:100vh; align-items:center; justify-content:center; padding:24px; background:var(--navy);">
+  <div style="max-width:420px; width:100%; text-align:center;">
+    <div style="font-size:40px; margin-bottom:12px;">🔑</div>
+    <h2 style="color:#fff; font-size:20px; margin-bottom:10px;">Save Your Project Code</h2>
+    <p style="color:#AEB9CF; font-size:13px; margin-bottom:20px; line-height:1.6;">This is the only way to access your project. Write it down, screenshot it, or send it to yourself now.</p>
+    <div class="mono" id="codeRevealText" style="background:#fff; color:var(--navy); font-size:24px; font-weight:700; padding:18px; border-radius:4px; letter-spacing:0.08em; margin-bottom:20px;"></div>
+    <button class="btn btn-orange" id="codeRevealContinueBtn" style="width:100%; justify-content:center;">I've saved it — Continue</button>
+  </div>
+</div>
+
+<!-- ============ RENEWAL PAYMENT MODAL ============ -->
+<div id="renewModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000;"></div>
+<div id="renewModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:24px; border-radius:6px; box-shadow:0 8px 30px rgba(0,0,0,0.3); z-index:1001; width:90%; max-width:380px;">
+  <div style="text-align:center; margin-bottom:18px;">
+    <div style="font-size:15px; color:var(--steel); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Renew Access</div>
+    <div style="font-size:30px; font-weight:700; color:var(--navy); font-family:'Space Grotesk',sans-serif;">2,000 ETB</div>
+    <div style="font-size:12px; color:var(--steel); margin-top:2px;">Extends your access by 30 days</div>
+  </div>
+  <div style="background:#FCFBF8; border:1px dashed var(--line); border-radius:4px; padding:14px; text-align:center; margin-bottom:16px;">
+    <div style="font-size:11px; color:var(--steel); text-transform:uppercase; margin-bottom:4px;">TeleBirr Number</div>
+    <div style="font-size:18px; font-weight:700; font-family:'IBM Plex Mono',monospace;">+251 913 265 488</div>
+  </div>
+  <label>TeleBirr Transaction ID</label>
+  <input type="text" id="renewTxnId" name="teleBirrTxnRef" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. DFN76I7LTE" style="margin-bottom:14px;">
+  <div id="renewError" style="display:none; color:var(--red); font-size:12px; margin-bottom:10px;"></div>
+  <button class="btn btn-orange" id="renewSubmitBtn" style="width:100%; justify-content:center; margin-bottom:8px;">Confirm Payment</button>
+  <button class="btn btn-ghost" id="renewCancelBtn" style="width:100%; justify-content:center;">Cancel</button>
+</div>
+
+<!-- ============ EXPIRY LOCK BANNER (shown inside app when read-only) ============ -->
+<div id="expiryBanner" style="display:none; background:var(--red); color:#fff; padding:10px 16px; text-align:center; font-size:13px; font-weight:600;"></div>
+
+
+<div id="appRoot" style="display:none;">
+<header>
+  <div class="brand-row">
+    <div class="brand"><span class="mark"></span>SITELOG<small>Daily Report · Subcontractor Measurement · Payments</small></div>
+    <button class="btn btn-ghost btn-sm" id="renewBtn" style="display:none;">Renew — 2,000 ETB</button>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" data-view="dailyView">Daily Report</button>
+    <button class="tab-btn" data-view="mbView">Subcontractor Measurement</button>
+    <button class="tab-btn" data-view="paymentsView">Payments</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ PROJECT INFO BAR ============ -->
+  <div class="project-bar no-print">
+    <div class="field">
+      <label>Project</label>
+      <div style="font-weight:700; font-size:15px; padding:8px 0;" id="currentProjectName">—</div>
+    </div>
+    <div class="field" style="flex:0;">
+      <label>Code</label>
+      <div class="mono" style="font-weight:700; font-size:13px; padding:8px 0;" id="currentProjectCode">—</div>
+    </div>
+  </div>
+
+  <!-- ============ DAILY REPORT VIEW ============ -->
+  <div class="view active" id="dailyView">
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <div><span class="eyebrow">Entry</span><h2>Today's Report</h2></div>
+          </div>
+          <div class="row row-2">
+            <div class="field"><label>Date</label><input type="date" id="reportDate"></div>
+            <div class="field"><label>Weather</label>
+              <select id="reportWeather">
+                <option>Clear</option><option>Cloudy</option><option>Rain</option>
+                <option>Extreme heat</option><option>High wind</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="dim-divider">Work Completed</div>
+          <div id="workItemsList"></div>
+          <div class="row row-4">
+            <input type="text" id="wiActivity" placeholder="Activity, e.g. Column casting">
+            <input type="text" id="wiLocation" placeholder="Location / grid">
+            <input type="number" id="wiQty" placeholder="Qty">
+            <input type="text" id="wiUnit" placeholder="Unit">
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="addWorkItem">+ Add work item</button>
+
+          <div class="dim-divider">Manpower on Site</div>
+          <div id="manpowerList"></div>
+          <div class="row row-2">
+            <select id="mpCategory">
+              <option>Mason</option><option>Helper</option><option>Carpenter</option>
+              <option>Steel fixer</option><option>Electrician</option><option>Plumber</option>
+              <option>Painter</option><option>Supervisor</option><option>Other</option>
+            </select>
+            <input type="number" id="mpCount" placeholder="Count">
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="addManpower">+ Add manpower</button>
+
+          <div class="dim-divider">Delays / Issues</div>
+          <div id="delaysList"></div>
+          <div class="row row-2">
+            <input type="text" id="dlReason" placeholder="Reason, e.g. Late cement delivery">
+            <input type="number" id="dlHours" placeholder="Hours lost">
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="addDelay">+ Add delay</button>
+
+          <div class="btn-row">
+            <button class="btn btn-orange" id="saveReportBtn">Save report</button>
+            <button class="btn btn-ghost" id="clearReportBtn">Clear form</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">History</span><h2>Past Reports</h2></div></div>
+          <div id="reportHistory"><div class="empty">No reports saved yet for this project.</div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">Output</span><h2>Export</h2></div></div>
+          <p class="hint">Load a report from history, or save the current form, then export a clean PDF-style copy for the client or PM.</p>
+          <button class="btn btn-ghost" id="printReportBtn">Print / Export current report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MEASUREMENT BOOK VIEW ============ -->
+  <div class="view" id="mbView">
+
+    <div class="card">
+      <div class="card-head">
+        <div><span class="eyebrow">Subcontractor</span><h2>Select or Add</h2></div>
+      </div>
+      <div class="row row-3">
+        <div class="field" style="grid-column:span 2">
+          <label>Subcontractor</label>
+          <select id="subSelect"></select>
+        </div>
+        <div class="field" style="align-self:end">
+          <button class="btn btn-ghost" id="newSubBtn" style="width:100%">+ New subcontractor</button>
+        </div>
+      </div>
+      <div id="subMeta" class="stat-row"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div><span class="eyebrow">Summary</span><h2>Consolidated Bill — All Subcontractors</h2></div>
+      </div>
+      <div id="grandSummary"><div class="empty">Add subcontractors and BOQ items to see the combined bill here.</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">BOQ</span><h2>Bill of Quantity Items</h2></div></div>
+          <div id="boqTableWrap"><div class="empty">No BOQ items yet. Add one below.</div></div>
+          <div class="dim-divider">Add BOQ Item</div>
+          <div class="row row-2">
+            <input type="text" id="boqDesc" placeholder="Description, e.g. RCC Column M25">
+            <select id="boqUnit">
+              <option value="m">m (length)</option>
+              <option value="m2">m² (area)</option>
+              <option value="m3">m³ (volume)</option>
+              <option value="kg">kg</option>
+              <option value="nos">nos (count)</option>
+              <option value="ls">ls (lump sum)</option>
+            </select>
+          </div>
+          <div class="row row-2" style="margin-top:10px">
+            <input type="number" id="boqRate" placeholder="Rate per unit (ETB)">
+            <input type="number" id="boqContracted" placeholder="Contracted quantity">
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="addBoqItem">+ Add BOQ item</button>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">Site Entry</span><h2>Record Measurement</h2></div></div>
+          <div class="field">
+            <label>BOQ item</label>
+            <select id="measBoqItem"></select>
+          </div>
+          <div id="measDimFields" class="row row-3" style="margin-bottom:10px"></div>
+          <div class="row row-2">
+            <input type="text" id="measLocation" placeholder="Location, e.g. Grid A3–A5, 2nd floor">
+            <input type="date" id="measDate">
+          </div>
+          <div class="stat-row" id="measCalcPreview" style="margin-top:8px"></div>
+          <button class="btn btn-orange btn-sm" style="margin-top:10px" id="addMeasurement">+ Add measurement</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">Ledger</span><h2>Recent Measurements</h2></div></div>
+          <div id="measurementsList"><div class="empty">No measurements recorded yet.</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">Billing</span><h2>Generate Bill</h2></div></div>
+          <div class="row row-2">
+            <div class="field"><label>Period from</label><input type="date" id="billFrom"></div>
+            <div class="field"><label>Period to</label><input type="date" id="billTo"></div>
+          </div>
+          <div id="billPreview"></div>
+          <div class="btn-row">
+            <button class="btn btn-orange" id="generateBillBtn">Generate bill</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">History</span><h2>Past Bills</h2></div></div>
+          <div id="billHistory"><div class="empty">No bills generated yet.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PAYMENTS VIEW ============ -->
+  <div class="view" id="paymentsView">
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">Entry</span><h2>Record a Payment</h2></div></div>
+          <div class="row row-2">
+            <div class="field"><label>Date</label><input type="date" id="payDate"></div>
+            <div class="field"><label>Amount paid (ETB)</label><input type="number" id="payAmount" placeholder="0"></div>
+          </div>
+          <div class="field">
+            <label>Paid to (trade / subcontractor / person)</label>
+            <input type="text" id="payPayee" list="payeeSuggestions" placeholder="e.g. Carpentry crew, Reinforcement benders">
+            <datalist id="payeeSuggestions"></datalist>
+          </div>
+          <div class="row row-2">
+            <div class="field"><label>For work / reason</label><input type="text" id="payReason" placeholder="e.g. Shuttering — 3rd floor slab"></div>
+            <div class="field"><label>Payment method</label>
+              <select id="payMethod"><option>Cash</option><option>Bank transfer</option><option>Mobile money</option><option>Cheque</option></select>
+            </div>
+          </div>
+          <div class="field"><label>Notes (optional)</label><input type="text" id="payNotes" placeholder="Anything worth remembering"></div>
+          <button class="btn btn-orange" id="addPaymentBtn">+ Record payment</button>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><span class="eyebrow">Today</span><h2 id="todayPayHeading">Today's Payments</h2></div>
+          </div>
+          <div id="todayPayments"><div class="empty">No payments recorded today.</div></div>
+          <div class="stat-row" id="todayPayTotal" style="margin-top:10px"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:12px" id="printDayBtn">Print today's payment voucher</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">Ledger</span><h2>By Payee</h2></div></div>
+          <div id="payeeTotals"><div class="empty">No payments recorded yet.</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><span class="eyebrow">History</span><h2>Payment History</h2></div></div>
+          <div id="paymentHistory"><div class="empty">No payments recorded yet.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RFI VIEW ============ -->
+  <div class="view" id="rfiView">
+    <div class="card">
+      <div class="card-head"><div><span class="eyebrow">Log</span><h2>New RFI</h2></div></div>
+      <div class="row row-2">
+        <div class="field"><label>Subject</label><input type="text" id="rfiSubject" placeholder="e.g. Beam reinforcement clash at Grid C4"></div>
+        <div class="field"><label>Priority</label>
+          <select id="rfiPriority"><option>Low</option><option selected>Medium</option><option>High</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Question</label><textarea id="rfiQuestion" rows="3" placeholder="Describe the question or clarification needed"></textarea></div>
+      <div class="row row-3">
+        <div class="field"><label>Submitted by</label><input type="text" id="rfiFrom" placeholder="Your name"></div>
+        <div class="field"><label>Submitted to</label><input type="text" id="rfiTo" placeholder="e.g. Structural Consultant"></div>
+        <div class="field"><label>Response needed by</label><input type="date" id="rfiNeeded"></div>
+      </div>
+      <button class="btn btn-orange btn-sm" id="addRfiBtn">+ Submit RFI</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div><span class="eyebrow">Register</span><h2>All RFIs</h2></div>
+        <div class="stat-row" id="rfiStats"></div>
+      </div>
+      <div id="rfiList"><div class="empty">No RFIs logged yet for this project.</div></div>
+    </div>
+  </div>
+
+  <!-- ============ SUBMITTAL VIEW ============ -->
+  <div class="view" id="submittalView">
+    <div class="card">
+      <div class="card-head"><div><span class="eyebrow">Log</span><h2>New Submittal</h2></div></div>
+      <div class="row row-2">
+        <div class="field"><label>Description</label><input type="text" id="subDescField" placeholder="e.g. Precast facade panel shop drawings"></div>
+        <div class="field"><label>Type</label>
+          <select id="subType">
+            <option>Shop Drawing</option><option>Material Sample</option>
+            <option>Product Data</option><option>Mock-up</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="row row-3">
+        <div class="field"><label>Spec section</label><input type="text" id="subSpec" placeholder="e.g. 03 45 00"></div>
+        <div class="field"><label>Submitted by</label><input type="text" id="subFrom" placeholder="Subcontractor / supplier"></div>
+        <div class="field"><label>Revision no.</label><input type="number" id="subRevision" placeholder="0" value="0"></div>
+      </div>
+      <button class="btn btn-orange btn-sm" id="addSubmittalBtn">+ Submit for review</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div><span class="eyebrow">Register</span><h2>All Submittals</h2></div>
+        <div class="stat-row" id="submittalStats"></div>
+      </div>
+      <div id="submittalList"><div class="empty">No submittals logged yet for this project.</div></div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+/* ---------------------------------------------------------------
+   FIREBASE
+--------------------------------------------------------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyA4tt1TUtv5U88m2ATs3yBKNuZSRt1HdGI",
+  authDomain: "addisboq.firebaseapp.com",
+  projectId: "addisboq",
+  storageBucket: "addisboq.firebasestorage.app",
+  messagingSenderId: "964055222529",
+  appId: "1:964055222529:web:140501a97568d1162fb300"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* ---------------------------------------------------------------
+   STATE — one project per code, no multi-project switcher
+--------------------------------------------------------------- */
+let projectCode = null;
+let projectMeta = { name: '', createdAt: null, trialEndsAt: null, accessExpiresAt: null };
+let isReadOnly = false;
+
+let state = {
+  dailyReports: [],       // {id, date, weather, workItems, manpower, delays}
+  subcontractors: [],     // {id, name, trade, contractValue}
+  currentSubId: null,
+  boqItems: [],           // {id, subId, desc, unit, rate, contractedQty}
+  measurements: [],       // {id, boqItemId, date, location, qty, dims, billed, billId}
+  bills: [],              // {id, subId, billNumber, from, to, total, lines}
+  payments: []            // {id, date, payee, reason, amount, method, notes}
+};
+
+// draft (unsaved) daily report working buffers
+let draft = { workItems: [], manpower: [], delays: [], editingReportId: null };
+
+let saveTimer = null;
+function persist(){
+  if (isReadOnly) return; // never write while access has expired
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try{
+      await db.collection('sitelog_projects').doc(projectCode).update({
+        stateData: JSON.stringify(state)
+      });
+    }
+    catch(e){ console.error('Save failed', e); }
+  }, 300);
+}
+
+function generateProjectCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous 0/O/1/I
+  const part = () => Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  return 'SL-' + part() + '-' + part();
+}
+
+async function createProject(name){
+  const code = generateProjectCode();
+  const now = firebase.firestore.Timestamp.now();
+  const trialEndsAt = firebase.firestore.Timestamp.fromMillis(now.toMillis() + 14*24*60*60*1000);
+  const emptyState = { dailyReports:[], subcontractors:[], currentSubId:null, boqItems:[], measurements:[], bills:[], payments:[] };
+  await db.collection('sitelog_projects').doc(code).set({
+    projectName: name,
+    createdAt: now,
+    trialEndsAt: trialEndsAt,
+    accessExpiresAt: trialEndsAt,
+    lastPaymentDate: null,
+    stateData: JSON.stringify(emptyState)
+  });
+  return code;
+}
+
+async function loadProject(code){
+  const docRef = db.collection('sitelog_projects').doc(code);
+  const snap = await docRef.get();
+  if (!snap.exists) return false;
+  const data = snap.data();
+  projectCode = code;
+  projectMeta = {
+    name: data.projectName,
+    createdAt: data.createdAt,
+    trialEndsAt: data.trialEndsAt,
+    accessExpiresAt: data.accessExpiresAt
+  };
+  if (data.stateData) {
+    try { state = Object.assign(state, JSON.parse(data.stateData)); } catch(e) {}
+  }
+  checkAccessExpiry();
+  localStorage.setItem('sitelog_lastCode', code); // convenience only, not the source of truth
+  return true;
+}
+
+function checkAccessExpiry(){
+  const now = Date.now();
+  const expiresAtMs = projectMeta.accessExpiresAt ? projectMeta.accessExpiresAt.toMillis() : 0;
+  isReadOnly = now > expiresAtMs;
+  const banner = document.getElementById('expiryBanner');
+  const renewBtn = document.getElementById('renewBtn');
+  const daysLeft = Math.ceil((expiresAtMs - now) / (24*60*60*1000));
+
+  if (isReadOnly) {
+    banner.style.display = 'block';
+    banner.textContent = '🔒 Access expired — showing read-only data. Renew for 2,000 ETB / 30 days to continue editing.';
+    renewBtn.style.display = 'inline-flex';
+    document.querySelectorAll('#appRoot button, #appRoot input, #appRoot select, #appRoot textarea')
+      .forEach(el => { if (el.id !== 'renewBtn') el.disabled = true; });
+  } else if (daysLeft <= 3) {
+    banner.style.display = 'block';
+    banner.style.background = '#E4551F';
+    banner.textContent = `⏳ Your access expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'} — renew now to avoid interruption.`;
+    renewBtn.style.display = 'inline-flex';
+  } else {
+    banner.style.display = 'none';
+    renewBtn.style.display = 'none';
+  }
+}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function fmt(n){ return (Math.round((n + Number.EPSILON) * 100) / 100).toLocaleString('en-US'); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+/* ---------------------------------------------------------------
+   LANDING SCREEN WIRING
+--------------------------------------------------------------- */
+document.getElementById('createProjectBtn').addEventListener('click', async () => {
+  const name = document.getElementById('newProjNameInput').value.trim();
+  if (!name) { alert('Enter a project name.'); return; }
+  const btn = document.getElementById('createProjectBtn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+  try {
+    const code = await createProject(name);
+    document.getElementById('codeRevealText').textContent = code;
+    document.getElementById('landingScreen').style.display = 'none';
+    document.getElementById('codeRevealScreen').style.display = 'flex';
+    document.getElementById('codeRevealScreen').dataset.pendingCode = code;
+  } catch(e) {
+    alert('Something went wrong creating your project. Please try again.');
+    console.error(e);
+  }
+  btn.disabled = false; btn.textContent = 'Create Project';
+});
+
+document.getElementById('codeRevealContinueBtn').addEventListener('click', async () => {
+  const code = document.getElementById('codeRevealScreen').dataset.pendingCode;
+  document.getElementById('codeRevealScreen').style.display = 'none';
+  await enterApp(code);
+});
+
+document.getElementById('enterProjectBtn').addEventListener('click', async () => {
+  const code = document.getElementById('enterCodeInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('landingError');
+  errEl.style.display = 'none';
+  if (!code) { return; }
+  const btn = document.getElementById('enterProjectBtn');
+  btn.disabled = true; btn.textContent = 'Opening...';
+  const found = await loadProject(code);
+  btn.disabled = false; btn.textContent = 'Open Project';
+  if (!found) {
+    errEl.textContent = "Couldn't find a project with that code. Double-check and try again.";
+    errEl.style.display = 'block';
+    return;
+  }
+  document.getElementById('landingScreen').style.display = 'none';
+  enterAppUI();
+});
+
+async function enterApp(code){
+  const found = await loadProject(code);
+  if (found) enterAppUI();
+}
+
+function enterAppUI(){
+  document.getElementById('appRoot').style.display = 'block';
+  document.getElementById('currentProjectName').textContent = projectMeta.name;
+  document.getElementById('currentProjectCode').textContent = projectCode;
+  checkAccessExpiry();
+  renderAll();
+}
+
+document.getElementById('renewBtn').addEventListener('click', openRenewModal);
+
+function openRenewModal(){
+  document.getElementById('renewModalOverlay').style.display = 'block';
+  document.getElementById('renewModal').style.display = 'block';
+  document.getElementById('renewError').style.display = 'none';
+  document.getElementById('renewTxnId').value = '';
+}
+function closeRenewModal(){
+  document.getElementById('renewModalOverlay').style.display = 'none';
+  document.getElementById('renewModal').style.display = 'none';
+}
+document.getElementById('renewCancelBtn').addEventListener('click', closeRenewModal);
+document.getElementById('renewModalOverlay').addEventListener('click', closeRenewModal);
+
+document.getElementById('renewSubmitBtn').addEventListener('click', async () => {
+  const txnId = document.getElementById('renewTxnId').value.trim();
+  const errEl = document.getElementById('renewError');
+  errEl.style.display = 'none';
+  if (!txnId) {
+    errEl.textContent = 'Please enter your TeleBirr transaction ID.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('renewSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Verifying...';
+  try {
+    const response = await fetch('https://us-central1-addisboq.cloudfunctions.net/verifySitelogRenewal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transactionId: txnId, projectCode: projectCode })
+    });
+    const result = await response.json();
+    if (result.valid) {
+      closeRenewModal();
+      // Re-fetch the project doc to pick up the new accessExpiresAt from the server
+      await loadProject(projectCode);
+      enterAppUI();
+      alert('Payment verified — your access has been extended by 30 days.');
+    } else {
+      errEl.textContent = 'Payment not verified. Please check your transaction ID and try again.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Something went wrong. Please check your connection and try again.';
+    errEl.style.display = 'block';
+    console.error(e);
+  }
+  btn.disabled = false; btn.textContent = 'Confirm Payment';
+});
+
+/* ---------------------------------------------------------------
+   TABS
+--------------------------------------------------------------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.view).classList.add('active');
+  });
+});
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------------------------------------------------------
+   DAILY REPORT — draft entry rows
+--------------------------------------------------------------- */
+document.getElementById('reportDate').value = todayStr();
+document.getElementById('measDate').value = todayStr();
+document.getElementById('payDate').value = todayStr();
+
+document.getElementById('addWorkItem').addEventListener('click', ()=>{
+  const a = document.getElementById('wiActivity').value.trim();
+  const l = document.getElementById('wiLocation').value.trim();
+  const q = document.getElementById('wiQty').value;
+  const u = document.getElementById('wiUnit').value.trim();
+  if(!a){ alert('Enter an activity name.'); return; }
+  draft.workItems.push({ activity:a, location:l, qty:q, unit:u });
+  ['wiActivity','wiLocation','wiQty','wiUnit'].forEach(id=>document.getElementById(id).value='');
+  renderWorkItems();
+});
+function renderWorkItems(){
+  const el = document.getElementById('workItemsList');
+  if(draft.workItems.length===0){ el.innerHTML=''; return; }
+  el.innerHTML = draft.workItems.map((w,i)=>`
+    <div class="list-row">
+      <span class="grow"><b>${escapeHtml(w.activity)}</b> — ${escapeHtml(w.location||'—')}</span>
+      <span class="tag mono">${escapeHtml(w.qty||'')} ${escapeHtml(w.unit||'')}</span>
+      <button class="btn-danger btn-sm" style="border:none;background:none" data-i="${i}" data-type="wi">✕</button>
+    </div>`).join('');
+  el.querySelectorAll('button[data-type="wi"]').forEach(b=>b.addEventListener('click', ()=>{
+    draft.workItems.splice(+b.dataset.i,1); renderWorkItems();
+  }));
+}
+
+document.getElementById('addManpower').addEventListener('click', ()=>{
+  const cat = document.getElementById('mpCategory').value;
+  const count = document.getElementById('mpCount').value;
+  if(!count || +count<=0){ alert('Enter a headcount.'); return; }
+  draft.manpower.push({ category:cat, count:+count });
+  document.getElementById('mpCount').value='';
+  renderManpower();
+});
+function renderManpower(){
+  const el = document.getElementById('manpowerList');
+  if(draft.manpower.length===0){ el.innerHTML=''; return; }
+  const total = draft.manpower.reduce((s,m)=>s+m.count,0);
+  el.innerHTML = draft.manpower.map((m,i)=>`
+    <div class="list-row">
+      <span class="grow">${escapeHtml(m.category)}</span>
+      <span class="tag mono">${m.count}</span>
+      <button class="btn-danger btn-sm" style="border:none;background:none" data-i="${i}" data-type="mp">✕</button>
+    </div>`).join('') + `<div class="stat" style="margin-top:6px">Total on site<b>${total}</b></div>`;
+  el.querySelectorAll('button[data-type="mp"]').forEach(b=>b.addEventListener('click', ()=>{
+    draft.manpower.splice(+b.dataset.i,1); renderManpower();
+  }));
+}
+
+document.getElementById('addDelay').addEventListener('click', ()=>{
+  const r = document.getElementById('dlReason').value.trim();
+  const h = document.getElementById('dlHours').value;
+  if(!r){ alert('Enter a delay reason.'); return; }
+  draft.delays.push({ reason:r, hours:h||0 });
+  document.getElementById('dlReason').value=''; document.getElementById('dlHours').value='';
+  renderDelays();
+});
+function renderDelays(){
+  const el = document.getElementById('delaysList');
+  if(draft.delays.length===0){ el.innerHTML=''; return; }
+  el.innerHTML = draft.delays.map((d,i)=>`
+    <div class="list-row">
+      <span class="grow">${escapeHtml(d.reason)}</span>
+      <span class="tag tag-orange mono">${d.hours}h lost</span>
+      <button class="btn-danger btn-sm" style="border:none;background:none" data-i="${i}" data-type="dl">✕</button>
+    </div>`).join('');
+  el.querySelectorAll('button[data-type="dl"]').forEach(b=>b.addEventListener('click', ()=>{
+    draft.delays.splice(+b.dataset.i,1); renderDelays();
+  }));
+}
+
+document.getElementById('clearReportBtn').addEventListener('click', ()=>{
+  if(!confirm('Clear the current form? Unsaved entries will be lost.')) return;
+  draft = { workItems: [], manpower: [], delays: [], editingReportId: null };
+  document.getElementById('reportDate').value = todayStr();
+  document.getElementById('reportWeather').value = 'Clear';
+  renderWorkItems(); renderManpower(); renderDelays();
+});
+
+document.getElementById('saveReportBtn').addEventListener('click', ()=>{
+  const date = document.getElementById('reportDate').value;
+  if(!date){ alert('Pick a date.'); return; }
+  if(draft.workItems.length===0 && draft.manpower.length===0){
+    if(!confirm('No work items or manpower logged. Save anyway?')) return;
+  }
+  const weather = document.getElementById('reportWeather').value;
+  let existingIdx = -1;
+  if(draft.editingReportId){
+    existingIdx = state.dailyReports.findIndex(r=>r.id===draft.editingReportId);
+  } else {
+    existingIdx = state.dailyReports.findIndex(r=>r.date===date);
+  }
+  const payload = {
+    id: draft.editingReportId || uid(),
+    
+    date, weather,
+    workItems: [...draft.workItems],
+    manpower: [...draft.manpower],
+    delays: [...draft.delays]
+  };
+  if(existingIdx>-1){ state.dailyReports[existingIdx] = payload; }
+  else { state.dailyReports.push(payload); }
+  draft.editingReportId = payload.id;
+  persist();
+  renderReportHistory();
+  alert('Report saved.');
+});
+
+function renderReportHistory(){
+  const el = document.getElementById('reportHistory');
+  const list = state.dailyReports.sort((a,b)=>b.date.localeCompare(a.date));
+  if(list.length===0){ el.innerHTML = '<div class="empty">No reports saved yet for this project.</div>'; return; }
+  el.innerHTML = list.map(r=>`
+    <div class="list-row">
+      <span class="grow"><b class="mono">${r.date}</b> — ${r.workItems.length} item(s), ${r.manpower.reduce((s,m)=>s+m.count,0)} crew</span>
+      ${r.delays.length ? `<span class="tag tag-orange">${r.delays.length} delay</span>` : ''}
+      <button class="btn btn-ghost btn-sm" data-id="${r.id}">Load</button>
+    </div>`).join('');
+  el.querySelectorAll('button[data-id]').forEach(b=>b.addEventListener('click', ()=>loadReport(b.dataset.id)));
+}
+function loadReport(id){
+  const r = state.dailyReports.find(x=>x.id===id);
+  if(!r) return;
+  draft = { workItems:[...r.workItems], manpower:[...r.manpower], delays:[...r.delays], editingReportId:r.id };
+  document.getElementById('reportDate').value = r.date;
+  document.getElementById('reportWeather').value = r.weather;
+  renderWorkItems(); renderManpower(); renderDelays();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.getElementById('printReportBtn').addEventListener('click', ()=>{
+  const date = document.getElementById('reportDate').value;
+  const weather = document.getElementById('reportWeather').value;
+  const proj = { name: projectMeta.name };
+  const totalCrew = draft.manpower.reduce((s,m)=>s+m.count,0);
+  const html = `
+    <div class="print-doc">
+      <h1>Daily Progress Report</h1>
+      <div class="sub">${escapeHtml(proj ? proj.name : '')} · ${date} · Weather: ${weather}</div>
+      <h3>Work Completed</h3>
+      <table><thead><tr><th>Activity</th><th>Location</th><th>Qty</th><th>Unit</th></tr></thead>
+      <tbody>${draft.workItems.map(w=>`<tr><td>${escapeHtml(w.activity)}</td><td>${escapeHtml(w.location||'—')}</td><td>${escapeHtml(w.qty||'')}</td><td>${escapeHtml(w.unit||'')}</td></tr>`).join('') || '<tr><td colspan="4">No entries</td></tr>'}</tbody></table>
+      <h3>Manpower (Total: ${totalCrew})</h3>
+      <table><thead><tr><th>Category</th><th>Count</th></tr></thead>
+      <tbody>${draft.manpower.map(m=>`<tr><td>${escapeHtml(m.category)}</td><td>${m.count}</td></tr>`).join('') || '<tr><td colspan="2">No entries</td></tr>'}</tbody></table>
+      <h3>Delays / Issues</h3>
+      <table><thead><tr><th>Reason</th><th>Hours lost</th></tr></thead>
+      <tbody>${draft.delays.map(d=>`<tr><td>${escapeHtml(d.reason)}</td><td>${d.hours}</td></tr>`).join('') || '<tr><td colspan="2">None reported</td></tr>'}</tbody></table>
+    </div>`;
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+});
+
+/* ---------------------------------------------------------------
+   MEASUREMENT BOOK
+--------------------------------------------------------------- */
+const subSelect = document.getElementById('subSelect');
+subSelect.addEventListener('change', ()=>{
+  state.currentSubId = subSelect.value || null;
+  persist();
+  renderMB();
+});
+document.getElementById('newSubBtn').addEventListener('click', ()=>{
+  const name = prompt('Subcontractor name:');
+  if(!name) return;
+  const trade = prompt('Trade (e.g. Reinforcement, Masonry, Electrical):') || '';
+  const cv = prompt('Total contract value (ETB), optional:') || 0;
+  const s = { id: uid(), name: name.trim(), trade: trade.trim(), contractValue:+cv||0 };
+  state.subcontractors.push(s);
+  state.currentSubId = s.id;
+  persist();
+  renderMB();
+});
+
+document.getElementById('addBoqItem').addEventListener('click', ()=>{
+  if(!state.currentSubId){ alert('Select or create a subcontractor first.'); return; }
+  const desc = document.getElementById('boqDesc').value.trim();
+  const unit = document.getElementById('boqUnit').value;
+  const rate = +document.getElementById('boqRate').value || 0;
+  const contracted = +document.getElementById('boqContracted').value || 0;
+  if(!desc){ alert('Enter a description.'); return; }
+  state.boqItems.push({ id: uid(), subId: state.currentSubId, desc, unit, rate, contractedQty: contracted });
+  ['boqDesc','boqRate','boqContracted'].forEach(id=>document.getElementById(id).value='');
+  persist();
+  renderMB();
+});
+
+function measuredQtyFor(boqItemId){
+  return state.measurements.filter(m=>m.boqItemId===boqItemId).reduce((s,m)=>s+m.qty,0);
+}
+
+function renderBoqTable(){
+  const wrap = document.getElementById('boqTableWrap');
+  const items = state.boqItems.filter(b=>b.subId===state.currentSubId);
+  if(items.length===0){ wrap.innerHTML = '<div class="empty">No BOQ items yet. Add one below.</div>'; return; }
+  wrap.innerHTML = `<table><thead><tr><th>Item</th><th>Unit</th><th class="num">Rate</th><th class="num">Contracted</th><th class="num">Measured</th><th></th></tr></thead><tbody>
+    ${items.map(b=>{
+      const measured = measuredQtyFor(b.id);
+      const pct = b.contractedQty>0 ? Math.min(100,(measured/b.contractedQty)*100) : 0;
+      const over = b.contractedQty>0 && measured>b.contractedQty;
+      return `<tr>
+        <td>${escapeHtml(b.desc)}</td>
+        <td class="mono">${b.unit}</td>
+        <td class="num mono">${fmt(b.rate)}</td>
+        <td class="num mono">${fmt(b.contractedQty)}</td>
+        <td class="num mono">${fmt(measured)}${over?' ⚠':''}</td>
+        <td><button class="btn-danger btn-sm" style="border:none;background:none" data-boqdel="${b.id}">✕</button></td>
+      </tr>
+      <tr><td colspan="6" style="padding-top:0"><div class="gauge ${over?'over':''}"><div style="width:${pct}%"></div></div></td></tr>`;
+    }).join('')}
+  </tbody></table>`;
+  wrap.querySelectorAll('[data-boqdel]').forEach(b=>b.addEventListener('click', ()=>{
+    if(!confirm('Delete this BOQ item? Associated measurements will remain but be unlinked.')) return;
+    state.boqItems = state.boqItems.filter(x=>x.id!==b.dataset.boqdel);
+    persist(); renderMB();
+  }));
+}
+
+function renderMeasBoqOptions(){
+  const sel = document.getElementById('measBoqItem');
+  const items = state.boqItems.filter(b=>b.subId===state.currentSubId);
+  sel.innerHTML = items.map(b=>`<option value="${b.id}">${escapeHtml(b.desc)} (${b.unit})</option>`).join('');
+  renderMeasDimFields();
+}
+
+function renderMeasDimFields(){
+  const sel = document.getElementById('measBoqItem');
+  const item = state.boqItems.find(b=>b.id===sel.value);
+  const wrap = document.getElementById('measDimFields');
+  if(!item){ wrap.innerHTML=''; return; }
+  if(item.unit==='m'){
+    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)">`;
+  } else if(item.unit==='m2'){
+    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)"><input type="number" id="dimW" placeholder="Width (m)">`;
+  } else if(item.unit==='m3'){
+    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)"><input type="number" id="dimW" placeholder="Width (m)"><input type="number" id="dimH" placeholder="Height/Depth (m)">`;
+  } else {
+    wrap.innerHTML = `<input type="number" id="dimCount" placeholder="Count / quantity">`;
+  }
+  wrap.querySelectorAll('input').forEach(inp=>inp.addEventListener('input', updateMeasPreview));
+  updateMeasPreview();
+}
+document.getElementById('measBoqItem').addEventListener('change', renderMeasDimFields);
+
+function currentCalcQty(){
+  const sel = document.getElementById('measBoqItem');
+  const item = state.boqItems.find(b=>b.id===sel.value);
+  if(!item) return 0;
+  const v = id => +(document.getElementById(id)?.value || 0);
+  if(item.unit==='m') return v('dimL');
+  if(item.unit==='m2') return v('dimL')*v('dimW');
+  if(item.unit==='m3') return v('dimL')*v('dimW')*v('dimH');
+  return v('dimCount');
+}
+function updateMeasPreview(){
+  const qty = currentCalcQty();
+  const sel = document.getElementById('measBoqItem');
+  const item = state.boqItems.find(b=>b.id===sel.value);
+  const el = document.getElementById('measCalcPreview');
+  if(!item){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="stat">Calculated quantity<b class="mono">${fmt(qty)} ${item.unit}</b></div>
+    <div class="stat">Amount<b class="mono">ETB ${fmt(qty*item.rate)}</b></div>`;
+}
+
+document.getElementById('addMeasurement').addEventListener('click', ()=>{
+  const sel = document.getElementById('measBoqItem');
+  const item = state.boqItems.find(b=>b.id===sel.value);
+  if(!item){ alert('Add a BOQ item first.'); return; }
+  const qty = currentCalcQty();
+  if(!qty || qty<=0){ alert('Enter dimensions/count greater than zero.'); return; }
+  const location = document.getElementById('measLocation').value.trim();
+  const date = document.getElementById('measDate').value || todayStr();
+  state.measurements.push({ id: uid(), boqItemId: item.id, date, location, qty, billed:false, billId:null });
+  document.getElementById('measLocation').value='';
+  ['dimL','dimW','dimH','dimCount'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  updateMeasPreview();
+  persist();
+  renderMB();
+});
+
+function renderMeasurementsList(){
+  const el = document.getElementById('measurementsList');
+  const boqIds = state.boqItems.filter(b=>b.subId===state.currentSubId).map(b=>b.id);
+  const list = state.measurements.filter(m=>boqIds.includes(m.boqItemId)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,25);
+  if(list.length===0){ el.innerHTML = '<div class="empty">No measurements recorded yet.</div>'; return; }
+  el.innerHTML = list.map(m=>{
+    const item = state.boqItems.find(b=>b.id===m.boqItemId);
+    return `<div class="list-row">
+      <span class="grow"><b class="mono">${m.date}</b> — ${escapeHtml(item?item.desc:'—')} ${m.location?'· '+escapeHtml(m.location):''}</span>
+      <span class="tag mono">${fmt(m.qty)} ${item?item.unit:''}</span>
+      ${m.billed ? '<span class="tag tag-green">Billed</span>' : `<button class="btn-danger btn-sm" style="border:none;background:none" data-measdel="${m.id}">✕</button>`}
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-measdel]').forEach(b=>b.addEventListener('click', ()=>{
+    state.measurements = state.measurements.filter(x=>x.id!==b.dataset.measdel);
+    persist(); renderMB();
+  }));
+}
+
+function renderBillPreview(){
+  const from = document.getElementById('billFrom').value;
+  const to = document.getElementById('billTo').value;
+  const el = document.getElementById('billPreview');
+  if(!state.currentSubId || !from || !to){ el.innerHTML = '<p class="hint">Pick a date range to preview unbilled measurements.</p>'; return; }
+  const boqIds = state.boqItems.filter(b=>b.subId===state.currentSubId).map(b=>b.id);
+  const lines = state.measurements.filter(m=>boqIds.includes(m.boqItemId) && !m.billed && m.date>=from && m.date<=to);
+  if(lines.length===0){ el.innerHTML = '<p class="hint">No unbilled measurements in this period.</p>'; return; }
+  const grouped = {};
+  lines.forEach(m=>{ grouped[m.boqItemId] = (grouped[m.boqItemId]||0) + m.qty; });
+  let total = 0;
+  const rows = Object.entries(grouped).map(([boqId,qty])=>{
+    const item = state.boqItems.find(b=>b.id===boqId);
+    const amount = qty*(item?item.rate:0);
+    total += amount;
+    return `<tr><td>${escapeHtml(item?item.desc:'—')}</td><td class="mono">${fmt(qty)} ${item?item.unit:''}</td><td class="num mono">ETB ${fmt(amount)}</td></tr>`;
+  }).join('');
+  el.innerHTML = `<table><thead><tr><th>Item</th><th>Qty</th><th class="num">Amount</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="stat" style="margin-top:8px">Bill total<b class="mono">ETB ${fmt(total)}</b></div>`;
+}
+document.getElementById('billFrom').addEventListener('change', renderBillPreview);
+document.getElementById('billTo').addEventListener('change', renderBillPreview);
+
+document.getElementById('generateBillBtn').addEventListener('click', ()=>{
+  const from = document.getElementById('billFrom').value;
+  const to = document.getElementById('billTo').value;
+  if(!state.currentSubId){ alert('Select a subcontractor first.'); return; }
+  if(!from || !to){ alert('Pick a date range.'); return; }
+  const boqIds = state.boqItems.filter(b=>b.subId===state.currentSubId).map(b=>b.id);
+  const lines = state.measurements.filter(m=>boqIds.includes(m.boqItemId) && !m.billed && m.date>=from && m.date<=to);
+  if(lines.length===0){ alert('No unbilled measurements in this period.'); return; }
+  const grouped = {};
+  lines.forEach(m=>{ grouped[m.boqItemId] = (grouped[m.boqItemId]||0) + m.qty; });
+  let total = 0;
+  const billLines = Object.entries(grouped).map(([boqId,qty])=>{
+    const item = state.boqItems.find(b=>b.id===boqId);
+    const amount = qty*(item?item.rate:0);
+    total += amount;
+    return { boqItemId:boqId, desc:item?item.desc:'', unit:item?item.unit:'', qty, rate:item?item.rate:0, amount };
+  });
+  const billNumber = 'BILL-' + (state.bills.filter(b=>b.subId===state.currentSubId).length+1).toString().padStart(3,'0');
+  const bill = { id: uid(), subId: state.currentSubId, billNumber, from, to, total, lines: billLines };
+  state.bills.push(bill);
+  lines.forEach(m=>{ m.billed = true; m.billId = bill.id; });
+  persist();
+  renderMB();
+  alert(`${billNumber} generated — total ETB ${fmt(total)}`);
+});
+
+function renderBillHistory(){
+  const el = document.getElementById('billHistory');
+  const list = state.bills.filter(b=>b.subId===state.currentSubId).sort((a,b)=>b.to.localeCompare(a.to));
+  if(list.length===0){ el.innerHTML = '<div class="empty">No bills generated yet.</div>'; return; }
+  el.innerHTML = list.map(b=>`
+    <div class="list-row">
+      <span class="grow"><b class="mono">${b.billNumber}</b> — ${b.from} to ${b.to}</span>
+      <span class="tag mono">ETB ${fmt(b.total)}</span>
+      <button class="btn btn-ghost btn-sm" data-billid="${b.id}">Print</button>
+    </div>`).join('');
+  el.querySelectorAll('[data-billid]').forEach(btn=>btn.addEventListener('click', ()=>printBill(btn.dataset.billid)));
+}
+
+function printBill(billId){
+  const bill = state.bills.find(b=>b.id===billId);
+  const sub = state.subcontractors.find(s=>s.id===bill.subId);
+  const proj = { name: projectMeta.name };
+  const html = `
+    <div class="print-doc">
+      <h1>Measurement Bill — ${bill.billNumber}</h1>
+      <div class="sub">${escapeHtml(proj?proj.name:'')} · Subcontractor: ${escapeHtml(sub?sub.name:'')} (${escapeHtml(sub?sub.trade:'')}) · Period: ${bill.from} to ${bill.to}</div>
+      <table><thead><tr><th>Item</th><th>Qty</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+      <tbody>${bill.lines.map(l=>`<tr><td>${escapeHtml(l.desc)}</td><td class="mono">${fmt(l.qty)} ${l.unit}</td><td class="num mono">ETB ${fmt(l.rate)}</td><td class="num mono">ETB ${fmt(l.amount)}</td></tr>`).join('')}</tbody></table>
+      <h3 style="text-align:right">Total: ETB ${fmt(bill.total)}</h3>
+    </div>`;
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
+function renderSubSelect(){
+  const subs = state.subcontractors;
+  subSelect.innerHTML = '<option value="">— Select subcontractor —</option>' +
+    subs.map(s=>`<option value="${s.id}" ${s.id===state.currentSubId?'selected':''}>${escapeHtml(s.name)} (${escapeHtml(s.trade)})</option>`).join('');
+  if(!subs.find(s=>s.id===state.currentSubId)) state.currentSubId = null;
+}
+function renderSubMeta(){
+  const el = document.getElementById('subMeta');
+  const sub = state.subcontractors.find(s=>s.id===state.currentSubId);
+  if(!sub){ el.innerHTML=''; return; }
+  const boqIds = state.boqItems.filter(b=>b.subId===sub.id).map(b=>b.id);
+  const billedTotal = state.bills.filter(b=>b.subId===sub.id).reduce((s,b)=>s+b.total,0);
+  el.innerHTML = `
+    <div class="stat">Contract value<b class="mono">ETB ${fmt(sub.contractValue)}</b></div>
+    <div class="stat">Billed to date<b class="mono">ETB ${fmt(billedTotal)}</b></div>
+    <div class="stat">Balance<b class="mono">ETB ${fmt(sub.contractValue-billedTotal)}</b></div>
+  `;
+}
+
+function renderGrandSummary(){
+  const el = document.getElementById('grandSummary');
+  const subs = state.subcontractors;
+  if(subs.length===0){ el.innerHTML = '<div class="empty">Add subcontractors and BOQ items to see the combined bill here.</div>'; return; }
+
+  let grandTotal = 0;
+  let anyItems = false;
+  const blocks = subs.map(sub=>{
+    const items = state.boqItems.filter(b=>b.subId===sub.id);
+    if(items.length===0) return '';
+    anyItems = true;
+    let subTotal = 0;
+    const rows = items.map(it=>{
+      const qty = measuredQtyFor(it.id);
+      const amount = qty*it.rate;
+      subTotal += amount;
+      return `<tr><td>${escapeHtml(it.desc)}</td><td class="mono">${it.unit}</td><td class="num mono">${fmt(it.rate)}</td><td class="num mono">${fmt(qty)}</td><td class="num mono">${fmtMoney(amount)}</td></tr>`;
+    }).join('');
+    grandTotal += subTotal;
+    return `
+      <div style="margin-bottom:16px">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px">
+          <b>${escapeHtml(sub.name)}</b><span class="tag">${escapeHtml(sub.trade||'')}</span>
+        </div>
+        <table><thead><tr><th>Item</th><th>Unit</th><th class="num">Rate</th><th class="num">Qty to date</th><th class="num">Amount</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+        <div style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:13px; margin-top:4px">Subtotal: <b>${fmtMoney(subTotal)}</b></div>
+      </div>`;
+  }).join('');
+
+  if(!anyItems){ el.innerHTML = '<div class="empty">No BOQ items added for any subcontractor yet.</div>'; return; }
+
+  el.innerHTML = blocks + `<div class="dim-divider">Grand Total</div>
+    <div class="stat-row"><div class="stat">All subcontractors combined<b class="mono" style="font-size:18px">${fmtMoney(grandTotal)}</b></div></div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:10px" id="printSummaryBtn">Print consolidated bill</button>`;
+
+  const printBtn = document.getElementById('printSummaryBtn');
+  if(printBtn) printBtn.addEventListener('click', ()=>printGrandSummary());
+}
+
+function printGrandSummary(){
+  const proj = { name: projectMeta.name };
+  const subs = state.subcontractors;
+  let grandTotal = 0;
+  const blocks = subs.map(sub=>{
+    const items = state.boqItems.filter(b=>b.subId===sub.id);
+    if(items.length===0) return '';
+    let subTotal = 0;
+    const rows = items.map(it=>{
+      const qty = measuredQtyFor(it.id);
+      const amount = qty*it.rate;
+      subTotal += amount;
+      return `<tr><td>${escapeHtml(it.desc)}</td><td>${it.unit}</td><td class="num">${fmt(it.rate)}</td><td class="num">${fmt(qty)}</td><td class="num">${fmtMoney(amount)}</td></tr>`;
+    }).join('');
+    grandTotal += subTotal;
+    return `<h3>${escapeHtml(sub.name)} — ${escapeHtml(sub.trade||'')}</h3>
+      <table><thead><tr><th>Item</th><th>Unit</th><th class="num">Rate</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+      <p style="text-align:right"><b>Subtotal: ${fmtMoney(subTotal)}</b></p>`;
+  }).join('');
+  const html = `
+    <div class="print-doc">
+      <h1>Consolidated Bill Summary</h1>
+      <div class="sub">${escapeHtml(proj?proj.name:'')} · Generated ${todayStr()}</div>
+      ${blocks}
+      <h2 style="text-align:right; margin-top:20px">Grand Total: ${fmtMoney(grandTotal)}</h2>
+    </div>`;
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
+function renderMB(){
+  renderSubSelect();
+  renderSubMeta();
+  renderGrandSummary();
+  renderBoqTable();
+  renderMeasBoqOptions();
+  renderMeasurementsList();
+  renderBillPreview();
+  renderBillHistory();
+}
+
+/* ---------------------------------------------------------------
+   PAYMENTS
+--------------------------------------------------------------- */
+function fmtMoney(n){ return 'ETB ' + fmt(n); }
+
+document.getElementById('addPaymentBtn').addEventListener('click', ()=>{
+  const date = document.getElementById('payDate').value || todayStr();
+  const amount = +document.getElementById('payAmount').value;
+  const payee = document.getElementById('payPayee').value.trim();
+  const reason = document.getElementById('payReason').value.trim();
+  const method = document.getElementById('payMethod').value;
+  const notes = document.getElementById('payNotes').value.trim();
+  if(!payee){ alert('Enter who this payment was made to.'); return; }
+  if(!amount || amount<=0){ alert('Enter an amount greater than zero.'); return; }
+  state.payments.push({ id: uid(), date, payee, reason, amount, method, notes });
+  document.getElementById('payAmount').value='';
+  document.getElementById('payPayee').value='';
+  document.getElementById('payReason').value='';
+  document.getElementById('payNotes').value='';
+  persist();
+  renderPayments();
+});
+
+function renderPayeeSuggestions(){
+  const dl = document.getElementById('payeeSuggestions');
+  const subNames = state.subcontractors.map(s=>s.name);
+  const payNames = state.payments.map(p=>p.payee);
+  const names = [...new Set([...subNames, ...payNames])];
+  dl.innerHTML = names.map(n=>`<option value="${escapeHtml(n)}">`).join('');
+}
+
+function renderTodayPayments(){
+  const date = document.getElementById('payDate').value || todayStr();
+  const isToday = date === todayStr();
+  document.getElementById('todayPayHeading').textContent = isToday ? "Today's Payments" : `Payments — ${date}`;
+  const list = state.payments && p.date===date;
+  const el = document.getElementById('todayPayments');
+  if(list.length===0){ el.innerHTML = '<div class="empty">No payments recorded ' + (isToday ? 'today.' : 'for this date.') + '</div>'; }
+  else{
+    el.innerHTML = list.map(p=>`
+      <div class="list-row">
+        <span class="grow"><b>${escapeHtml(p.payee)}</b>${p.reason ? ' — '+escapeHtml(p.reason) : ''} <span class="tag">${p.method}</span></span>
+        <span class="tag mono">${fmtMoney(p.amount)}</span>
+        <button class="btn-danger btn-sm" style="border:none;background:none" data-paydel="${p.id}">✕</button>
+      </div>`).join('');
+    el.querySelectorAll('[data-paydel]').forEach(b=>b.addEventListener('click', ()=>{
+      state.payments = state.payments.filter(x=>x.id!==b.dataset.paydel);
+      persist(); renderPayments();
+    }));
+  }
+  const total = list.reduce((s,p)=>s+p.amount,0);
+  document.getElementById('todayPayTotal').innerHTML = `<div class="stat">Total ${isToday?'today':'this day'}<b class="mono">${fmtMoney(total)}</b></div><div class="stat">Payments logged<b class="mono">${list.length}</b></div>`;
+}
+document.getElementById('payDate').addEventListener('change', renderTodayPayments);
+
+function renderPayeeTotals(){
+  const list = state.payments;
+  const el = document.getElementById('payeeTotals');
+  if(list.length===0){ el.innerHTML = '<div class="empty">No payments recorded yet.</div>'; return; }
+  const grouped = {};
+  list.forEach(p=>{ grouped[p.payee] = (grouped[p.payee]||0) + p.amount; });
+  const rows = Object.entries(grouped).sort((a,b)=>b[1]-a[1]);
+  const grandTotal = rows.reduce((s,r)=>s+r[1],0);
+  el.innerHTML = `<table><thead><tr><th>Payee</th><th class="num">Total paid</th></tr></thead><tbody>
+    ${rows.map(([name,total])=>`<tr><td>${escapeHtml(name)}</td><td class="num mono">${fmtMoney(total)}</td></tr>`).join('')}
+  </tbody></table>
+  <div class="stat" style="margin-top:10px">Grand total paid<b class="mono">${fmtMoney(grandTotal)}</b></div>`;
+}
+
+function renderPaymentHistory(){
+  const list = state.payments;
+  const el = document.getElementById('paymentHistory');
+  if(list.length===0){ el.innerHTML = '<div class="empty">No payments recorded yet.</div>'; return; }
+  const byDate = {};
+  list.forEach(p=>{ (byDate[p.date] = byDate[p.date] || []).push(p); });
+  const dates = Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).slice(0,30);
+  el.innerHTML = dates.map(d=>{
+    const dayTotal = byDate[d].reduce((s,p)=>s+p.amount,0);
+    return `<div class="list-row">
+      <span class="grow"><b class="mono">${d}</b> — ${byDate[d].length} payment(s)</span>
+      <span class="tag mono">${fmtMoney(dayTotal)}</span>
+      <button class="btn btn-ghost btn-sm" data-viewday="${d}">View</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-viewday]').forEach(b=>b.addEventListener('click', ()=>{
+    document.getElementById('payDate').value = b.dataset.viewday;
+    renderTodayPayments();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }));
+}
+
+document.getElementById('printDayBtn').addEventListener('click', ()=>{
+  const date = document.getElementById('payDate').value || todayStr();
+  const proj = { name: projectMeta.name };
+  const list = state.payments && p.date===date;
+  const total = list.reduce((s,p)=>s+p.amount,0);
+  const html = `
+    <div class="print-doc">
+      <h1>Daily Payment Voucher</h1>
+      <div class="sub">${escapeHtml(proj?proj.name:'')} · ${date}</div>
+      <table><thead><tr><th>Payee</th><th>Reason</th><th>Method</th><th class="num">Amount</th></tr></thead>
+      <tbody>${list.map(p=>`<tr><td>${escapeHtml(p.payee)}</td><td>${escapeHtml(p.reason||'—')}</td><td>${p.method}</td><td class="num mono">${fmtMoney(p.amount)}</td></tr>`).join('') || '<tr><td colspan="4">No payments recorded</td></tr>'}</tbody></table>
+      <h3 style="text-align:right">Total: ${fmtMoney(total)}</h3>
+    </div>`;
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+});
+
+function renderPayments(){
+  renderPayeeSuggestions();
+  renderTodayPayments();
+  renderPayeeTotals();
+  renderPaymentHistory();
+}
+
+/* ---------------------------------------------------------------
+   RFIs
+--------------------------------------------------------------- */
+document.getElementById('addRfiBtn').addEventListener('click', ()=>{
+  const subject = document.getElementById('rfiSubject').value.trim();
+  const question = document.getElementById('rfiQuestion').value.trim();
+  const priority = document.getElementById('rfiPriority').value;
+  const from = document.getElementById('rfiFrom').value.trim();
+  const to = document.getElementById('rfiTo').value.trim();
+  const needed = document.getElementById('rfiNeeded').value;
+  if(!subject || !question){ alert('Enter a subject and question.'); return; }
+  const count = state.rfis.length;
+  const number = 'RFI-' + (count+1).toString().padStart(3,'0');
+  state.rfis.push({
+    id: uid(), number, subject, question, priority,
+    from, to, dateSubmitted: todayStr(), dateNeeded: needed, status:'open',
+    response:'', responseDate:''
+  });
+  ['rfiSubject','rfiQuestion','rfiFrom','rfiTo','rfiNeeded'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rfiPriority').value = 'Medium';
+  persist();
+  renderRfis();
+});
+
+function rfiStatusTagClass(status){
+  if(status==='open') return 'tag-orange';
+  if(status==='answered') return 'tag-green';
+  return '';
+}
+
+function renderRfis(){
+  const wrapStats = document.getElementById('rfiStats');
+  const list = state.rfis.sort((a,b)=>b.dateSubmitted.localeCompare(a.dateSubmitted));
+  const open = list.filter(r=>r.status==='open').length;
+  const answered = list.filter(r=>r.status==='answered').length;
+  const closed = list.filter(r=>r.status==='closed').length;
+  wrapStats.innerHTML = `<span class="tag tag-orange">${open} open</span><span class="tag tag-green">${answered} answered</span><span class="tag">${closed} closed</span>`;
+
+  const el = document.getElementById('rfiList');
+  if(list.length===0){ el.innerHTML = '<div class="empty">No RFIs logged yet for this project.</div>'; return; }
+  el.innerHTML = list.map(r=>{
+    const overdue = r.status==='open' && r.dateNeeded && r.dateNeeded < todayStr();
+    const isOpenRow = openRfiId === r.id;
+    return `
+    <div class="list-row" style="flex-direction:column; align-items:stretch">
+      <div style="display:flex; align-items:center; gap:10px; width:100%">
+        <span class="grow"><b class="mono">${r.number}</b> — ${escapeHtml(r.subject)}</span>
+        <span class="tag">${r.priority}</span>
+        ${overdue ? '<span class="tag" style="background:rgba(201,74,59,0.12);color:var(--red)">Overdue</span>' : ''}
+        <span class="tag ${rfiStatusTagClass(r.status)}">${r.status}</span>
+        <button class="btn btn-ghost btn-sm" data-rfitoggle="${r.id}">${isOpenRow?'Close':'View'}</button>
+      </div>
+      ${isOpenRow ? renderRfiDetail(r) : ''}
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('[data-rfitoggle]').forEach(b=>b.addEventListener('click', ()=>{
+    openRfiId = openRfiId === b.dataset.rfitoggle ? null : b.dataset.rfitoggle;
+    renderRfis();
+  }));
+  el.querySelectorAll('[data-rfianswer]').forEach(b=>b.addEventListener('click', ()=>{
+    const r = state.rfis.find(x=>x.id===b.dataset.rfianswer);
+    const textarea = document.getElementById('rfiResponseInput-'+r.id);
+    const text = textarea.value.trim();
+    if(!text){ alert('Enter a response before submitting.'); return; }
+    r.response = text; r.status='answered'; r.responseDate = todayStr();
+    persist(); renderRfis();
+  }));
+  el.querySelectorAll('[data-rficlose]').forEach(b=>b.addEventListener('click', ()=>{
+    const r = state.rfis.find(x=>x.id===b.dataset.rficlose);
+    r.status='closed'; persist(); renderRfis();
+  }));
+  el.querySelectorAll('[data-rfiprint]').forEach(b=>b.addEventListener('click', ()=>printRfi(b.dataset.rfiprint)));
+}
+
+function renderRfiDetail(r){
+  return `
+    <div style="border-top:1px solid var(--line); margin-top:10px; padding-top:10px; font-size:13px">
+      <div class="stat-row" style="margin-bottom:8px">
+        <div class="stat">From<b>${escapeHtml(r.from||'—')}</b></div>
+        <div class="stat">To<b>${escapeHtml(r.to||'—')}</b></div>
+        <div class="stat">Submitted<b class="mono">${r.dateSubmitted}</b></div>
+        <div class="stat">Needed by<b class="mono">${r.dateNeeded||'—'}</b></div>
+      </div>
+      <p style="margin:6px 0"><b>Question:</b> ${escapeHtml(r.question)}</p>
+      ${r.status==='open' ? `
+        <textarea id="rfiResponseInput-${r.id}" rows="2" placeholder="Type response...">${escapeHtml(r.response||'')}</textarea>
+        <div class="btn-row">
+          <button class="btn btn-orange btn-sm" data-rfianswer="${r.id}">Submit answer</button>
+        </div>` : `
+        <p style="margin:6px 0"><b>Response (${r.responseDate}):</b> ${escapeHtml(r.response)}</p>
+        <div class="btn-row">
+          ${r.status==='answered' ? `<button class="btn btn-ghost btn-sm" data-rficlose="${r.id}">Mark closed</button>` : ''}
+          <button class="btn btn-ghost btn-sm" data-rfiprint="${r.id}">Print</button>
+        </div>`}
+    </div>`;
+}
+
+function printRfi(id){
+  const r = state.rfis.find(x=>x.id===id);
+  const proj = { name: projectMeta.name };
+  const html = `
+    <div class="print-doc">
+      <h1>RFI — ${r.number}</h1>
+      <div class="sub">${escapeHtml(proj?proj.name:'')} · Submitted ${r.dateSubmitted} · Priority: ${r.priority}</div>
+      <p><b>From:</b> ${escapeHtml(r.from||'—')} &nbsp; <b>To:</b> ${escapeHtml(r.to||'—')} &nbsp; <b>Needed by:</b> ${r.dateNeeded||'—'}</p>
+      <h3>Subject</h3><p>${escapeHtml(r.subject)}</p>
+      <h3>Question</h3><p>${escapeHtml(r.question)}</p>
+      <h3>Response</h3><p>${r.response ? escapeHtml(r.response) + ' (' + r.responseDate + ')' : 'Pending'}</p>
+    </div>`;
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
+/* ---------------------------------------------------------------
+   SUBMITTALS
+--------------------------------------------------------------- */
+document.getElementById('addSubmittalBtn').addEventListener('click', ()=>{
+  const desc = document.getElementById('subDescField').value.trim();
+  const type = document.getElementById('subType').value;
+  const spec = document.getElementById('subSpec').value.trim();
+  const from = document.getElementById('subFrom').value.trim();
+  const revision = +document.getElementById('subRevision').value || 0;
+  if(!desc){ alert('Enter a description.'); return; }
+  const count = state.submittals.length;
+  const number = 'SUB-' + (count+1).toString().padStart(3,'0');
+  state.submittals.push({
+    id: uid(), number, desc, type, spec, from, revision,
+    dateSubmitted: todayStr(), status:'pending', reviewer:'', reviewDate:'', comments:''
+  });
+  ['subDescField','subSpec','subFrom'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('subRevision').value = '0';
+  persist();
+  renderSubmittals();
+});
+
+function submittalTagClass(status){
+  if(status==='pending') return 'tag-orange';
+  if(status==='approved') return 'tag-green';
+  if(status==='approved-as-noted') return 'tag-green';
+  return '';
+}
+function submittalStatusLabel(status){
+  return { pending:'Pending', approved:'Approved', 'approved-as-noted':'Approved as noted',
+    'revise-resubmit':'Revise & resubmit', rejected:'Rejected' }[status] || status;
+}
+
+function renderSubmittals(){
+  const wrapStats = document.getElementById('submittalStats');
+  const list = state.submittals.sort((a,b)=>b.dateSubmitted.localeCompare(a.dateSubmitted));
+  const pending = list.filter(s=>s.status==='pending').length;
+  const approved = list.filter(s=>s.status==='approved'||s.status==='approved-as-noted').length;
+  const flagged = list.filter(s=>s.status==='revise-resubmit'||s.status==='rejected').length;
+  wrapStats.innerHTML = `<span class="tag tag-orange">${pending} pending</span><span class="tag tag-green">${approved} approved</span><span class="tag" style="background:rgba(201,74,59,0.12);color:var(--red)">${flagged} flagged</span>`;
+
+  const el = document.getElementById('submittalList');
+  if(list.length===0){ el.innerHTML = '<div class="empty">No submittals logged yet for this project.</div>'; return; }
+  el.innerHTML = list.map(s=>{
+    const isOpenRow = openSubmittalId === s.id;
+    return `
+    <div class="list-row" style="flex-direction:column; align-items:stretch">
+      <div style="display:flex; align-items:center; gap:10px; width:100%">
+        <span class="grow"><b class="mono">${s.number}</b> — ${escapeHtml(s.desc)} <span class="tag">${s.type}</span></span>
+        <span class="tag ${submittalTagClass(s.status)}" ${['revise-resubmit','rejected'].includes(s.status)?'style="background:rgba(201,74,59,0.12);color:var(--red)"':''}>${submittalStatusLabel(s.status)}</span>
+        <button class="btn btn-ghost btn-sm" data-subtoggle="${s.id}">${isOpenRow?'Close':'View'}</button>
+      </div>
+      ${isOpenRow ? renderSubmittalDetail(s) : ''}
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('[data-subtoggle]').forEach(b=>b.addEventListener('click', ()=>{
+    openSubmittalId = openSubmittalId === b.dataset.subtoggle ? null : b.dataset.subtoggle;
+    renderSubmittals();
+  }));
+  el.querySelectorAll('[data-subsave]').forEach(b=>b.addEventListener('click', ()=>{
+    const s = state.submittals.find(x=>x.id===b.dataset.subsave);
+    const reviewer = document.getElementById('subReviewer-'+s.id).value.trim();
+    const status = document.getElementById('subStatusInput-'+s.id).value;
+    const comments = document.getElementById('subComments-'+s.id).value.trim();
+    s.reviewer = reviewer; s.status = status; s.comments = comments; s.reviewDate = todayStr();
+    persist(); renderSubmittals();
+  }));
+  el.querySelectorAll('[data-subprint]').forEach(b=>b.addEventListener('click', ()=>printSubmittal(b.dataset.subprint)));
+}
+
+function renderSubmittalDetail(s){
+  return `
+    <div style="border-top:1px solid var(--line); margin-top:10px; padding-top:10px; font-size:13px">
+      <div class="stat-row" style="margin-bottom:8px">
+        <div class="stat">Spec section<b>${escapeHtml(s.spec||'—')}</b></div>
+        <div class="stat">Submitted by<b>${escapeHtml(s.from||'—')}</b></div>
+        <div class="stat">Date submitted<b class="mono">${s.dateSubmitted}</b></div>
+        <div class="stat">Revision<b class="mono">${s.revision}</b></div>
+      </div>
+      <div class="row row-2" style="margin-bottom:8px">
+        <div class="field"><label>Reviewer</label><input type="text" id="subReviewer-${s.id}" value="${escapeHtml(s.reviewer||'')}" placeholder="Reviewer name"></div>
+        <div class="field"><label>Status</label>
+          <select id="subStatusInput-${s.id}">
+            <option value="pending" ${s.status==='pending'?'selected':''}>Pending</option>
+            <option value="approved" ${s.status==='approved'?'selected':''}>Approved</option>
+            <option value="approved-as-noted" ${s.status==='approved-as-noted'?'selected':''}>Approved as noted</option>
+            <option value="revise-resubmit" ${s.status==='revise-resubmit'?'selected':''}>Revise &amp; resubmit</option>
+            <option value="rejected" ${s.status==='rejected'?'selected':''}>Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Review comments</label><textarea id="subComments-${s.id}" rows="2">${escapeHtml(s.comments||'')}</textarea></div>
+      ${s.reviewDate ? `<p class="hint">Last reviewed ${s.reviewDate}</p>` : ''}
+      <div class="btn-row">
+        <button class="btn btn-orange btn-sm" data-subsave="${s.id}">Save review</button>
+        <button class="btn btn-ghost btn-sm" data-subprint="${s.id}">Print transmittal</button>
+      </div>
+    </div>`;
+}
+
+function printSubmittal(id){
+  const s = state.submittals.find(x=>x.id===id);
+  const proj = { name: projectMeta.name };
+  const html = `
+    <div class="print-doc">
+      <h1>Submittal Transmittal — ${s.number}</h1>
+      <div class="sub">${escapeHtml(proj?proj.name:'')} · Submitted ${s.dateSubmitted} · Revision ${s.revision}</div>
+      <p><b>Description:</b> ${escapeHtml(s.desc)}</p>
+      <p><b>Type:</b> ${escapeHtml(s.type)} &nbsp; <b>Spec section:</b> ${escapeHtml(s.spec||'—')} &nbsp; <b>Submitted by:</b> ${escapeHtml(s.from||'—')}</p>
+      <h3>Review status</h3>
+      <p>${submittalStatusLabel(s.status)}${s.reviewer ? ' — reviewed by '+escapeHtml(s.reviewer) : ''}${s.reviewDate ? ' on '+s.reviewDate : ''}</p>
+      ${s.comments ? `<h3>Comments</h3><p>${escapeHtml(s.comments)}</p>` : ''}
+    </div>`;
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
+/* ---------------------------------------------------------------
+   RENDER ALL
+--------------------------------------------------------------- */
+function renderAll(){
+  renderWorkItems(); renderManpower(); renderDelays();
+  renderReportHistory();
+  renderMB();
+  renderPayments();
+}
+
+// Convenience only: pre-fill the code field if they've opened a project on this device before.
+// The code itself (from Firestore) remains the real access control, not this local hint.
+(function initLanding(){
+  const lastCode = localStorage.getItem('sitelog_lastCode');
+  if (lastCode) document.getElementById('enterCodeInput').value = lastCode;
+})();
+</script>
+</body>
+</html>

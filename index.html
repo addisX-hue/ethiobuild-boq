@@ -638,6 +638,7 @@
 <h3>EthioBuild</h3>
 <a href='#' onclick="goHome(); toggleMenu()">Home</a>
 <a href='#' onclick="goHome(); toggleMenu()">New BOQ</a>
+<a href='sitelog.html'>📋 Site Log</a>
 <a href='mailto:addiss1993@gmail.com?subject=Customer Support - EthioBuild'>Customer Support</a>
 <a href='mailto:addiss1993@gmail.com?subject=Contact - EthioBuild'>Contact Organization</a>
 <a href='mailto:addiss1993@gmail.com?subject=Bug Report - EthioBuild'>Report a Bug</a>
@@ -660,6 +661,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
   padding: 32px 28px;
   max-width: 420px;
   width: 90%;
+  max-height: 88vh;
+  overflow-y: auto;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -689,6 +692,9 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       Get your full professional BOQ in Excel format
     </p>
   </div>
+
+  <!-- Pre-payment content — hidden entirely once payment succeeds -->
+  <div id="paymentFormWrap">
 
   <!-- Price Badge -->
   <div id="modal-price-box" style="
@@ -821,6 +827,9 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     Cancel
   </button>
 
+  <!-- End pre-payment content wrapper -->
+  </div>
+
   <!-- Success state (hidden by default) -->
   <div id="paySuccess" style="display:none;text-align:center;padding:8px 0;">
     <div style="font-size:40px;margin-bottom:10px;">✅</div>
@@ -892,6 +901,9 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       <a class="btn-welcome-secondary" href="https://play.google.com/store/apps/details?id=com.addisengineering.rebarcut" target="_blank">
         ✂️ Rebar Cutting Optimizer — Play Store
       </a>
+      <a class="btn-welcome-secondary" href="sitelog.html">
+        📋 Site Log — Daily Reports & Payments
+      </a>
     </div>
   </div>
 
@@ -915,6 +927,13 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       <div class="welcome-card-text">
         <h4>AddisBOQ — BOQ Calculator</h4>
         <p>Professional Bill of Quantities with Excel export.</p>
+      </div>
+    </a>
+    <a class="welcome-card" href="sitelog.html">
+      <div class="welcome-card-icon" style="background:rgba(200,146,42,0.15);">📋</div>
+      <div class="welcome-card-text">
+        <h4>Site Log</h4>
+        <p>Daily site reports, subcontractor measurement, and payment tracking. 14 days free.</p>
       </div>
     </a>
     <a class="welcome-card" href="https://play.google.com/store/apps/details?id=com.addisengineering.rebarcut" target="_blank">
@@ -2451,10 +2470,7 @@ document.getElementById('paymentOverlay').style.display='block';
 function closePaymentModal(){
   if (window._discountCountdownInterval) clearInterval(window._discountCountdownInterval);
   document.getElementById('paySuccess').style.display = 'none';
-  const verifyBtn = document.querySelector('#paymentModal button[onclick="verifyPayment()"]');
-  const cancelBtn = document.querySelector('#paymentModal button[onclick="closePaymentModal()"]');
-  if(verifyBtn) verifyBtn.style.display = 'block';
-  if(cancelBtn) cancelBtn.style.display = 'block';
+  document.getElementById('paymentFormWrap').style.display = 'block';
 document.getElementById('paymentModal').style.display='none';
 document.getElementById('paymentOverlay').style.display='none';
 document.getElementById('payError').style.display='none';
@@ -2487,16 +2503,25 @@ async function verifyPayment(){
 
     if(result.valid){
       // Show success state instead of immediately downloading
-      document.querySelector('#paymentModal button[onclick="verifyPayment()"]').style.display = 'none';
-      document.querySelector('#paymentModal button[onclick="closePaymentModal()"]').style.display = 'none';
+      document.getElementById('paymentFormWrap').style.display = 'none';
       document.getElementById('paySuccess').style.display = 'block';
       unlockBoqView();
       const exportType = window._exportType || 'excel';
       document.getElementById('downloadBtnLabel').textContent = exportType === 'pdf' ? 'Download PDF' : 'Download Excel';
       document.getElementById('downloadBtn').onclick = function() {
-        closePaymentModal();
-        if(exportType === 'pdf') exportPDF();
-        else exportExcel();
+        const btn = this;
+        const originalLabel = document.getElementById('downloadBtnLabel').textContent;
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        document.getElementById('downloadBtnLabel').textContent = 'Generating your file — please wait...';
+        const finish = () => {
+          closePaymentModal();
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          document.getElementById('downloadBtnLabel').textContent = originalLabel;
+        };
+        if(exportType === 'pdf') exportPDF(finish);
+        else exportExcel(finish);
       };
     } else {
       errorBox.innerText = '⚠️ Payment not verified. Please check your transaction ID and try again.';
@@ -2535,20 +2560,21 @@ function shareBoq(){
   }
 }
 
-function exportPDF(){
-  if (!window._boqData) return;
+function exportPDF(onDone){
+  if (!window._boqData) { if (onDone) onDone(); return; }
   if (!window.jspdf) {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
     script.onload = () => {
       const script2 = document.createElement('script');
       script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
-      script2.onload = () => doExportPDF(window._boqData);
+      script2.onload = () => { doExportPDF(window._boqData); if (onDone) onDone(); };
       document.head.appendChild(script2);
     };
     document.head.appendChild(script);
   } else {
     doExportPDF(window._boqData);
+    if (onDone) onDone();
   }
 }
 
@@ -2657,18 +2683,18 @@ function doExportPDF(d){
   doc.save((d.projName || 'BOQ').replace(/[^a-z0-9]/gi, '_') + '_BOQ.pdf');
 }
 
-function exportExcel() {
-  if (!window._boqData) return;
+function exportExcel(onDone) {
+  if (!window._boqData) { if (onDone) onDone(); return; }
   const d = window._boqData;
 
   // Dynamically load SheetJS
   if (!window.ExcelJS) {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js';
-    script.onload = () => doExport(d);
+    script.onload = () => { doExport(d).then(() => { if (onDone) onDone(); }); };
     document.head.appendChild(script);
   } else {
-    doExport(d);
+    doExport(d).then(() => { if (onDone) onDone(); });
   }
 }
 
@@ -3168,8 +3194,39 @@ function recalculate() {
         AddisBOQ የኢትዮጵያ የግንባታ ፕሮጀክቶች ወጪ ለማስላት እና የስራ ዝርዝር (BOQ) ለማዘጋጀት የተሰራ ድረ-ገጽ እና መተግበሪያ ነው።
       </p>
       <p style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;margin-top:8px;">
-        AddisBOQ is a web app and mobile application built to calculate construction project costs and prepare Bill of Quantities (BOQ) for Ethiopian standards.
+        AddisBOQ started as a cost calculator and BOQ generator for Ethiopian construction projects — and has grown into a small suite of tools for engineers, contractors, and site teams, from initial cost estimation through to daily site management.
       </p>
+    </div>
+
+    <!-- Our Tools -->
+    <div style="background:rgba(255,255,255,0.06);border-radius:14px;padding:18px;margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Our Tools</div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="font-size:22px;">📊</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:#fff;">AddisBOQ Calculator</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;margin-top:2px;">Free cost estimate and BOQ for your building project. Export a professional Excel or PDF once you're ready.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="font-size:22px;">📋</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:#fff;">Site Log</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;margin-top:2px;">Daily site reports, subcontractor measurement books, and payment tracking — no login needed, just a project code. 14 days free, then 2,000 ETB/month.</div>
+          <a href="sitelog.html" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:var(--gold);text-decoration:none;">Open Site Log →</a>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;">
+        <div style="font-size:22px;">✂️</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:#fff;">Rebar Cutting Optimizer</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;margin-top:2px;">Minimize offcut waste when cutting reinforcement bars. Available as an Android app.</div>
+          <a href="https://play.google.com/store/apps/details?id=com.addisengineering.rebarcut" target="_blank" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:var(--gold);text-decoration:none;">Get it on Play Store →</a>
+        </div>
+      </div>
     </div>
 
     <!-- Features -->
