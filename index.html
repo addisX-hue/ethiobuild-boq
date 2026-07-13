@@ -611,6 +611,11 @@
     font-size: 12px;
     color: rgba(255,255,255,0.35);
   }
+  @keyframes pulseBtn {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(45,106,79,0.3); }
+    50% { transform: scale(1.035); box-shadow: 0 6px 22px rgba(45,106,79,0.5); }
+  }
+  .pulse-btn { animation: pulseBtn 1.4s ease-in-out infinite; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -834,8 +839,9 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
   <div id="paySuccess" style="display:none;text-align:center;padding:8px 0;">
     <div style="font-size:40px;margin-bottom:10px;">✅</div>
     <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:#1a1a2e;margin-bottom:4px;">ክፍያ ተረጋግጧል!</div>
-    <div style="font-size:13px;color:#4a4a6a;margin-bottom:20px;">Payment Verified Successfully</div>
-    <button id="downloadBtn" style="
+    <div style="font-size:13px;color:#4a4a6a;margin-bottom:16px;">Payment Verified Successfully</div>
+    <div style="font-size:13px;font-weight:700;color:#2d6a4f;margin-bottom:8px;">👇 ለማውረድ ከታች ያለውን ይጫኑ / Tap below to download</div>
+    <button id="downloadBtn" class="pulse-btn" style="
       width:100%;padding:16px;
       background:linear-gradient(135deg,#2d6a4f,#52b788);
       border:none;border-radius:10px;
@@ -2510,6 +2516,7 @@ async function verifyPayment(){
       document.getElementById('downloadBtnLabel').textContent = exportType === 'pdf' ? 'Download PDF' : 'Download Excel';
       document.getElementById('downloadBtn').onclick = function() {
         const btn = this;
+        btn.classList.remove('pulse-btn');
         const originalLabel = document.getElementById('downloadBtnLabel').textContent;
         btn.disabled = true;
         btn.style.opacity = '0.7';
