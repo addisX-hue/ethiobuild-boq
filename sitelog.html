@@ -222,6 +222,7 @@
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 </head>
 <body>
 
@@ -294,7 +295,9 @@
 <header>
   <div class="brand-row">
     <div class="brand"><span class="mark"></span>SITELOG<small>Daily Report · Subcontractor Measurement · Payments</small></div>
-    <button class="btn btn-ghost btn-sm" id="renewBtn" style="display:none;">Renew — 2,000 ETB</button>
+    <div id="daysLeftBadge" style="font-size:11px; font-weight:700; color:#fff; background:rgba(255,255,255,0.15); padding:5px 10px; border-radius:12px; margin-right:8px; white-space:nowrap;"></div>
+    <button class="btn btn-ghost btn-sm" id="exportExcelBtn" style="margin-right:8px;">📥 Export Excel</button>
+    <button class="btn btn-ghost btn-sm" id="renewBtn" style="display:none;">Add 30 days — 2,000 ETB</button>
   </div>
   <div class="tabs">
     <button class="tab-btn active" data-view="dailyView">Daily Report</button>
@@ -354,6 +357,10 @@
               <option>Painter</option><option>Supervisor</option><option>Other</option>
             </select>
             <input type="number" id="mpCount" placeholder="Count">
+          </div>
+          <div class="row row-2" style="margin-top:6px">
+            <input type="number" id="mpHours" placeholder="Hours worked" step="0.5">
+            <input type="number" id="mpWage" placeholder="Wage per hour (ETB)">
           </div>
           <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="addManpower">+ Add manpower</button>
 
@@ -681,28 +688,233 @@ async function loadProject(code){
   return true;
 }
 
+document.getElementById('exportExcelBtn').addEventListener('click', exportSiteLogExcel);
+
+async function exportSiteLogExcel(){
+  const btn = document.getElementById('exportExcelBtn');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+
+  try {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'AddisBOQ SiteLog';
+    workbook.created = new Date();
+
+    // ---- Shared styling, matching AddisBOQ's Excel export exactly ----
+    const tnr = 'Times New Roman';
+    const dotted = { style: 'dotted', color: { argb: 'FF000000' } };
+    const thin   = { style: 'thin',   color: { argb: 'FF000000' } };
+    const medium = { style: 'medium', color: { argb: 'FF000000' } };
+    const dottedBorder = { top: dotted, bottom: dotted, left: dotted, right: dotted };
+    const thinBorder   = { top: thin,   bottom: thin,   left: thin,   right: thin   };
+    const mediumBorder = { top: medium, bottom: medium, left: medium, right: medium };
+    const navy = 'FF1a1a2e';
+    const gold = 'FFC8922A';
+
+    function styleRow(row, options = {}) {
+      row.eachCell({ includeEmpty: true }, cell => {
+        cell.font = { name: tnr, size: options.fontSize || 10, bold: options.bold || false, color: { argb: options.fontColor || 'FF000000' } };
+        cell.border = options.border || dottedBorder;
+        cell.alignment = { vertical: 'middle', wrapText: options.wrap || false, horizontal: options.align || 'left' };
+        if (options.fill) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: options.fill } };
+      });
+      row.height = options.height || 18;
+    }
+
+    function setupPrint(ws, cols) {
+      ws.pageSetup = {
+        paperSize: 9, orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+        margins: { left: 0.4, right: 0.4, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 },
+      };
+      ws.headerFooter = {
+        oddFooter: '&L' + (projectMeta.name || 'SiteLog') + ' — AddisBOQ.com &C&P of &N &R Generated ' + new Date().toLocaleDateString(),
+      };
+    }
+
+    // ---- Sheet 1: Project Summary ----
+    const wsSummary = workbook.addWorksheet('Summary');
+    wsSummary.columns = [{ width: 28 }, { width: 32 }];
+    const titleRow = wsSummary.addRow(['SITE LOG — PROJECT SUMMARY', '']);
+    wsSummary.mergeCells(`A${titleRow.number}:B${titleRow.number}`);
+    styleRow(titleRow, { bold: true, fontSize: 14, fontColor: 'FFFFFFFF', fill: navy, border: mediumBorder, align: 'center', height: 26 });
+    wsSummary.addRow([]);
+
+    const totalPaid = state.payments.reduce((s,p)=>s+(+p.amount||0),0);
+    const summaryRows = [
+      ['Project Name', projectMeta.name || '—'],
+      ['Project Code', projectCode || '—'],
+      ['Report Generated', new Date().toLocaleDateString('en-GB')],
+      ['Total Daily Reports', state.dailyReports.length],
+      ['Total Subcontractors', state.subcontractors.length],
+      ['Total Payments Logged', state.payments.length],
+      ['Total Amount Paid (ETB)', totalPaid],
+    ];
+    summaryRows.forEach(r => {
+      const row = wsSummary.addRow(r);
+      styleRow(row, { bold: r[0].startsWith('Project Name') });
+      row.getCell(1).font = { name: tnr, size: 10, bold: true };
+    });
+    wsSummary.getCell(`B${wsSummary.rowCount}`).numFmt = '#,##0.00';
+    setupPrint(wsSummary);
+
+    // ---- Sheet 2: Daily Reports ----
+    const wsDaily = workbook.addWorksheet('Daily Reports');
+    wsDaily.columns = [
+      { header: 'Date', key: 'date', width: 14 },
+      { header: 'Weather', key: 'weather', width: 12 },
+      { header: 'Activity', key: 'activity', width: 28 },
+      { header: 'Location', key: 'location', width: 16 },
+      { header: 'Qty', key: 'qty', width: 10 },
+      { header: 'Unit', key: 'unit', width: 8 },
+      { header: 'Manpower Category', key: 'mpCat', width: 18 },
+      { header: 'Count', key: 'mpCount', width: 8 },
+      { header: 'Hours', key: 'mpHours', width: 8 },
+      { header: 'Wage/hr', key: 'mpWage', width: 10 },
+      { header: 'Labor Cost (ETB)', key: 'mpCost', width: 16 },
+      { header: 'Delay Reason', key: 'delayReason', width: 20 },
+      { header: 'Hours Lost', key: 'delayHours', width: 10 },
+    ];
+    const dailyHeaderRow = wsDaily.getRow(1);
+    styleRow(dailyHeaderRow, { bold: true, fontColor: 'FFFFFFFF', fill: navy, border: thinBorder, align: 'center', height: 24 });
+    state.dailyReports.slice().sort((a,b)=>a.date<b.date?1:-1).forEach(r => {
+      const maxRows = Math.max(r.workItems.length, r.manpower.length, r.delays.length, 1);
+      for (let i = 0; i < maxRows; i++) {
+        const w = r.workItems[i], m = r.manpower[i], d = r.delays[i];
+        const row = wsDaily.addRow({
+          date: i===0 ? r.date : '',
+          weather: i===0 ? r.weather : '',
+          activity: w ? w.activity : '',
+          location: w ? w.location : '',
+          qty: w ? w.qty : '',
+          unit: w ? w.unit : '',
+          mpCat: m ? m.category : '',
+          mpCount: m ? m.count : '',
+          mpHours: m && m.hours ? m.hours : '',
+          mpWage: m && m.wage ? m.wage : '',
+          mpCost: m && m.hours && m.wage ? m.count*m.hours*m.wage : '',
+          delayReason: d ? d.reason : '',
+          delayHours: d ? d.hours : '',
+        });
+        styleRow(row);
+        row.getCell(11).numFmt = '#,##0.00';
+      }
+    });
+    setupPrint(wsDaily);
+
+    // ---- Sheet 3: Subcontractor Measurement ----
+    const wsMeas = workbook.addWorksheet('Subcontractor Measurement');
+    wsMeas.columns = [
+      { header: 'Subcontractor', key: 'sub', width: 20 },
+      { header: 'Trade', key: 'trade', width: 16 },
+      { header: 'BOQ Item', key: 'item', width: 28 },
+      { header: 'Unit', key: 'unit', width: 8 },
+      { header: 'Rate (ETB)', key: 'rate', width: 12 },
+      { header: 'Contracted Qty', key: 'contracted', width: 14 },
+      { header: 'Date', key: 'date', width: 12 },
+      { header: 'Location', key: 'location', width: 16 },
+      { header: 'Measured Qty', key: 'qty', width: 14 },
+      { header: 'Amount (ETB)', key: 'amount', width: 14 },
+      { header: 'Billed?', key: 'billed', width: 10 },
+    ];
+    const measHeaderRow = wsMeas.getRow(1);
+    styleRow(measHeaderRow, { bold: true, fontColor: 'FFFFFFFF', fill: navy, border: thinBorder, align: 'center', height: 24 });
+    let measGrandTotal = 0;
+    state.subcontractors.forEach(sub => {
+      const items = state.boqItems.filter(b => b.subId === sub.id);
+      items.forEach(item => {
+        const meas = state.measurements.filter(m => m.boqItemId === item.id);
+        if (meas.length === 0) {
+          const row = wsMeas.addRow({ sub: sub.name, trade: sub.trade, item: item.desc, unit: item.unit, rate: item.rate, contracted: item.contractedQty, date:'', location:'', qty:'', amount:'', billed:'' });
+          styleRow(row);
+          row.getCell(5).numFmt = '#,##0.00';
+        } else {
+          meas.forEach(m => {
+            const amount = m.qty*item.rate;
+            measGrandTotal += amount;
+            const row = wsMeas.addRow({ sub: sub.name, trade: sub.trade, item: item.desc, unit: item.unit, rate: item.rate, contracted: item.contractedQty, date: m.date, location: m.location, qty: m.qty, amount: amount, billed: m.billed ? 'Yes' : 'No' });
+            styleRow(row);
+            row.getCell(5).numFmt = '#,##0.00';
+            row.getCell(10).numFmt = '#,##0.00';
+          });
+        }
+      });
+    });
+    const measTotalRow = wsMeas.addRow({ sub:'', trade:'', item:'', unit:'', rate:'', contracted:'', date:'', location:'', qty:'TOTAL', amount: measGrandTotal, billed:'' });
+    styleRow(measTotalRow, { bold: true, fill: 'FFF5F0E1', border: thinBorder });
+    measTotalRow.getCell(10).numFmt = '#,##0.00';
+    setupPrint(wsMeas);
+
+    // ---- Sheet 4: Payments ----
+    const wsPay = workbook.addWorksheet('Payments');
+    wsPay.columns = [
+      { header: 'Date', key: 'date', width: 14 },
+      { header: 'Payee', key: 'payee', width: 22 },
+      { header: 'Reason', key: 'reason', width: 24 },
+      { header: 'Amount (ETB)', key: 'amount', width: 14 },
+      { header: 'Method', key: 'method', width: 14 },
+      { header: 'Notes', key: 'notes', width: 26 },
+    ];
+    const payHeaderRow = wsPay.getRow(1);
+    styleRow(payHeaderRow, { bold: true, fontColor: 'FFFFFFFF', fill: navy, border: thinBorder, align: 'center', height: 24 });
+    state.payments.slice().sort((a,b)=>a.date<b.date?1:-1).forEach(p => {
+      const row = wsPay.addRow({ date: p.date, payee: p.payee, reason: p.reason, amount: p.amount, method: p.method, notes: p.notes });
+      styleRow(row);
+      row.getCell(4).numFmt = '#,##0.00';
+    });
+    const totalRow = wsPay.addRow({ date:'', payee:'', reason:'TOTAL', amount: totalPaid, method:'', notes:'' });
+    styleRow(totalRow, { bold: true, fill: 'FFF5F0E1', border: thinBorder });
+    totalRow.getCell(4).numFmt = '#,##0.00';
+    setupPrint(wsPay);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (projectMeta.name || 'SiteLog_Project').replace(/[^a-z0-9]/gi, '_') + '_Export.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert('Export failed. Please try again.');
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.textContent = originalText;
+}
+
 function checkAccessExpiry(){
   const now = Date.now();
   const expiresAtMs = projectMeta.accessExpiresAt ? projectMeta.accessExpiresAt.toMillis() : 0;
   isReadOnly = now > expiresAtMs;
   const banner = document.getElementById('expiryBanner');
   const renewBtn = document.getElementById('renewBtn');
+  const daysBadge = document.getElementById('daysLeftBadge');
   const daysLeft = Math.ceil((expiresAtMs - now) / (24*60*60*1000));
 
+  // Renew button and days-left badge are always visible, not just near expiry
+  renewBtn.style.display = 'inline-flex';
+  renewBtn.textContent = 'Add 30 days — 2,000 ETB';
+
   if (isReadOnly) {
+    daysBadge.textContent = '🔒 Expired';
+    daysBadge.style.background = 'rgba(224,90,50,0.9)';
     banner.style.display = 'block';
+    banner.style.background = '';
     banner.textContent = '🔒 Access expired — showing read-only data. Renew for 2,000 ETB / 30 days to continue editing.';
-    renewBtn.style.display = 'inline-flex';
     document.querySelectorAll('#appRoot button, #appRoot input, #appRoot select, #appRoot textarea')
       .forEach(el => { if (el.id !== 'renewBtn') el.disabled = true; });
   } else if (daysLeft <= 3) {
+    daysBadge.textContent = `⏳ ${daysLeft}d left`;
+    daysBadge.style.background = 'rgba(224,90,50,0.9)';
     banner.style.display = 'block';
     banner.style.background = '#E4551F';
     banner.textContent = `⏳ Your access expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'} — renew now to avoid interruption.`;
-    renewBtn.style.display = 'inline-flex';
   } else {
+    daysBadge.textContent = `${daysLeft} days left`;
+    daysBadge.style.background = 'rgba(255,255,255,0.15)';
     banner.style.display = 'none';
-    renewBtn.style.display = 'none';
   }
 }
 
@@ -873,21 +1085,40 @@ function renderWorkItems(){
 document.getElementById('addManpower').addEventListener('click', ()=>{
   const cat = document.getElementById('mpCategory').value;
   const count = document.getElementById('mpCount').value;
+  const hours = document.getElementById('mpHours').value;
+  const wage = document.getElementById('mpWage').value;
   if(!count || +count<=0){ alert('Enter a headcount.'); return; }
-  draft.manpower.push({ category:cat, count:+count });
+  draft.manpower.push({
+    category: cat,
+    count: +count,
+    hours: hours ? +hours : null,
+    wage: wage ? +wage : null
+  });
   document.getElementById('mpCount').value='';
+  document.getElementById('mpHours').value='';
+  document.getElementById('mpWage').value='';
   renderManpower();
 });
 function renderManpower(){
   const el = document.getElementById('manpowerList');
   if(draft.manpower.length===0){ el.innerHTML=''; return; }
   const total = draft.manpower.reduce((s,m)=>s+m.count,0);
-  el.innerHTML = draft.manpower.map((m,i)=>`
+  const hasCostData = draft.manpower.some(m => m.hours && m.wage);
+  const totalCost = draft.manpower.reduce((s,m)=> s + (m.hours && m.wage ? m.count * m.hours * m.wage : 0), 0);
+  el.innerHTML = draft.manpower.map((m,i)=>{
+    const cost = (m.hours && m.wage) ? m.count * m.hours * m.wage : null;
+    const costTag = cost ? `<span class="tag mono" style="color:var(--green)">${fmt(cost)} ETB</span>` : '';
+    const hoursTag = (m.hours || m.wage) ? `<span class="tag mono" style="font-size:11px;color:var(--steel)">${m.hours||'—'}h × ${m.wage||'—'}/h</span>` : '';
+    return `
     <div class="list-row">
       <span class="grow">${escapeHtml(m.category)}</span>
       <span class="tag mono">${m.count}</span>
+      ${hoursTag}
+      ${costTag}
       <button class="btn-danger btn-sm" style="border:none;background:none" data-i="${i}" data-type="mp">✕</button>
-    </div>`).join('') + `<div class="stat" style="margin-top:6px">Total on site<b>${total}</b></div>`;
+    </div>`;
+  }).join('') + `<div class="stat" style="margin-top:6px">Total on site<b>${total}</b></div>`
+    + (hasCostData ? `<div class="stat">Total labor cost<b style="color:var(--green)">${fmt(totalCost)} ETB</b></div>` : '');
   el.querySelectorAll('button[data-type="mp"]').forEach(b=>b.addEventListener('click', ()=>{
     draft.manpower.splice(+b.dataset.i,1); renderManpower();
   }));
@@ -979,6 +1210,7 @@ document.getElementById('printReportBtn').addEventListener('click', ()=>{
   const weather = document.getElementById('reportWeather').value;
   const proj = { name: projectMeta.name };
   const totalCrew = draft.manpower.reduce((s,m)=>s+m.count,0);
+  const totalLaborCost = draft.manpower.reduce((s,m)=> s + (m.hours && m.wage ? m.count * m.hours * m.wage : 0), 0);
   const html = `
     <div class="print-doc">
       <h1>Daily Progress Report</h1>
@@ -986,9 +1218,9 @@ document.getElementById('printReportBtn').addEventListener('click', ()=>{
       <h3>Work Completed</h3>
       <table><thead><tr><th>Activity</th><th>Location</th><th>Qty</th><th>Unit</th></tr></thead>
       <tbody>${draft.workItems.map(w=>`<tr><td>${escapeHtml(w.activity)}</td><td>${escapeHtml(w.location||'—')}</td><td>${escapeHtml(w.qty||'')}</td><td>${escapeHtml(w.unit||'')}</td></tr>`).join('') || '<tr><td colspan="4">No entries</td></tr>'}</tbody></table>
-      <h3>Manpower (Total: ${totalCrew})</h3>
-      <table><thead><tr><th>Category</th><th>Count</th></tr></thead>
-      <tbody>${draft.manpower.map(m=>`<tr><td>${escapeHtml(m.category)}</td><td>${m.count}</td></tr>`).join('') || '<tr><td colspan="2">No entries</td></tr>'}</tbody></table>
+      <h3>Manpower (Total: ${totalCrew}${totalLaborCost ? ' · Labor cost: ' + fmt(totalLaborCost) + ' ETB' : ''})</h3>
+      <table><thead><tr><th>Category</th><th>Count</th><th>Hours</th><th>Wage/hr</th><th>Cost</th></tr></thead>
+      <tbody>${draft.manpower.map(m=>`<tr><td>${escapeHtml(m.category)}</td><td>${m.count}</td><td>${m.hours||'—'}</td><td>${m.wage||'—'}</td><td>${(m.hours && m.wage) ? fmt(m.count*m.hours*m.wage) : '—'}</td></tr>`).join('') || '<tr><td colspan="5">No entries</td></tr>'}</tbody></table>
       <h3>Delays / Issues</h3>
       <table><thead><tr><th>Reason</th><th>Hours lost</th></tr></thead>
       <tbody>${draft.delays.map(d=>`<tr><td>${escapeHtml(d.reason)}</td><td>${d.hours}</td></tr>`).join('') || '<tr><td colspan="2">None reported</td></tr>'}</tbody></table>
@@ -1069,30 +1301,56 @@ function renderMeasBoqOptions(){
   renderMeasDimFields();
 }
 
+let measOverrideMode = false;
+
 function renderMeasDimFields(){
   const sel = document.getElementById('measBoqItem');
   const item = state.boqItems.find(b=>b.id===sel.value);
   const wrap = document.getElementById('measDimFields');
   if(!item){ wrap.innerHTML=''; return; }
-  if(item.unit==='m'){
+
+  if((item.unit==='m2' || item.unit==='m3') && measOverrideMode){
+    // Direct total entry — skip L×W(×H) multiplication entirely
+    wrap.className = 'row';
+    wrap.innerHTML = `
+      <div style="flex:1">
+        <input type="number" id="dimTotal" placeholder="Total ${item.unit} (e.g. 30)">
+        <div style="margin-top:6px"><a href="#" id="measModeToggle" class="hint" style="text-decoration:underline">↩ Switch back to Length${item.unit==='m3' ? ' × Width × Height' : ' × Width'}</a></div>
+      </div>`;
+  } else if(item.unit==='m'){
+    wrap.className = 'row row-3';
     wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)">`;
   } else if(item.unit==='m2'){
-    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)"><input type="number" id="dimW" placeholder="Width (m)">`;
+    wrap.className = 'row row-3';
+    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)"><input type="number" id="dimW" placeholder="Width (m)">
+      <div style="grid-column:1/-1;margin-top:2px"><a href="#" id="measModeToggle" class="hint" style="text-decoration:underline">Enter total m² directly instead</a></div>`;
   } else if(item.unit==='m3'){
-    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)"><input type="number" id="dimW" placeholder="Width (m)"><input type="number" id="dimH" placeholder="Height/Depth (m)">`;
+    wrap.className = 'row row-3';
+    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)"><input type="number" id="dimW" placeholder="Width (m)"><input type="number" id="dimH" placeholder="Height/Depth (m)">
+      <div style="grid-column:1/-1;margin-top:2px"><a href="#" id="measModeToggle" class="hint" style="text-decoration:underline">Enter total m³ directly instead</a></div>`;
   } else {
+    wrap.className = 'row row-3';
     wrap.innerHTML = `<input type="number" id="dimCount" placeholder="Count / quantity">`;
   }
+
+  const toggle = document.getElementById('measModeToggle');
+  if (toggle) toggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    measOverrideMode = !measOverrideMode;
+    renderMeasDimFields();
+  });
+
   wrap.querySelectorAll('input').forEach(inp=>inp.addEventListener('input', updateMeasPreview));
   updateMeasPreview();
 }
-document.getElementById('measBoqItem').addEventListener('change', renderMeasDimFields);
+document.getElementById('measBoqItem').addEventListener('change', () => { measOverrideMode = false; renderMeasDimFields(); });
 
 function currentCalcQty(){
   const sel = document.getElementById('measBoqItem');
   const item = state.boqItems.find(b=>b.id===sel.value);
   if(!item) return 0;
   const v = id => +(document.getElementById(id)?.value || 0);
+  if((item.unit==='m2' || item.unit==='m3') && measOverrideMode) return v('dimTotal');
   if(item.unit==='m') return v('dimL');
   if(item.unit==='m2') return v('dimL')*v('dimW');
   if(item.unit==='m3') return v('dimL')*v('dimW')*v('dimH');
@@ -1118,8 +1376,9 @@ document.getElementById('addMeasurement').addEventListener('click', ()=>{
   const date = document.getElementById('measDate').value || todayStr();
   state.measurements.push({ id: uid(), boqItemId: item.id, date, location, qty, billed:false, billId:null });
   document.getElementById('measLocation').value='';
-  ['dimL','dimW','dimH','dimCount'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
-  updateMeasPreview();
+  ['dimL','dimW','dimH','dimCount','dimTotal'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  measOverrideMode = false;
+  renderMeasDimFields();
   persist();
   renderMB();
 });
