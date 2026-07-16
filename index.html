@@ -10,10 +10,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <meta name="description" content="EthioBuild: Free BOQ calculator for Ethiopian construction. Get accurate cost estimates, professional Excel exports, and multi-city price support in minutes.">
+  <meta name="description" content="EthioBuild: Free BOQ calculator for Ethiopian construction. Get accurate cost estimates and a professionally formatted Excel BOQ — with contingency, signature block, and full item breakdown — in minutes.">
 <meta name="keywords" content="BOQ Ethiopia, construction cost estimator, bill of quantities, Ethiopian construction, Addis Ababa construction cost, multi-city construction budgeting, project cost planning, regional price variations, building cost calculator">
 <meta property="og:title" content="EthioBuild — Ethiopian Construction Cost Calculator">
-<meta property="og:description" content="Get accurate, professional BOQ estimates for your Ethiopian construction projects in minutes. Free, easy to use, and built to standard.">
+<meta property="og:description" content="Get accurate, professional BOQ estimates for your Ethiopian construction projects in minutes. Free to calculate, with a polished Excel export ready to hand to your contractor.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://addisboq.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1109,6 +1109,11 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
         <span class="rc-label">Mat <span style="font-size:10px;opacity:0.7;">(ምንጣፍ)</span></span>
         <span class="rc-sub">Raft slab</span>
       </label>
+      <label class="radio-card">
+        <input type="radio" name="foundation" value="masonry">
+        <span class="rc-label">Masonry Wall <span style="font-size:10px;opacity:0.7;">(ግንብ)</span></span>
+        <span class="rc-sub">Stone/masonry strip</span>
+      </label>
     </div>
   </div>
 
@@ -1559,6 +1564,7 @@ const RATES = {
   rebar_14mm: 257,
   rebar_16mm: 257,
   rebar_20mm: 257,
+  rebar_24mm: 257,
 
   // Masonry (per m3)
   stone_masonry_below: 7804,
@@ -1835,7 +1841,8 @@ function calculateBOQ() {
   // --- Gather inputs ---
   const city        = document.getElementById('city').value;
   const floorArea   = parseFloat(document.getElementById('floor-area').value) || 110;
-  const floorsAbove = parseInt(document.getElementById('floors-above').value) || 3;
+  const floorsAboveRaw = parseInt(document.getElementById('floors-above').value);
+  const floorsAbove = isNaN(floorsAboveRaw) ? 3 : floorsAboveRaw;
   const floorsBase  = parseInt(document.getElementById('floors-basement').value) || 0;
   const floorH      = parseFloat(document.getElementById('floor-height').value) || 3.2;
   const foundation  = getRadio('foundation');
@@ -1852,7 +1859,8 @@ function calculateBOQ() {
   const withEarthing= getRadio('earthing') === 'yes';
   const buildingUse = getRadio('building-use');
   const sanitaryGrade = getRadio('sanitary-grade');
-  const wetRooms    = parseInt(document.getElementById('wet-rooms').value) || 3;
+  const wetRoomsRaw = parseInt(document.getElementById('wet-rooms').value);
+  const wetRooms = isNaN(wetRoomsRaw) ? 3 : wetRoomsRaw;
   const withSeptic  = getRadio('septic') === 'yes';
   const projName    = document.getElementById('project-name').value || 'Unnamed Project';
   const cityLabel   = document.getElementById('city').options[document.getElementById('city').selectedIndex].text;
@@ -1864,7 +1872,7 @@ function calculateBOQ() {
     R[k] = typeof RATES[k] === 'number' ? RATES[k] * cm : RATES[k];
   });
 
-  const totalFloors = floorsAbove + floorsBase;
+  const totalFloors = floorsAbove + floorsBase + 1; // +1 for the ground floor itself
   const totalArea   = floorArea * totalFloors;
   const perimeter   = Math.sqrt(floorArea) * 4; // approx
   const roofArea    = floorArea * 1.15; // 15% slope allowance
@@ -1893,7 +1901,7 @@ function calculateBOQ() {
 
   // 2. Foundation Concrete
   const leanConc  = floorArea * 0.18; // m2
-  const footingV  = (foundation === 'mat') ? floorArea * 0.25 : floorArea * 0.095;
+  const footingV  = (floorsAbove === 0) ? 0 : ((foundation === 'mat') ? floorArea * 0.25 : floorArea * 0.095);
   const gradeBeamV = floorArea * 0.053;
   const fndColV   = floorArea * 0.031;
   const rebarFoundKg = footingV * 95 + gradeBeamV * 80;
@@ -1919,29 +1927,36 @@ function calculateBOQ() {
   sections.push({ title: '3. Masonry Works', items: stoneMas });
 
   // ---- B. SUPERSTRUCTURE ----
-  const colV   = floorArea * floorsAbove * 0.013;
-  const beamV  = floorArea * floorsAbove * 0.031;
+  const isHighRise = floorsAbove > 8;
+  const colV   = floorArea * (floorsAbove + 1) * 0.013 * (isHighRise ? 2 : 1); // +1: every physical floor (incl. ground) needs columns
+  const beamV  = floorArea * floorsAbove * 0.031; // floor beams — one set per slab, correctly 0 for G+0
+  const topTieBeamV = floorArea * 0.031; // top-tie beam — always exactly 1 set, caps the topmost floor's walls
   const slabV  = floorArea * floorsAbove * 0.15;
   const stairV = floorsAbove * 1.575;
-  const rebarSupKg = (colV * 130 + beamV * 110 + slabV * 85) ;
+  const rebarSupKg = (colV * 130 + beamV * 110 + topTieBeamV * 110 + slabV * 85);
 
   const superConc = [
     { no:'1.01', desc:'C-25 concrete to elevation columns', unit:'m³', qty: colV, rate: R.concrete_c25_column },
-    { no:'1.02', desc:'C-25 concrete to beams', unit:'m³', qty: beamV, rate: R.concrete_c25_beam },
-    { no:'1.03', desc:'C-25 concrete to floor slabs (150mm)', unit:'m³', qty: slabV, rate: R.concrete_c25_slab },
-    { no:'1.04', desc:'C-25 concrete to staircase and landing', unit:'m³', qty: stairV, rate: R.concrete_c25_column },
-    { no:'1.05', desc:'Formwork to columns', unit:'m²', qty: colV * 16, rate: R.formwork },
-    { no:'1.06', desc:'Formwork to beams', unit:'m²', qty: beamV * 7.5, rate: R.formwork },
-    { no:'1.07', desc:'Formwork to floor slabs', unit:'m²', qty: floorArea * floorsAbove, rate: R.formwork },
-    { no:'1.08', desc:'Rebar 8mm deformed bars (superstructure)', unit:'kg', qty: rebarSupKg * 0.45, rate: R.rebar_8mm },
-    { no:'1.09', desc:'Rebar 10mm deformed bars', unit:'kg', qty: rebarSupKg * 0.12, rate: R.rebar_10mm },
-    { no:'1.10', desc:'Rebar 14mm deformed bars', unit:'kg', qty: rebarSupKg * 0.25, rate: R.rebar_14mm },
-    { no:'1.11', desc:'Rebar 16mm deformed bars', unit:'kg', qty: rebarSupKg * 0.18, rate: R.rebar_16mm },
+    { no:'1.02', desc:'C-25 concrete to floor beams', unit:'m³', qty: beamV, rate: R.concrete_c25_beam },
+    { no:'1.03', desc:'C-25 concrete to top-tie beam (roof level ring beam)', unit:'m³', qty: topTieBeamV, rate: R.concrete_c25_beam },
+    { no:'1.04', desc:'C-25 concrete to floor slabs (150mm)', unit:'m³', qty: slabV, rate: R.concrete_c25_slab },
+    { no:'1.05', desc:'C-25 concrete to staircase and landing', unit:'m³', qty: stairV, rate: R.concrete_c25_column },
+    { no:'1.06', desc:'Formwork to columns', unit:'m²', qty: colV * 16, rate: R.formwork },
+    { no:'1.07', desc:'Formwork to floor beams', unit:'m²', qty: beamV * 7.5, rate: R.formwork },
+    { no:'1.08', desc:'Formwork to top-tie beam', unit:'m²', qty: topTieBeamV * 7.5, rate: R.formwork },
+    { no:'1.09', desc:'Formwork to floor slabs', unit:'m²', qty: floorArea * floorsAbove, rate: R.formwork },
+    { no:'1.10', desc:'Rebar 8mm deformed bars (superstructure)', unit:'kg', qty: rebarSupKg * (isHighRise ? 0.35 : 0.45), rate: R.rebar_8mm },
+    { no:'1.11', desc:'Rebar 10mm deformed bars', unit:'kg', qty: rebarSupKg * (isHighRise ? 0.10 : 0.12), rate: R.rebar_10mm },
+    { no:'1.12', desc:'Rebar 14mm deformed bars', unit:'kg', qty: rebarSupKg * (isHighRise ? 0.20 : 0.25), rate: R.rebar_14mm },
+    { no:'1.13', desc:'Rebar 16mm deformed bars', unit:'kg', qty: rebarSupKg * (isHighRise ? 0.15 : 0.18), rate: R.rebar_16mm },
   ];
+  if (isHighRise) {
+    superConc.push({ no:'1.14', desc:'Rebar 24mm deformed bars (high-rise columns, G+9 and above)', unit:'kg', qty: rebarSupKg * 0.20, rate: R.rebar_24mm });
+  }
   sections.push({ title: '1. Concrete Works', items: superConc });
 
   // HCB / Wall material — separate external and internal
-  const extWallArea = perimeter * floorH * floorsAbove * 0.85; // 15% openings
+  const extWallArea = perimeter * floorH * (floorsAbove + 1) * 0.85; // +1: every physical floor needs walls, incl. ground
   const intWallArea = extWallArea * 0.65; // internal partitions ~ 65% of ext wall area
   const extWallRateMap = { hcb20: R.hcb_20cm, hcb15: R.hcb_15cm, stone: R.stone_wall_ext };
   const intWallRateMap = { hcb15: R.hcb_15cm, hcb10: R.hcb_10cm, gypsum: R.gypsum_board };
@@ -2010,7 +2025,7 @@ const aluminumItems = [
 sections.push({ title: '6. Aluminium Works', items: aluminumItems });
 
   // ---- 7 & 8. PLASTERING, FINISHING & PAINTING ----
-const totalFloorArea = floorArea * (floorsAbove + floorsBase);
+const totalFloorArea = floorArea * (floorsAbove + floorsBase + 1); // +1 for the ground floor itself, same fix as totalArea
 const floorFinRateMap = { tiles: R.floor_tiles, marble: R.floor_marble, terrazzo: R.floor_terrazzo, screed: R.floor_screed };
 const extPaintRateMap = { local: R.paint_local, medium: R.paint_medium, premium: R.paint_premium };
 const intPaintRateMap = { local: R.paint_local, medium: R.paint_medium, premium: R.paint_premium };
