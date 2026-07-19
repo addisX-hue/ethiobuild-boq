@@ -5,14 +5,14 @@
   <meta name="theme-color" content="#1a1a2e">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EthioBuild BOQ Calculator</title>
+<title>AddisBOQ — Ethiopian BOQ & Construction Cost Calculator</title>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <meta name="description" content="EthioBuild: Free BOQ calculator for Ethiopian construction. Get accurate cost estimates and a professionally formatted Excel BOQ — with contingency, signature block, and full item breakdown — in minutes.">
+  <meta name="description" content="AddisBOQ: Free BOQ calculator for Ethiopian construction. Get accurate cost estimates and a professionally formatted Excel BOQ — with contingency, signature block, and full item breakdown — in minutes.">
 <meta name="keywords" content="BOQ Ethiopia, construction cost estimator, bill of quantities, Ethiopian construction, Addis Ababa construction cost, multi-city construction budgeting, project cost planning, regional price variations, building cost calculator">
-<meta property="og:title" content="EthioBuild — Ethiopian Construction Cost Calculator">
+<meta property="og:title" content="AddisBOQ — Ethiopian Construction Cost Calculator">
 <meta property="og:description" content="Get accurate, professional BOQ estimates for your Ethiopian construction projects in minutes. Free to calculate, with a polished Excel export ready to hand to your contractor.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://addisboq.com">
@@ -640,13 +640,13 @@
 
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 <div class="side-menu" id="sideMenu">
-<h3>EthioBuild</h3>
+<h3>AddisBOQ</h3>
 <a href='#' onclick="goHome(); toggleMenu()">Home</a>
 <a href='#' onclick="goHome(); toggleMenu()">New BOQ</a>
 <a href='sitelog.html'>📋 Site Log</a>
-<a href='mailto:addiss1993@gmail.com?subject=Customer Support - EthioBuild'>Customer Support</a>
-<a href='mailto:addiss1993@gmail.com?subject=Contact - EthioBuild'>Contact Organization</a>
-<a href='mailto:addiss1993@gmail.com?subject=Bug Report - EthioBuild'>Report a Bug</a>
+<a href='mailto:addiss1993@gmail.com?subject=Customer Support - AddisBOQ'>Customer Support</a>
+<a href='mailto:addiss1993@gmail.com?subject=Contact - AddisBOQ'>Contact Organization</a>
+<a href='mailto:addiss1993@gmail.com?subject=Bug Report - AddisBOQ'>Report a Bug</a>
 <a href='#' onclick="toggleWhatsComing()">What's Coming</a>
 <a href='#'>Request a Feature</a>
 <a href='#' onclick="openAbout(); toggleMenu()">About</a>
@@ -868,7 +868,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 <button class="menu-btn" onclick="toggleMenu()">☰</button>
   <div class="logo-mark">EB</div>
   <div class="logo-text">
-    <h1>EthioBuild</h1>
+    <h1>AddisBOQ</h1>
     <p>Professional Construction Cost Estimation Platform</p>
   </div>
   <div class="header-badge">Pro version</div>
@@ -959,6 +959,17 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       <div class="welcome-card-text">
         <h4>Telegram Channel</h4>
         <p>Join our channel for updates, tips and new features. ለዜናዎች እና አዲስ አፕዴቶች ቻናላችንን ይቀላቀሉ።</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="welcome-section">
+    <div class="welcome-section-title">እርዳታ / Help</div>
+    <a class="welcome-card" href="/faq">
+      <div class="welcome-card-icon" style="background:rgba(200,146,42,0.15);">❓</div>
+      <div class="welcome-card-text">
+        <h4>Frequently Asked Questions</h4>
+        <p>BOQ basics, construction cost factors, and how AddisBOQ works.</p>
       </div>
     </a>
   </div>
@@ -1515,7 +1526,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 </div>
 
 <div class="footer">
-EthioBuild BOQ Calculator. <br>
+AddisBOQ Calculator. <br>
 Prices are based on June 2026. Final quantities must be verified by a licensed engineer.
 <div class="developer-credit">Developed by Addis Engineering.</div>
 
@@ -1766,6 +1777,14 @@ window.addEventListener('popstate', function(e) {
 // Set initial history state
 history.replaceState({ view: 'welcome' }, '', '');
 history.pushState({ view: 'welcome' }, '', '');
+
+// If ?start=quick is in the URL, skip welcome screen and go directly to Step 1
+(function checkStartParam() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('start') === 'quick') {
+    startCalculator();
+  }
+})();
 
 function step(id, delta) {
   const el = document.getElementById(id);
@@ -3115,7 +3134,7 @@ async function doExport(d) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = (d.projName || 'EthioBuild_BOQ') + '.xlsx';
+  a.download = (d.projName || 'AddisBOQ_BOQ') + '.xlsx';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -3128,6 +3147,19 @@ function recalculate() {
   document.getElementById('progress-bar').style.display = 'flex';
   goToStep(1);
 }
+
+// If someone arrives via a direct link meant to jump straight into the
+// calculator (e.g. from the FAQ page, an ad, or any external link), skip
+// the welcome screen and go straight to Step 1.
+(function handleDirectCalculatorLink() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('start') !== 'calculator') return;
+  document.addEventListener('DOMContentLoaded', () => {
+    startCalculator();
+    // Clean the URL so a refresh doesn't re-trigger this
+    window.history.replaceState({}, document.title, window.location.pathname);
+  });
+})();
 
 // If we've landed here via the external payment redirect (from the installed app),
 // restore the person's inputs, recalculate their BOQ, and jump straight to payment.
