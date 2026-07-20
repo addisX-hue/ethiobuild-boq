@@ -1562,10 +1562,10 @@ const RATES = {
 
   // Concrete (per m3)
   concrete_c15: 3417,
-  concrete_c25_foundation: 15625,
-  concrete_c25_column: 16714,
-  concrete_c25_beam: 16250,
-  concrete_c25_slab: 16250,
+  concrete_c25_foundation: 19125,
+  concrete_c25_column: 20100,
+  concrete_c25_beam: 19125,
+  concrete_c25_slab: 19125,
   formwork: 1254,
 
   // Rebar (per kg)
@@ -1607,9 +1607,15 @@ const RATES = {
   plaster_gypsum: 480,
 
   // Paint (per m2)
-  paint_local: 85,
-  paint_medium: 145,
-  paint_premium: 210,
+  paint_ext_local: 500,
+  paint_ext_medium: 610,
+  paint_ext_premium: 850,
+  paint_int_local: 85,
+  paint_int_medium: 145,
+  paint_int_premium: 210,
+
+  // Ceiling (per m2)
+  chipboard_ceiling: 1510,
 
   // Electrical (per m2 of built-up area)
   elec_basic: 420,
@@ -1623,7 +1629,7 @@ const RATES = {
   mlpp_160A: 58500,
   mlpp_200A: 70000,
   mlpp_250A: 84500,
-  mlpp_300A: 100000,
+  mlpp_300A: 250000,
 
   // SDB (Sub Distribution Board) — 1 per floor, standard spec
   sdb_standard: 5000,
@@ -1640,8 +1646,8 @@ const RATES = {
   manhole_electrical: 4000, // 1 per project
 
   // Sanitary — granular fixtures (ETB, sample rates x2 per instruction — outdated source)
-  san_basin: 5000,
-  san_wc: 7000,
+  san_basin: 20200,
+  san_wc: 28010,
   san_paper_holder: 1300,
   san_mirror: 1300,
   san_towel_rail: 1700,
@@ -1649,7 +1655,7 @@ const RATES = {
   san_floor_gully: 1300,
   san_cleanout_100: 700,
   san_cleanout_75: 700,
-  san_urinal: 5200,
+  san_urinal: 10383,
   san_water_heater: 50000,
   san_lab_sink: 7000,
   san_fire_ext: 25000,
@@ -1891,6 +1897,54 @@ function calculateBOQ() {
     R[k] = typeof RATES[k] === 'number' ? RATES[k] * cm : RATES[k];
   });
 
+  // ---- HEIGHT-BASED SCALING (foundation & superstructure grow non-linearly with floor count) ----
+  // Column volume + steel ratio + rebar diameter distribution, based on floorsAbove only
+  // As floors increase, weight shifts from thin bars (8/10mm) toward thick bars (16/20/24mm)
+  function getSuperstructureScale(floors) {
+    if (floors <= 3)  return { colMult: 1.0,  steelRatio: 0.015, dia: { d8:0.45, d10:0.12, d14:0.25, d16:0.18, d20:0,    d24:0    } };
+    if (floors <= 6)  return { colMult: 1.15, steelRatio: 0.020, dia: { d8:0.40, d10:0.12, d14:0.26, d16:0.22, d20:0,    d24:0    } };
+    if (floors <= 9)  return { colMult: 1.4,  steelRatio: 0.027, dia: { d8:0.35, d10:0.10, d14:0.25, d16:0.20, d20:0.10, d24:0    } };
+    if (floors <= 12) return { colMult: 1.7,  steelRatio: 0.032, dia: { d8:0.28, d10:0.09, d14:0.22, d16:0.20, d20:0.14, d24:0.07 } };
+    if (floors <= 15) return { colMult: 2.1,  steelRatio: 0.038, dia: { d8:0.22, d10:0.08, d14:0.18, d16:0.20, d20:0.17, d24:0.15 } };
+    // Beyond G+15: continue the same growth rate per 3-floor band rather than flattening
+    const bandsBeyond = Math.ceil((floors - 15) / 3);
+    return {
+      colMult: 2.1 + bandsBeyond * 0.4,
+      steelRatio: 0.038 + bandsBeyond * 0.006,
+      dia: { d8:0.18, d10:0.07, d14:0.15, d16:0.18, d20:0.20, d24:0.22 }
+    };
+  }
+  // Foundation volume + rebar increase multiplier, based on floorsAbove only
+  function getFoundationScale(floors) {
+    if (floors <= 3)  return { foundMult: 1.0,  rebarBoost: 1.0 };
+    if (floors <= 6)  return { foundMult: 1.25, rebarBoost: 1.20 };
+    if (floors <= 9)  return { foundMult: 1.6,  rebarBoost: 1.45 };
+    if (floors <= 12) return { foundMult: 2.0,  rebarBoost: 1.70 };
+    if (floors <= 15) return { foundMult: 2.5,  rebarBoost: 2.00 };
+    // Beyond G+15: continue the same growth rate per 3-floor band rather than flattening
+    const bandsBeyond = Math.ceil((floors - 15) / 3);
+    return { foundMult: 2.5 + bandsBeyond * 0.5, rebarBoost: 2.00 + bandsBeyond * 0.3 };
+  }
+  const superScale = getSuperstructureScale(floorsAbove);
+  const foundScale = getFoundationScale(floorsAbove);
+  // Basement adds +18% to foundation volume/rebar per basement level, on top of the floor-based curve
+  const basementFoundBoost = 1 + (floorsBase * 0.18);
+  const foundMultFinal  = foundScale.foundMult * basementFoundBoost;
+  const rebarBoostFinal = foundScale.rebarBoost * basementFoundBoost;
+
+  // Rebar diameter mix — shifts smoothly toward thicker bars (16/20/24mm) as floor count rises,
+  // matching the same 5-tier bands used for colMult/steelRatio/foundMult above.
+  function getRebarDiaSplit(floors) {
+    if (floors <= 3)  return { d8: 0.45, d10: 0.12, d14: 0.25, d16: 0.18, d20: 0,    d24: 0    };
+    if (floors <= 6)  return { d8: 0.40, d10: 0.12, d14: 0.26, d16: 0.22, d20: 0,    d24: 0    };
+    if (floors <= 9)  return { d8: 0.35, d10: 0.10, d14: 0.25, d16: 0.20, d20: 0.10, d24: 0    };
+    if (floors <= 12) return { d8: 0.28, d10: 0.09, d14: 0.22, d16: 0.18, d20: 0.15, d24: 0.08 };
+    if (floors <= 15) return { d8: 0.22, d10: 0.08, d14: 0.18, d16: 0.16, d20: 0.18, d24: 0.18 };
+    // Beyond G+15: keep shifting toward heavier bars
+    return                    { d8: 0.16, d10: 0.06, d14: 0.14, d16: 0.14, d20: 0.20, d24: 0.30 };
+  }
+  const rebarDiaSplit = getRebarDiaSplit(floorsAbove);
+
   const totalFloors = floorsAbove + floorsBase + 1; // +1 for the ground floor itself
   const totalArea   = floorArea * totalFloors;
   const perimeter   = Math.sqrt(floorArea) * 4; // approx
@@ -1920,10 +1974,10 @@ function calculateBOQ() {
 
   // 2. Foundation Concrete
   const leanConc  = floorArea * 0.18; // m2
-  const footingV  = (floorsAbove === 0) ? 0 : ((foundation === 'mat') ? floorArea * 0.25 : floorArea * 0.095);
-  const gradeBeamV = floorArea * 0.053;
-  const fndColV   = floorArea * 0.031;
-  const rebarFoundKg = footingV * 95 + gradeBeamV * 80;
+  const footingV  = ((floorsAbove === 0) ? 0 : ((foundation === 'mat') ? floorArea * 0.25 : floorArea * 0.095)) * foundMultFinal;
+  const gradeBeamV = floorArea * 0.053 * foundMultFinal;
+  const fndColV   = floorArea * 0.031 * foundMultFinal;
+  const rebarFoundKg = (footingV * 95 + gradeBeamV * 80) * rebarBoostFinal;
 
   const foundConc = [
     { no:'2.01', desc:'5cm lean concrete C-5 (150 kg cement/m³) under foundation', unit:'m²', qty: leanConc, rate: R.concrete_c15 * 0.05 + 200 },
@@ -1946,13 +2000,13 @@ function calculateBOQ() {
   sections.push({ title: '3. Masonry Works', items: stoneMas });
 
   // ---- B. SUPERSTRUCTURE ----
-  const isHighRise = floorsAbove > 8;
-  const colV   = floorArea * (floorsAbove + 1) * 0.013 * (isHighRise ? 2 : 1); // +1: every physical floor (incl. ground) needs columns
+  const colV   = floorArea * (floorsAbove + 1) * 0.013 * superScale.colMult; // +1: every physical floor (incl. ground) needs columns
   const beamV  = floorArea * floorsAbove * 0.031; // floor beams — one set per slab, correctly 0 for G+0
   const topTieBeamV = floorArea * 0.031; // top-tie beam — always exactly 1 set, caps the topmost floor's walls
   const slabV  = floorArea * floorsAbove * 0.15;
   const stairV = floorsAbove * 1.575;
-  const rebarSupKg = (colV * 130 + beamV * 110 + topTieBeamV * 110 + slabV * 85);
+  // Rebar quantity now driven by actual steel ratio (kg per m3 approximated from steelRatio × concrete density factor)
+  const rebarSupKg = (colV * (superScale.steelRatio * 7850 / 10) + beamV * 110 + topTieBeamV * 110 + slabV * 85);
 
   const superConc = [
     { no:'1.01', desc:'C-25 concrete to elevation columns', unit:'m³', qty: colV, rate: R.concrete_c25_column },
@@ -1964,13 +2018,16 @@ function calculateBOQ() {
     { no:'1.07', desc:'Formwork to floor beams', unit:'m²', qty: beamV * 7.5, rate: R.formwork },
     { no:'1.08', desc:'Formwork to top-tie beam', unit:'m²', qty: topTieBeamV * 7.5, rate: R.formwork },
     { no:'1.09', desc:'Formwork to floor slabs', unit:'m²', qty: floorArea * floorsAbove, rate: R.formwork },
-    { no:'1.10', desc:'Rebar 8mm deformed bars (superstructure)', unit:'kg', qty: rebarSupKg * (isHighRise ? 0.35 : 0.45), rate: R.rebar_8mm },
-    { no:'1.11', desc:'Rebar 10mm deformed bars', unit:'kg', qty: rebarSupKg * (isHighRise ? 0.10 : 0.12), rate: R.rebar_10mm },
-    { no:'1.12', desc:'Rebar 14mm deformed bars', unit:'kg', qty: rebarSupKg * (isHighRise ? 0.20 : 0.25), rate: R.rebar_14mm },
-    { no:'1.13', desc:'Rebar 16mm deformed bars', unit:'kg', qty: rebarSupKg * (isHighRise ? 0.15 : 0.18), rate: R.rebar_16mm },
+    { no:'1.10', desc:'Rebar 8mm deformed bars (superstructure)', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d8, rate: R.rebar_8mm },
+    { no:'1.11', desc:'Rebar 10mm deformed bars', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d10, rate: R.rebar_10mm },
+    { no:'1.12', desc:'Rebar 14mm deformed bars', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d14, rate: R.rebar_14mm },
+    { no:'1.13', desc:'Rebar 16mm deformed bars', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d16, rate: R.rebar_16mm },
   ];
-  if (isHighRise) {
-    superConc.push({ no:'1.14', desc:'Rebar 24mm deformed bars (high-rise columns, G+9 and above)', unit:'kg', qty: rebarSupKg * 0.20, rate: R.rebar_24mm });
+  if (rebarDiaSplit.d20 > 0) {
+    superConc.push({ no:'1.14', desc:'Rebar 20mm deformed bars (high-rise columns)', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d20, rate: R.rebar_20mm });
+  }
+  if (rebarDiaSplit.d24 > 0) {
+    superConc.push({ no:'1.15', desc:'Rebar 24mm deformed bars (high-rise columns)', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d24, rate: R.rebar_24mm });
   }
   sections.push({ title: '1. Concrete Works', items: superConc });
 
@@ -2019,7 +2076,7 @@ if (!steelTruss) {
     carpItems.push({ no:'5.02', desc:'Eucalyptus pole — king post & intermediate posts (100mm dia.)', unit:'ml', qty: roofArea * 0.5, rate: R.eucalyptus_100mm || 75 * cm });
     carpItems.push({ no:'5.03', desc:'Eucalyptus pole — diagonal bracing (80mm dia.)', unit:'ml', qty: roofArea * 0.4, rate: R.eucalyptus_80mm || 55 * cm });
 }
-carpItems.push({ no:'5.04', desc:'Chipboard ceiling — top floor (12mm, supply & fix)', unit:'m²', qty: floorArea, rate: R.chipboard_ceiling || 650 * cm });
+carpItems.push({ no:'5.04', desc:'Chipboard ceiling — top floor (12mm, supply & fix)', unit:'m²', qty: floorArea, rate: R.chipboard_ceiling * cm });
 carpItems.push({ no:'5.05', desc:'Wooden door frames (supply & fix)', unit:'No.', qty: Math.round(totalArea / 25), rate: R.door_frame_wood || 2800 * cm });
 carpItems.push({ no:'5.06', desc:'Wooden flush door leaves (supply & fix)', unit:'No.', qty: Math.round(totalArea / 25), rate: R.door_leaf_wood || 4500 * cm });
 sections.push({ title: '5. Carpentry & Joinery', items: carpItems });
@@ -2046,8 +2103,8 @@ sections.push({ title: '6. Aluminium Works', items: aluminumItems });
   // ---- 7 & 8. PLASTERING, FINISHING & PAINTING ----
 const totalFloorArea = floorArea * (floorsAbove + floorsBase + 1); // +1 for the ground floor itself, same fix as totalArea
 const floorFinRateMap = { tiles: R.floor_tiles, marble: R.floor_marble, terrazzo: R.floor_terrazzo, screed: R.floor_screed };
-const extPaintRateMap = { local: R.paint_local, medium: R.paint_medium, premium: R.paint_premium };
-const intPaintRateMap = { local: R.paint_local, medium: R.paint_medium, premium: R.paint_premium };
+const extPaintRateMap = { local: R.paint_ext_local, medium: R.paint_ext_medium, premium: R.paint_ext_premium };
+const intPaintRateMap = { local: R.paint_int_local, medium: R.paint_int_medium, premium: R.paint_int_premium };
 const intWallAreaFinish = (extWallArea + intWallArea) * 1.1;
 
 // 7. Plastering & Finishing
@@ -2234,7 +2291,8 @@ if (withMechanical) {
   });
 
   const subtotalAll  = sections.reduce((s, sec) => s + sec.subtotal, 0);
-  const contingency  = subtotalAll * 0.02;
+  const contingencyRate = floorsAbove > 5 ? 0.10 : 0.02;
+  const contingency  = subtotalAll * contingencyRate;
   const subtotalPlusContingency = subtotalAll + contingency;
   const vat           = subtotalPlusContingency * 0.15;
   const grandTotal     = subtotalPlusContingency + vat;
@@ -2254,7 +2312,7 @@ const costPerM2=grandTotal/totalArea;
   // Grand total
   document.getElementById('boq-grand-total').textContent = fmt(grandTotal);
   updateExcelButtonLabels();
-  document.getElementById('boq-vat-line').textContent = `Subtotal: ${fmt(subtotalAll)} + Contingency (2%): ${fmt(contingency)} + VAT: ${fmt(vat)} | Cost/m²: ${fmt(costPerM2)}`;
+  document.getElementById('boq-vat-line').textContent = `Subtotal: ${fmt(subtotalAll)} + Contingency (${(contingencyRate*100).toFixed(0)}%): ${fmt(contingency)} + VAT: ${fmt(vat)} | Cost/m²: ${fmt(costPerM2)}`;
 
   // Section summary cards
   const summaryEl = document.getElementById('section-summary');
@@ -2363,7 +2421,7 @@ const costPerM2=grandTotal/totalArea;
   `).join('');
 
   // Store data for export
-  window._boqData = { projName, loc, totalArea, sections, subtotalAll, contingency, subtotalPlusContingency, vat, grandTotal, city: cityLabel };
+  window._boqData = { projName, loc, totalArea, sections, subtotalAll, contingency, contingencyRate, subtotalPlusContingency, vat, grandTotal, city: cityLabel };
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2707,7 +2765,7 @@ function doExportPDF(d){
   doc.text('Subtotal (Excl. VAT):', margin + 10, y);
   doc.text(fmtETB(d.subtotalAll), pageWidth - margin - 10, y, { align: 'right' });
   y += 16;
-  doc.text('Contingency (2%):', margin + 10, y);
+  doc.text(`Contingency (${((d.contingencyRate||0.02)*100).toFixed(0)}%):`, margin + 10, y);
   doc.text(fmtETB(d.contingency), pageWidth - margin - 10, y, { align: 'right' });
   y += 16;
   doc.text('VAT @ 15%:', margin + 10, y);
@@ -2928,8 +2986,8 @@ async function doExport(d) {
   subRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
   subRow.getCell(6).numFmt = '#,##0.00';
 
-  const contRow = ws.addRow(['', 'CONTINGENCY @ 2%', '', '', '',
-    { formula: `F${subRow.number}*0.02` }
+  const contRow = ws.addRow(['', `CONTINGENCY @ ${((d.contingencyRate||0.02)*100).toFixed(0)}%`, '', '', '',
+    { formula: `F${subRow.number}*${d.contingencyRate||0.02}` }
   ]);
   styleRow(contRow, { bold: true, border: thinBorder });
   contRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
@@ -3032,7 +3090,7 @@ async function doExport(d) {
   });
   subRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
 
-  const contRow2 = ws2.addRow(['', 'CONTINGENCY @ 2%',
+  const contRow2 = ws2.addRow(['', `CONTINGENCY @ ${((d.contingencyRate||0.02)*100).toFixed(0)}%`,
     { formula: `'Bill of Quantities'!F${contRow.number}` }
   ]);
   contRow2.eachCell({ includeEmpty: true }, cell => {
@@ -3108,7 +3166,7 @@ async function doExport(d) {
     '2. All quantities are estimated using standard engineering formulas and typical construction ratios. They have not been measured from architectural or structural drawings and must be verified by a licensed engineer before use in tendering, procurement, or construction.',
     '3. All rates are current as of the preparation date shown on the Summary sheet and are subject to market fluctuation. Rates should be re-verified against current supplier and contractor quotations before use.',
     '4. Preliminaries (site mobilization, temporary facilities, insurance, etc.) are listed for completeness but left unpriced — to be priced by the appointed Contractor based on project-specific conditions.',
-    '5. A contingency allowance of 2% has been included on the total construction cost to account for unforeseen items. This is indicative and may be adjusted based on project risk and complexity.',
+    `5. A contingency allowance of ${((d.contingencyRate||0.02)*100).toFixed(0)}% has been included on the total construction cost to account for unforeseen items. This is indicative and may be adjusted based on project risk and complexity.`,
     '6. VAT has been calculated at the standard Ethiopian rate of 15%, applied to the construction cost inclusive of contingency.',
     '7. This document is generated by AddisBOQ.com and is intended as a preliminary cost estimation tool. It does not replace a full quantity survey or detailed design-stage BOQ prepared by a licensed Quantity Surveyor or Structural Engineer.',
   ];
