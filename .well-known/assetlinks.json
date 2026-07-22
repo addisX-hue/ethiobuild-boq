@@ -1,1 +1,9 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.addisengineering.addisboq",
+    "sha256_cert_fingerprints": ["5F:98:C3:BF:4F:12:DE:1C:00:5A:FE:A4:96:4D:82:B4:E1:64:75:0C:38:99:E3:F1:16:2C:3B:A4:92:92:E9:2A"]
+  }
+}]
 
