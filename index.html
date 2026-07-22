@@ -618,8 +618,7 @@
   .pulse-btn { animation: pulseBtn 1.4s ease-in-out infinite; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<!-- jsPDF + autotable are lazy-loaded in exportPDF() only when a paid PDF export happens -->
 </head>
 <body>
 
@@ -644,6 +643,7 @@
 <a href='#' onclick="goHome(); toggleMenu()">Home</a>
 <a href='#' onclick="goHome(); toggleMenu()">New BOQ</a>
 <a href='sitelog.html'>📋 Site Log</a>
+<a href='/ethiopian-construction-guide'>📖 Builder's Guide</a>
 <a href='mailto:addiss1993@gmail.com?subject=Customer Support - AddisBOQ'>Customer Support</a>
 <a href='mailto:addiss1993@gmail.com?subject=Contact - AddisBOQ'>Contact Organization</a>
 <a href='mailto:addiss1993@gmail.com?subject=Bug Report - AddisBOQ'>Report a Bug</a>
@@ -965,6 +965,20 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 
   <div class="welcome-section">
     <div class="welcome-section-title">እርዳታ / Help</div>
+    <a class="welcome-card" href="/ethiopian-construction-guide">
+      <div class="welcome-card-icon" style="background:rgba(200,146,42,0.15);">📖</div>
+      <div class="welcome-card-text">
+        <h4>Ethiopian Builder's Guide</h4>
+        <p>Real BOQ mistakes, daily reporting, variations, and EBCS / ES EN codes — lessons from actual sites.</p>
+      </div>
+    </a>
+    <a class="welcome-card" href="/how-to-get-building-permit-in-ethiopia">
+      <div class="welcome-card-icon" style="background:rgba(82,183,136,0.15);">📋</div>
+      <div class="welcome-card-text">
+        <h4>Building Permit Guide</h4>
+        <p>The street-width rule, required documents, and realistic timelines for getting your permit approved.</p>
+      </div>
+    </a>
     <a class="welcome-card" href="/faq">
       <div class="welcome-card-icon" style="background:rgba(200,146,42,0.15);">❓</div>
       <div class="welcome-card-text">
@@ -1704,7 +1718,7 @@ const RATES = {
 // ============================================================
 let currentStep = 1;
 
-function goToStep(n) {
+function goToStep(n, skipPush) {
   if (n === 5) populateReview();
   document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('step-' + n).classList.add('active');
@@ -1722,7 +1736,7 @@ function goToStep(n) {
   }
   currentStep = n;
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  history.pushState({ view: 'calculator', step: n }, '', '');
+  if (!skipPush) history.pushState({ view: 'calculator', step: n }, '', '');
 }
 
 function openAbout() {
@@ -1742,47 +1756,48 @@ function startCalculator() {
   document.getElementById('main-content').style.display = 'block';
   document.getElementById('main-header').style.display = 'flex';
   document.getElementById('progress-bar').style.display = 'flex';
-  history.pushState({ view: 'calculator', step: 1 }, '', '');
-  goToStep(1);
+  goToStep(1); // goToStep pushes the history state itself — no separate push here
 }
 
-function goHome() {
+function goHome(skipPush) {
   document.getElementById('welcome-screen').classList.remove('hidden');
   document.getElementById('main-content').style.display = 'none';
   document.getElementById('main-header').style.display = 'none';
   document.getElementById('progress-bar').style.display = 'none';
   document.getElementById('boq-output').style.display = 'none';
-  history.pushState({ view: 'welcome' }, '', '');
+  if (!skipPush) history.pushState({ view: 'welcome' }, '', '');
 }
 
 window.addEventListener('popstate', function(e) {
   const state = e.state;
-  if (state && state.view === 'about') {
-    // do nothing, closeAbout handles it
-  } else if (!state || state.view === 'welcome') {
-    document.getElementById('about-screen').style.display = 'none';
-    document.body.style.overflow = '';
-    goHome();
+  // The About overlay sits above everything (z-index 2000) — always dismiss it
+  // when navigating history, regardless of which state we land on.
+  document.getElementById('about-screen').style.display = 'none';
+  document.body.style.overflow = '';
+
+  // NOTE: never pushState inside this handler — doing so re-grows the history
+  // stack on every Back press and destroys Forward navigation.
+  if (!state || state.view === 'welcome') {
+    goHome(true);
   } else if (state.view === 'boq-results') {
     document.getElementById('welcome-screen').classList.add('hidden');
     document.getElementById('main-content').style.display = 'block';
     document.getElementById('main-header').style.display = 'flex';
     document.getElementById('progress-bar').style.display = 'none';
     document.getElementById('boq-output').style.display = 'block';
-  history.pushState({ view: 'boq-results' }, '', '');
   } else if (state.view === 'calculator') {
     document.getElementById('welcome-screen').classList.add('hidden');
     document.getElementById('main-content').style.display = 'block';
     document.getElementById('main-header').style.display = 'flex';
     document.getElementById('progress-bar').style.display = 'flex';
     document.getElementById('boq-output').style.display = 'none';
-    goToStep(state.step || 1);
+    goToStep(state.step || 1, true);
   }
 });
 
-// Set initial history state
+// Set initial history state (single entry — a duplicate push here would make
+// the first Back press appear to do nothing)
 history.replaceState({ view: 'welcome' }, '', '');
-history.pushState({ view: 'welcome' }, '', '');
 
 // If ?start=quick is in the URL, skip welcome screen and go directly to Step 1
 (function checkStartParam() {
@@ -1794,15 +1809,22 @@ history.pushState({ view: 'welcome' }, '', '');
 
 function step(id, delta) {
   const el = document.getElementById(id);
-  const val = parseInt(el.value) + delta;
   const min = parseInt(el.min || 0);
   const max = parseInt(el.max || 999);
+  const cur = parseInt(el.value);
+  const val = (isNaN(cur) ? min : cur) + delta; // empty field no longer freezes the +/- buttons
   if (val >= min && val <= max) el.value = val;
 }
 
 // ============================================================
 // REVIEW PANEL
 // ============================================================
+// Escape user-supplied text before inserting into innerHTML (prevents reflected XSS
+// via URL-prefilled fields like ?project-name=<img onerror=...>)
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function getRadio(name) {
   const el = document.querySelector(`input[name="${name}"]:checked`);
   return el ? el.value : '';
@@ -1839,8 +1861,8 @@ function populateReview() {
   ];
   const html = rows.map(([k, v]) =>
     `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
-      <span style="color:var(--ink-light)">${k}</span>
-      <span style="font-weight:500">${v}</span>
+      <span style="color:var(--ink-light)">${esc(k)}</span>
+      <span style="font-weight:500">${esc(v)}</span>
     </div>`
   ).join('');
   document.getElementById('review-content').innerHTML = html;
@@ -1900,18 +1922,18 @@ function calculateBOQ() {
   // ---- HEIGHT-BASED SCALING (foundation & superstructure grow non-linearly with floor count) ----
   // Column volume + steel ratio + rebar diameter distribution, based on floorsAbove only
   // As floors increase, weight shifts from thin bars (8/10mm) toward thick bars (16/20/24mm)
+  // (Rebar diameter distribution lives ONLY in getRebarDiaSplit below — single source of truth)
   function getSuperstructureScale(floors) {
-    if (floors <= 3)  return { colMult: 1.0,  steelRatio: 0.015, dia: { d8:0.45, d10:0.12, d14:0.25, d16:0.18, d20:0,    d24:0    } };
-    if (floors <= 6)  return { colMult: 1.15, steelRatio: 0.020, dia: { d8:0.40, d10:0.12, d14:0.26, d16:0.22, d20:0,    d24:0    } };
-    if (floors <= 9)  return { colMult: 1.4,  steelRatio: 0.027, dia: { d8:0.35, d10:0.10, d14:0.25, d16:0.20, d20:0.10, d24:0    } };
-    if (floors <= 12) return { colMult: 1.7,  steelRatio: 0.032, dia: { d8:0.28, d10:0.09, d14:0.22, d16:0.20, d20:0.14, d24:0.07 } };
-    if (floors <= 15) return { colMult: 2.1,  steelRatio: 0.038, dia: { d8:0.22, d10:0.08, d14:0.18, d16:0.20, d20:0.17, d24:0.15 } };
+    if (floors <= 3)  return { colMult: 1.0,  steelRatio: 0.015 };
+    if (floors <= 6)  return { colMult: 1.15, steelRatio: 0.020 };
+    if (floors <= 9)  return { colMult: 1.4,  steelRatio: 0.027 };
+    if (floors <= 12) return { colMult: 1.7,  steelRatio: 0.032 };
+    if (floors <= 15) return { colMult: 2.1,  steelRatio: 0.038 };
     // Beyond G+15: continue the same growth rate per 3-floor band rather than flattening
     const bandsBeyond = Math.ceil((floors - 15) / 3);
     return {
       colMult: 2.1 + bandsBeyond * 0.4,
-      steelRatio: 0.038 + bandsBeyond * 0.006,
-      dia: { d8:0.18, d10:0.07, d14:0.15, d16:0.18, d20:0.20, d24:0.22 }
+      steelRatio: 0.038 + bandsBeyond * 0.006
     };
   }
   // Foundation volume + rebar increase multiplier, based on floorsAbove only
@@ -2062,8 +2084,8 @@ function calculateBOQ() {
 if (steelTruss) {
     const steelTrussWeight = roofArea * 12; // approx 12 kg/m2 for light steel trusses
     const steelItems = [
-      { no:'4.01', desc:'Fabricated steel roof truss (angle/channel sections)', unit:'kg', qty: steelTrussWeight, rate: R.steel_truss * cm },
-      { no:'4.02', desc:'Steel purlins (C or Z section)', unit:'kg', qty: roofArea * 4, rate: R.steel_purlin * cm },
+      { no:'4.01', desc:'Fabricated steel roof truss (angle/channel sections)', unit:'kg', qty: steelTrussWeight, rate: R.steel_truss },
+      { no:'4.02', desc:'Steel purlins (C or Z section)', unit:'kg', qty: roofArea * 4, rate: R.steel_purlin },
       { no:'4.03', desc:'Anti-rust primer and protective paint to steel work', unit:'m²', qty: roofArea * 0.3, rate: 180 * cm },
     ];
     sections.push({ title: '4. Steel Structure', items: steelItems });
@@ -2076,7 +2098,7 @@ if (!steelTruss) {
     carpItems.push({ no:'5.02', desc:'Eucalyptus pole — king post & intermediate posts (100mm dia.)', unit:'ml', qty: roofArea * 0.5, rate: R.eucalyptus_100mm || 75 * cm });
     carpItems.push({ no:'5.03', desc:'Eucalyptus pole — diagonal bracing (80mm dia.)', unit:'ml', qty: roofArea * 0.4, rate: R.eucalyptus_80mm || 55 * cm });
 }
-carpItems.push({ no:'5.04', desc:'Chipboard ceiling — top floor (12mm, supply & fix)', unit:'m²', qty: floorArea, rate: R.chipboard_ceiling * cm });
+carpItems.push({ no:'5.04', desc:'Chipboard ceiling — top floor (12mm, supply & fix)', unit:'m²', qty: floorArea, rate: R.chipboard_ceiling });
 carpItems.push({ no:'5.05', desc:'Wooden door frames (supply & fix)', unit:'No.', qty: Math.round(totalArea / 25), rate: R.door_frame_wood || 2800 * cm });
 carpItems.push({ no:'5.06', desc:'Wooden flush door leaves (supply & fix)', unit:'No.', qty: Math.round(totalArea / 25), rate: R.door_leaf_wood || 4500 * cm });
 sections.push({ title: '5. Carpentry & Joinery', items: carpItems });
@@ -2159,24 +2181,24 @@ sections.push({ title: '8. Painting', items: paintItems });
   const sdbSubSpec = '1 pc 50A main MCB, 3 Phase\n8 pcs 10A MCB, 1 Phase\n4 pcs 16A MCB, 1 Phase';
 
   const elecItems = [
-    { no:'9.01', desc:'Main Lighting & Power Panel (MLPP), floor standing, sheet steel enclosure, lockable door, complete consisting of:\n' + mlppSubSpecTable[mlppRating], unit:'No.', qty: 1, rate: R[mlppRateKey] * cm },
-    { no:'9.02', desc:'Sub Distribution Board (SDB), flush mounted, sheet steel enclosure, lockable door, complete consisting of:\n' + sdbSubSpec, unit:'No.', qty: elecFloorCount, rate: R.sdb_standard * cm },
-    { no:'9.03', desc:'Feeder cable (5x16)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x16 * feederFactor), rate: R.feeder_5x16 * cm },
-    { no:'9.04', desc:'Feeder cable (5x10)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x10 * feederFactor), rate: R.feeder_5x10 * cm },
-    { no:'9.05', desc:'Feeder cable (5x6)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x6 * feederFactor), rate: R.feeder_5x6 * cm },
-    { no:'9.06', desc:'Feeder cable (3x50/25+1x25)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c3x50_25 * feederFactor), rate: R.feeder_3x50_25 * cm },
-    { no:'9.07', desc:'Feeder cable (3x70/50+1x50)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c3x70_50 * feederFactor), rate: R.feeder_3x70_50 * cm },
-    { no:'9.08', desc:'PVC conduit 80mm diameter (feeder cable protection)', unit:'ml', qty: Math.round((feederBase.c5x16 + feederBase.c5x10) * feederFactor), rate: R.pvc_conduit_80 * cm },
-    { no:'9.09', desc:'PVC conduit 110mm diameter (feeder cable protection)', unit:'ml', qty: Math.round((feederBase.c3x50_25 + feederBase.c3x70_50) * feederFactor), rate: R.pvc_conduit_110 * cm },
+    { no:'9.01', desc:'Main Lighting & Power Panel (MLPP), floor standing, sheet steel enclosure, lockable door, complete consisting of:\n' + mlppSubSpecTable[mlppRating], unit:'No.', qty: 1, rate: R[mlppRateKey] },
+    { no:'9.02', desc:'Sub Distribution Board (SDB), flush mounted, sheet steel enclosure, lockable door, complete consisting of:\n' + sdbSubSpec, unit:'No.', qty: elecFloorCount, rate: R.sdb_standard },
+    { no:'9.03', desc:'Feeder cable (5x16)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x16 * feederFactor), rate: R.feeder_5x16 },
+    { no:'9.04', desc:'Feeder cable (5x10)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x10 * feederFactor), rate: R.feeder_5x10 },
+    { no:'9.05', desc:'Feeder cable (5x6)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x6 * feederFactor), rate: R.feeder_5x6 },
+    { no:'9.06', desc:'Feeder cable (3x50/25+1x25)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c3x50_25 * feederFactor), rate: R.feeder_3x50_25 },
+    { no:'9.07', desc:'Feeder cable (3x70/50+1x50)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c3x70_50 * feederFactor), rate: R.feeder_3x70_50 },
+    { no:'9.08', desc:'PVC conduit 80mm diameter (feeder cable protection)', unit:'ml', qty: Math.round((feederBase.c5x16 + feederBase.c5x10) * feederFactor), rate: R.pvc_conduit_80 },
+    { no:'9.09', desc:'PVC conduit 110mm diameter (feeder cable protection)', unit:'ml', qty: Math.round((feederBase.c3x50_25 + feederBase.c3x70_50) * feederFactor), rate: R.pvc_conduit_110 },
     { no:'9.10', desc:'PVC insulated wiring — lighting & power circuits, in conduit, complete', unit:'m²', qty: totalFloorArea, rate: elecRateMap[elecGrade] * 0.55 },
     { no:'9.11', desc:'Flush mounted light switch points (single/double/2-way, complete)', unit:'No.', qty: Math.round(totalFloorArea / 12), rate: 850 * cm },
     { no:'9.12', desc:'Flush mounted socket outlet points — 13A, 3-pin (complete)', unit:'No.', qty: Math.round(totalFloorArea / 8), rate: 950 * cm },
     { no:'9.13', desc:'Fluorescent / LED light fittings (supply & fix)', unit:'No.', qty: Math.round(totalFloorArea / 10), rate: (elecGrade === 'premium' ? 1800 : elecGrade === 'standard' ? 1100 : 650) * cm },
     { no:'9.14', desc:'External security / compound lighting', unit:'No.', qty: Math.round(perimeter / 8), rate: 2200 * cm },
-    { no:'9.15', desc:'Manhole in bricks, 600x600x600mm, with reinforced concrete cover', unit:'No.', qty: 1, rate: R.manhole_electrical * cm },
+    { no:'9.15', desc:'Manhole in bricks, 600x600x600mm, with reinforced concrete cover', unit:'No.', qty: 1, rate: R.manhole_electrical },
   ];
   if (withEarthing) {
-    elecItems.push({ no:'9.16', desc:'Earthing system and lightning protection (complete)', unit:'Lump', qty: 1, rate: R.earthing_lump * cm });
+    elecItems.push({ no:'9.16', desc:'Earthing system and lightning protection (complete)', unit:'Lump', qty: 1, rate: R.earthing_lump });
   }
   sections.push({ title: '9. ELECTRICAL INSTALLATION', items: elecItems });
 
@@ -2221,51 +2243,51 @@ sections.push({ title: '8. Painting', items: paintItems });
 
   const sanItems = [
     // 10.1 Fixtures — per wet room set
-    { no:'10.01', desc:'Hand wash basin, vitreous china, complete with mixer tap, P-trap & accessories', unit:'No.', qty: fixtureSetCount, rate: R.san_basin * cm },
-    { no:'10.02', desc:'Water closet (WC), low flush cistern, complete with seat & cover', unit:'No.', qty: fixtureSetCount, rate: R.san_wc * cm },
-    { no:'10.03', desc:'Toilet paper holder', unit:'No.', qty: fixtureSetCount, rate: R.san_paper_holder * cm },
-    { no:'10.04', desc:'Mirror, 6mm crystal glass, with clips', unit:'No.', qty: fixtureSetCount, rate: R.san_mirror * cm },
-    { no:'10.05', desc:'Towel rail, chrome plated', unit:'No.', qty: fixtureSetCount, rate: R.san_towel_rail * cm },
-    { no:'10.06', desc:'Soap holder, vitreous china', unit:'No.', qty: fixtureSetCount, rate: R.san_soap_holder * cm },
-    { no:'10.07', desc:'Floor gully drain, uPVC, with P-trap & cover', unit:'No.', qty: wetRooms, rate: R.san_floor_gully * cm },
-    { no:'10.08', desc:'Slab clean-out, screw type, Dia. 100mm', unit:'No.', qty: Math.ceil(wetRooms / 2), rate: R.san_cleanout_100 * cm },
-    { no:'10.09', desc:'Slab clean-out, screw type, Dia. 75mm', unit:'No.', qty: Math.ceil(wetRooms / 2), rate: R.san_cleanout_75 * cm },
-    { no:'10.10', desc:'Urinal, vitreous china, complete with cistern & flush valve', unit:'No.', qty: urinalQty, rate: R.san_urinal * cm },
-    { no:'10.11', desc:'Electric water heater, 200L capacity, complete', unit:'No.', qty: wetRooms, rate: R.san_water_heater * cm },
-    { no:'10.12', desc:'Elevated water storage tank, fiber, ' + tankCapacityLabel + ' capacity', unit:'No.', qty: 1, rate: R[tankRateKey] * cm },
+    { no:'10.01', desc:'Hand wash basin, vitreous china, complete with mixer tap, P-trap & accessories', unit:'No.', qty: fixtureSetCount, rate: R.san_basin },
+    { no:'10.02', desc:'Water closet (WC), low flush cistern, complete with seat & cover', unit:'No.', qty: fixtureSetCount, rate: R.san_wc },
+    { no:'10.03', desc:'Toilet paper holder', unit:'No.', qty: fixtureSetCount, rate: R.san_paper_holder },
+    { no:'10.04', desc:'Mirror, 6mm crystal glass, with clips', unit:'No.', qty: fixtureSetCount, rate: R.san_mirror },
+    { no:'10.05', desc:'Towel rail, chrome plated', unit:'No.', qty: fixtureSetCount, rate: R.san_towel_rail },
+    { no:'10.06', desc:'Soap holder, vitreous china', unit:'No.', qty: fixtureSetCount, rate: R.san_soap_holder },
+    { no:'10.07', desc:'Floor gully drain, uPVC, with P-trap & cover', unit:'No.', qty: wetRooms, rate: R.san_floor_gully },
+    { no:'10.08', desc:'Slab clean-out, screw type, Dia. 100mm', unit:'No.', qty: Math.ceil(wetRooms / 2), rate: R.san_cleanout_100 },
+    { no:'10.09', desc:'Slab clean-out, screw type, Dia. 75mm', unit:'No.', qty: Math.ceil(wetRooms / 2), rate: R.san_cleanout_75 },
+    { no:'10.10', desc:'Urinal, vitreous china, complete with cistern & flush valve', unit:'No.', qty: urinalQty, rate: R.san_urinal },
+    { no:'10.11', desc:'Electric water heater, 200L capacity, complete', unit:'No.', qty: wetRooms, rate: R.san_water_heater },
+    { no:'10.12', desc:'Elevated water storage tank, fiber, ' + tankCapacityLabel + ' capacity', unit:'No.', qty: 1, rate: R[tankRateKey] },
   ];
   if (includeLabSink) {
-    sanItems.push({ no:'10.13', desc:'Stainless steel laboratory sink, single bowl, complete with mixer', unit:'No.', qty: 1, rate: R.san_lab_sink * cm });
-    sanItems.push({ no:'10.14', desc:'Washing trough, precast reinforced concrete, complete', unit:'No.', qty: 1, rate: R.san_washing_trough * cm });
+    sanItems.push({ no:'10.13', desc:'Stainless steel laboratory sink, single bowl, complete with mixer', unit:'No.', qty: 1, rate: R.san_lab_sink });
+    sanItems.push({ no:'10.14', desc:'Washing trough, precast reinforced concrete, complete', unit:'No.', qty: 1, rate: R.san_washing_trough });
   }
   if (includeFireExt) {
-    sanItems.push({ no:'10.15', desc:'Fire extinguisher, 6kg chemical powder', unit:'No.', qty: sanFloorCount, rate: R.san_fire_ext * cm });
+    sanItems.push({ no:'10.15', desc:'Fire extinguisher, 6kg chemical powder', unit:'No.', qty: sanFloorCount, rate: R.san_fire_ext });
   }
 
   // 10.2 Water supply pipe (PPR) + valves
   sanItems.push(
-    { no:'10.16', desc:'PPR water supply pipe, PN-20, Dia. 20mm', unit:'ml', qty: Math.round(pprBase.d20 * sanPipeFactor), rate: R.san_ppr_20 * cm },
-    { no:'10.17', desc:'PPR water supply pipe, PN-20, Dia. 25mm', unit:'ml', qty: Math.round(pprBase.d25 * sanPipeFactor), rate: R.san_ppr_25 * cm },
-    { no:'10.18', desc:'PPR water supply pipe, PN-20, Dia. 32mm', unit:'ml', qty: Math.round(pprBase.d32 * sanPipeFactor), rate: R.san_ppr_32 * cm },
-    { no:'10.19', desc:'PPR water supply pipe, PN-20, Dia. 40mm', unit:'ml', qty: Math.round(pprBase.d40 * sanPipeFactor), rate: R.san_ppr_40 * cm },
-    { no:'10.20', desc:'Angle valve, Dia. 15mm, before fixtures', unit:'No.', qty: fixtureSetCount, rate: R.san_angle_valve * cm },
-    { no:'10.21', desc:'Bronze service valve, Dia. 20mm', unit:'No.', qty: sanFloorCount * 3, rate: R.san_service_valve_20 * cm },
-    { no:'10.22', desc:'Bronze service valve, Dia. 25mm', unit:'No.', qty: sanFloorCount * 2, rate: R.san_service_valve_25 * cm },
+    { no:'10.16', desc:'PPR water supply pipe, PN-20, Dia. 20mm', unit:'ml', qty: Math.round(pprBase.d20 * sanPipeFactor), rate: R.san_ppr_20 },
+    { no:'10.17', desc:'PPR water supply pipe, PN-20, Dia. 25mm', unit:'ml', qty: Math.round(pprBase.d25 * sanPipeFactor), rate: R.san_ppr_25 },
+    { no:'10.18', desc:'PPR water supply pipe, PN-20, Dia. 32mm', unit:'ml', qty: Math.round(pprBase.d32 * sanPipeFactor), rate: R.san_ppr_32 },
+    { no:'10.19', desc:'PPR water supply pipe, PN-20, Dia. 40mm', unit:'ml', qty: Math.round(pprBase.d40 * sanPipeFactor), rate: R.san_ppr_40 },
+    { no:'10.20', desc:'Angle valve, Dia. 15mm, before fixtures', unit:'No.', qty: fixtureSetCount, rate: R.san_angle_valve },
+    { no:'10.21', desc:'Bronze service valve, Dia. 20mm', unit:'No.', qty: sanFloorCount * 3, rate: R.san_service_valve_20 },
+    { no:'10.22', desc:'Bronze service valve, Dia. 25mm', unit:'No.', qty: sanFloorCount * 2, rate: R.san_service_valve_25 },
   );
 
   // 10.3 Waste, vent & rainwater pipes
   sanItems.push(
-    { no:'10.23', desc:'uPVC waste pipe, PN-6, Dia. 50mm', unit:'ml', qty: Math.round(wasteBase.d50 * sanPipeFactor), rate: R.san_waste_50 * cm },
-    { no:'10.24', desc:'uPVC waste pipe, PN-6, Dia. 75mm', unit:'ml', qty: Math.round(wasteBase.d75 * sanPipeFactor), rate: R.san_waste_75 * cm },
-    { no:'10.25', desc:'uPVC waste pipe, PN-6, Dia. 110mm', unit:'ml', qty: Math.round(wasteBase.d110 * sanPipeFactor), rate: R.san_waste_110 * cm },
-    { no:'10.26', desc:'Vent cap, uPVC, Dia. 50mm', unit:'No.', qty: wetRooms, rate: R.san_vent_cap * cm },
-    { no:'10.27', desc:'Storm water down pipe, uPVC, Dia. 110mm', unit:'ml', qty: Math.round(stormBase.d110 * sanPipeFactor), rate: R.san_storm_110 * cm },
-    { no:'10.28', desc:'Storm water down pipe, uPVC, Dia. 75mm', unit:'ml', qty: Math.round(stormBase.d75 * sanPipeFactor), rate: R.san_storm_75 * cm },
-    { no:'10.29', desc:'Galvanized grill covered drainage ditch', unit:'ml', qty: Math.round(ditchBase * sanPipeFactor), rate: R.san_drain_ditch * cm },
+    { no:'10.23', desc:'uPVC waste pipe, PN-6, Dia. 50mm', unit:'ml', qty: Math.round(wasteBase.d50 * sanPipeFactor), rate: R.san_waste_50 },
+    { no:'10.24', desc:'uPVC waste pipe, PN-6, Dia. 75mm', unit:'ml', qty: Math.round(wasteBase.d75 * sanPipeFactor), rate: R.san_waste_75 },
+    { no:'10.25', desc:'uPVC waste pipe, PN-6, Dia. 110mm', unit:'ml', qty: Math.round(wasteBase.d110 * sanPipeFactor), rate: R.san_waste_110 },
+    { no:'10.26', desc:'Vent cap, uPVC, Dia. 50mm', unit:'No.', qty: wetRooms, rate: R.san_vent_cap },
+    { no:'10.27', desc:'Storm water down pipe, uPVC, Dia. 110mm', unit:'ml', qty: Math.round(stormBase.d110 * sanPipeFactor), rate: R.san_storm_110 },
+    { no:'10.28', desc:'Storm water down pipe, uPVC, Dia. 75mm', unit:'ml', qty: Math.round(stormBase.d75 * sanPipeFactor), rate: R.san_storm_75 },
+    { no:'10.29', desc:'Galvanized grill covered drainage ditch', unit:'ml', qty: Math.round(ditchBase * sanPipeFactor), rate: R.san_drain_ditch },
   );
 
   if (withSeptic) {
-    sanItems.push({ no:'10.30', desc:'Septic tank and soakpit (complete — precast)', unit:'Lump', qty: 1, rate: R.septic_tank * cm });
+    sanItems.push({ no:'10.30', desc:'Septic tank and soakpit (complete — precast)', unit:'Lump', qty: 1, rate: R.septic_tank });
   }
   sections.push({ title: '10. SANITARY INSTALLATION', items: sanItems });
 
@@ -2302,6 +2324,7 @@ const costPerM2=grandTotal/totalArea;
   document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('boq-output').style.display = 'block';
   document.getElementById('progress-bar').style.display = 'none';
+  history.pushState({ view: 'boq-results' }, '', '');
 
   document.getElementById('boq-title').textContent = projName;
   const loc = [cityLabel, subloc].filter(Boolean).join(', ');
@@ -2467,11 +2490,20 @@ function restoreFormStateFromParams(params) {
   });
 }
 
+// ---- PRICING (single source of truth — edit here only) ----
+const PRICING = {
+  excelFull: 300,
+  excelDiscount: 250,
+  pdf: 150,
+  discountEndsAt: new Date('2026-07-30T23:59:59+03:00'), // East Africa Time
+  discountLabel: '⏳ Ends July 30',
+};
+function excelDiscountActive() { return new Date() < PRICING.discountEndsAt; }
+function currentExcelPrice() { return excelDiscountActive() ? PRICING.excelDiscount : PRICING.excelFull; }
+
 function updateExcelButtonLabels() {
-  const discountEndsAt = new Date('2026-07-30T23:59:59+03:00');
-  const discountActive = new Date() < discountEndsAt;
-  const label = discountActive ? '📥 Full Itemized BOQ — 250 ETB' : '📥 Full Itemized BOQ — 300 ETB';
-  const lockLabel = discountActive ? '📥 Get Full Itemized BOQ — 250 ETB' : '📥 Get Full Itemized BOQ — 300 ETB';
+  const label = '📥 Full Itemized BOQ — ' + currentExcelPrice() + ' ETB';
+  const lockLabel = '📥 Get Full Itemized BOQ — ' + currentExcelPrice() + ' ETB';
   const topBtn = document.getElementById('excel-btn-top');
   const lockBtn = document.getElementById('excel-btn-lock');
   const bottomBtn = document.getElementById('excel-btn-bottom');
@@ -2502,9 +2534,9 @@ function openPaymentModal(type){
     ? 'Get your full professional BOQ as a formatted PDF'
     : 'Get your full professional BOQ in Excel format';
 
-  const discountEndsAt = new Date('2026-07-30T23:59:59+03:00'); // East Africa Time
-  const discountActive = !isPdf && new Date() < discountEndsAt;
-  const excelPrice = discountActive ? 250 : 300;
+  const discountEndsAt = PRICING.discountEndsAt;
+  const discountActive = !isPdf && excelDiscountActive();
+  const excelPrice = currentExcelPrice();
 
   const oldPriceEl = document.getElementById('modal-price-old');
   const countdownEl = document.getElementById('modal-discount-countdown');
@@ -2522,18 +2554,18 @@ function openPaymentModal(type){
     saveBadgeEl.style.display = 'none';
     offerLabelEl.style.display = 'none';
     saveLineEl.style.display = 'none';
-    document.getElementById('modal-price').textContent = '150 ETB';
-    document.getElementById('modal-step1-text').textContent = 'Send 150 ETB via TeleBirr';
+    document.getElementById('modal-price').textContent = PRICING.pdf + ' ETB';
+    document.getElementById('modal-step1-text').textContent = 'Send ' + PRICING.pdf + ' ETB via TeleBirr';
     if (window._discountCountdownInterval) clearInterval(window._discountCountdownInterval);
   } else if (discountActive) {
     oldPriceEl.style.display = 'block';
-    oldPriceEl.textContent = '300 ETB';
+    oldPriceEl.textContent = PRICING.excelFull + ' ETB';
     document.getElementById('modal-price').textContent = excelPrice + ' ETB';
     document.getElementById('modal-step1-text').textContent = 'Send ' + excelPrice + ' ETB via TeleBirr';
     saveBadgeEl.style.display = 'block';
     offerLabelEl.style.display = 'block';
     saveLineEl.style.display = 'block';
-    saveLineEl.textContent = 'You save 50 ETB';
+    saveLineEl.textContent = 'You save ' + (PRICING.excelFull - PRICING.excelDiscount) + ' ETB';
     countdownEl.style.display = 'block';
     if (window._discountCountdownInterval) clearInterval(window._discountCountdownInterval);
     const updateCountdown = () => {
@@ -2547,7 +2579,7 @@ function openPaymentModal(type){
       const days = Math.floor(diff / (1000*60*60*24));
       const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
       const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
-      countdownEl.textContent = `⏳ Ends July 30 • ${days}d ${hours}h ${mins}m left`;
+      countdownEl.textContent = `${PRICING.discountLabel} • ${days}d ${hours}h ${mins}m left`;
     };
     updateCountdown();
     window._discountCountdownInterval = setInterval(updateCountdown, 60000);
@@ -2557,8 +2589,8 @@ function openPaymentModal(type){
     saveBadgeEl.style.display = 'none';
     offerLabelEl.style.display = 'none';
     saveLineEl.style.display = 'none';
-    document.getElementById('modal-price').textContent = '300 ETB';
-    document.getElementById('modal-step1-text').textContent = 'Send 300 ETB via TeleBirr';
+    document.getElementById('modal-price').textContent = PRICING.excelFull + ' ETB';
+    document.getElementById('modal-step1-text').textContent = 'Send ' + PRICING.excelFull + ' ETB via TeleBirr';
     if (window._discountCountdownInterval) clearInterval(window._discountCountdownInterval);
   }
 document.getElementById('paymentModal').style.display='block';
@@ -2661,19 +2693,29 @@ function shareBoq(){
 
 function exportPDF(onDone){
   if (!window._boqData) { if (onDone) onDone(); return; }
+  const loadFailed = () => {
+    alert('Could not load the PDF generator — please check your internet connection and tap Download again. Your payment is already verified.');
+    if (onDone) onDone();
+  };
+  const runExport = () => {
+    try { doExportPDF(window._boqData); }
+    catch(e) { console.error(e); alert('PDF generation failed — please tap Download again. Your payment is already verified.'); }
+    if (onDone) onDone();
+  };
   if (!window.jspdf) {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.onerror = loadFailed;
     script.onload = () => {
       const script2 = document.createElement('script');
       script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
-      script2.onload = () => { doExportPDF(window._boqData); if (onDone) onDone(); };
+      script2.onerror = loadFailed;
+      script2.onload = runExport;
       document.head.appendChild(script2);
     };
     document.head.appendChild(script);
   } else {
-    doExportPDF(window._boqData);
-    if (onDone) onDone();
+    runExport();
   }
 }
 
@@ -2786,14 +2828,24 @@ function exportExcel(onDone) {
   if (!window._boqData) { if (onDone) onDone(); return; }
   const d = window._boqData;
 
-  // Dynamically load SheetJS
+  const runExport = () => {
+    doExport(d)
+      .catch(e => { console.error(e); alert('Excel generation failed — please tap Download again. Your payment is already verified.'); })
+      .then(() => { if (onDone) onDone(); });
+  };
+
+  // Dynamically load ExcelJS
   if (!window.ExcelJS) {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js';
-    script.onload = () => { doExport(d).then(() => { if (onDone) onDone(); }); };
+    script.onerror = () => {
+      alert('Could not load the Excel generator — please check your internet connection and tap Download again. Your payment is already verified.');
+      if (onDone) onDone();
+    };
+    script.onload = runExport;
     document.head.appendChild(script);
   } else {
-    doExport(d).then(() => { if (onDone) onDone(); });
+    runExport();
   }
 }
 
@@ -3192,7 +3244,7 @@ async function doExport(d) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = (d.projName || 'AddisBOQ_BOQ') + '.xlsx';
+  a.download = (d.projName || 'AddisBOQ_BOQ').replace(/[^a-z0-9]/gi, '_') + '_BOQ.xlsx';
   a.click();
   URL.revokeObjectURL(url);
 }

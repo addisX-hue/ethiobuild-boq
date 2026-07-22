@@ -1,8 +1,10 @@
-const CACHE_NAME = 'addisboq-v15';
+const CACHE_NAME = 'addisboq-v16';
 const ASSETS = [
   '/',
   '/index.html',
   '/sitelog.html',
+  '/ethiopian-construction-guide',
+  '/how-to-get-building-permit-in-ethiopia',
   '/icon-192.jpg',
   '/icon-512.jpg',
   '/manifest.json'
@@ -32,6 +34,11 @@ self.addEventListener('activate', event => {
 // always see the current live site when they have a connection, at the
 // cost of a real network round-trip on every load.
 self.addEventListener('fetch', event => {
+  // Only handle GET requests. Non-GET requests (e.g. the TeleBirr payment
+  // verification POST) can't be stored with cache.put() — attempting to
+  // cache them throws — and shouldn't be served from cache anyway.
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
