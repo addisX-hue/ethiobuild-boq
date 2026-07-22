@@ -10,8 +10,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <meta name="description" content="AddisBOQ: Free BOQ calculator for Ethiopian construction. Get accurate cost estimates and a professionally formatted Excel BOQ — with contingency, signature block, and full item breakdown — in minutes.">
-<meta name="keywords" content="BOQ Ethiopia, construction cost estimator, bill of quantities, Ethiopian construction, Addis Ababa construction cost, multi-city construction budgeting, project cost planning, regional price variations, building cost calculator">
+  <meta name="description" content="AddisBOQ: Ethiopian building cost estimates calculated component by component. Multi-city rates, professional Excel Bill of Quantities export.">
 <meta property="og:title" content="AddisBOQ — Ethiopian Construction Cost Calculator">
 <meta property="og:description" content="Get accurate, professional BOQ estimates for your Ethiopian construction projects in minutes. Free to calculate, with a polished Excel export ready to hand to your contractor.">
 <meta property="og:type" content="website">
@@ -619,6 +618,40 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- jsPDF + autotable are lazy-loaded in exportPDF() only when a paid PDF export happens -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "AddisBOQ",
+  "alternateName": "AddisBOQ — Ethiopian Construction Cost Calculator",
+  "url": "https://addisboq.com",
+  "description": "Component-based Bill of Quantities (BOQ) estimation engine for Ethiopian construction. Instead of a single cost-per-m² multiplier, AddisBOQ calculates substructure, superstructure, finishing, electrical and sanitary works as independent line items, scales structural quantities non-linearly with floor count, and adjusts rates for 9 Ethiopian cities. Exports a professional, formula-linked Excel BOQ with summary and signature sheets.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Any (web-based PWA); Android app available",
+  "inLanguage": ["en", "am"],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "ETB",
+    "description": "Free to calculate; professional Excel and PDF exports available as one-time paid unlocks via TeleBirr."
+  },
+  "featureList": [
+    "Component-based cost estimation (not flat cost-per-m²)",
+    "Non-linear structural scaling by floor count, including high-rise rebar diameter distribution",
+    "City-adjusted unit rates for 9 Ethiopian cities",
+    "Itemized BOQ across excavation, concrete, masonry, roofing, finishing, electrical and sanitary works",
+    "Professional Excel export with live formulas, summary sheet and signature block",
+    "Works offline as an installable PWA",
+    "English and Amharic interface"
+  ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "Addis Engineering",
+    "url": "https://addisboq.com",
+    "logo": { "@type": "ImageObject", "url": "https://addisboq.com/icon-512.jpg" }
+  }
+}
+</script>
 </head>
 <body>
 

@@ -534,64 +534,6 @@
     </div>
   </div>
 
-  <!-- ============ RFI VIEW ============ -->
-  <div class="view" id="rfiView">
-    <div class="card">
-      <div class="card-head"><div><span class="eyebrow">Log</span><h2>New RFI</h2></div></div>
-      <div class="row row-2">
-        <div class="field"><label>Subject</label><input type="text" id="rfiSubject" placeholder="e.g. Beam reinforcement clash at Grid C4"></div>
-        <div class="field"><label>Priority</label>
-          <select id="rfiPriority"><option>Low</option><option selected>Medium</option><option>High</option></select>
-        </div>
-      </div>
-      <div class="field"><label>Question</label><textarea id="rfiQuestion" rows="3" placeholder="Describe the question or clarification needed"></textarea></div>
-      <div class="row row-3">
-        <div class="field"><label>Submitted by</label><input type="text" id="rfiFrom" placeholder="Your name"></div>
-        <div class="field"><label>Submitted to</label><input type="text" id="rfiTo" placeholder="e.g. Structural Consultant"></div>
-        <div class="field"><label>Response needed by</label><input type="date" id="rfiNeeded"></div>
-      </div>
-      <button class="btn btn-orange btn-sm" id="addRfiBtn">+ Submit RFI</button>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <div><span class="eyebrow">Register</span><h2>All RFIs</h2></div>
-        <div class="stat-row" id="rfiStats"></div>
-      </div>
-      <div id="rfiList"><div class="empty">No RFIs logged yet for this project.</div></div>
-    </div>
-  </div>
-
-  <!-- ============ SUBMITTAL VIEW ============ -->
-  <div class="view" id="submittalView">
-    <div class="card">
-      <div class="card-head"><div><span class="eyebrow">Log</span><h2>New Submittal</h2></div></div>
-      <div class="row row-2">
-        <div class="field"><label>Description</label><input type="text" id="subDescField" placeholder="e.g. Precast facade panel shop drawings"></div>
-        <div class="field"><label>Type</label>
-          <select id="subType">
-            <option>Shop Drawing</option><option>Material Sample</option>
-            <option>Product Data</option><option>Mock-up</option><option>Other</option>
-          </select>
-        </div>
-      </div>
-      <div class="row row-3">
-        <div class="field"><label>Spec section</label><input type="text" id="subSpec" placeholder="e.g. 03 45 00"></div>
-        <div class="field"><label>Submitted by</label><input type="text" id="subFrom" placeholder="Subcontractor / supplier"></div>
-        <div class="field"><label>Revision no.</label><input type="number" id="subRevision" placeholder="0" value="0"></div>
-      </div>
-      <button class="btn btn-orange btn-sm" id="addSubmittalBtn">+ Submit for review</button>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <div><span class="eyebrow">Register</span><h2>All Submittals</h2></div>
-        <div class="stat-row" id="submittalStats"></div>
-      </div>
-      <div id="submittalList"><div class="empty">No submittals logged yet for this project.</div></div>
-    </div>
-  </div>
-
 </main>
 </div>
 
@@ -633,18 +575,30 @@ let state = {
 let draft = { workItems: [], manpower: [], delays: [], editingReportId: null };
 
 let saveTimer = null;
+let savePending = false;
+async function writeState(){
+  savePending = false;
+  try{
+    await db.collection('sitelog_projects').doc(projectCode).update({
+      stateData: JSON.stringify(state)
+    });
+  }
+  catch(e){ console.error('Save failed', e); savePending = true; }
+}
 function persist(){
   if (isReadOnly) return; // never write while access has expired
+  savePending = true;
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    try{
-      await db.collection('sitelog_projects').doc(projectCode).update({
-        stateData: JSON.stringify(state)
-      });
-    }
-    catch(e){ console.error('Save failed', e); }
-  }, 300);
+  saveTimer = setTimeout(writeState, 300);
 }
+// If the tab is being hidden or closed while a debounced save is still
+// waiting, flush it immediately so the last edit isn't lost.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && savePending && projectCode && !isReadOnly) {
+    clearTimeout(saveTimer);
+    writeState();
+  }
+});
 
 function generateProjectCode(){
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous 0/O/1/I
@@ -920,7 +874,10 @@ function checkAccessExpiry(){
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function fmt(n){ return (Math.round((n + Number.EPSILON) * 100) / 100).toLocaleString('en-US'); }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
 
 /* ---------------------------------------------------------------
    LANDING SCREEN WIRING
@@ -976,8 +933,10 @@ function enterAppUI(){
   document.getElementById('appRoot').style.display = 'block';
   document.getElementById('currentProjectName').textContent = projectMeta.name;
   document.getElementById('currentProjectCode').textContent = projectCode;
-  checkAccessExpiry();
   renderAll();
+  // Must run AFTER renderAll — rendering re-creates buttons, which would
+  // otherwise come back enabled in expired (read-only) mode.
+  checkAccessExpiry();
 }
 
 document.getElementById('renewBtn').addEventListener('click', openRenewModal);
@@ -1042,10 +1001,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById(btn.dataset.view).classList.add('active');
   });
 });
-
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1185,7 +1140,7 @@ document.getElementById('saveReportBtn').addEventListener('click', ()=>{
 
 function renderReportHistory(){
   const el = document.getElementById('reportHistory');
-  const list = state.dailyReports.sort((a,b)=>b.date.localeCompare(a.date));
+  const list = state.dailyReports.slice().sort((a,b)=>b.date.localeCompare(a.date));
   if(list.length===0){ el.innerHTML = '<div class="empty">No reports saved yet for this project.</div>'; return; }
   el.innerHTML = list.map(r=>`
     <div class="list-row">
@@ -1616,7 +1571,7 @@ function renderTodayPayments(){
   const date = document.getElementById('payDate').value || todayStr();
   const isToday = date === todayStr();
   document.getElementById('todayPayHeading').textContent = isToday ? "Today's Payments" : `Payments — ${date}`;
-  const list = state.payments && p.date===date;
+  const list = state.payments.filter(p => p.date === date);
   const el = document.getElementById('todayPayments');
   if(list.length===0){ el.innerHTML = '<div class="empty">No payments recorded ' + (isToday ? 'today.' : 'for this date.') + '</div>'; }
   else{
@@ -1675,7 +1630,7 @@ function renderPaymentHistory(){
 document.getElementById('printDayBtn').addEventListener('click', ()=>{
   const date = document.getElementById('payDate').value || todayStr();
   const proj = { name: projectMeta.name };
-  const list = state.payments && p.date===date;
+  const list = state.payments.filter(p => p.date === date);
   const total = list.reduce((s,p)=>s+p.amount,0);
   const html = `
     <div class="print-doc">
@@ -1694,238 +1649,6 @@ function renderPayments(){
   renderTodayPayments();
   renderPayeeTotals();
   renderPaymentHistory();
-}
-
-/* ---------------------------------------------------------------
-   RFIs
---------------------------------------------------------------- */
-document.getElementById('addRfiBtn').addEventListener('click', ()=>{
-  const subject = document.getElementById('rfiSubject').value.trim();
-  const question = document.getElementById('rfiQuestion').value.trim();
-  const priority = document.getElementById('rfiPriority').value;
-  const from = document.getElementById('rfiFrom').value.trim();
-  const to = document.getElementById('rfiTo').value.trim();
-  const needed = document.getElementById('rfiNeeded').value;
-  if(!subject || !question){ alert('Enter a subject and question.'); return; }
-  const count = state.rfis.length;
-  const number = 'RFI-' + (count+1).toString().padStart(3,'0');
-  state.rfis.push({
-    id: uid(), number, subject, question, priority,
-    from, to, dateSubmitted: todayStr(), dateNeeded: needed, status:'open',
-    response:'', responseDate:''
-  });
-  ['rfiSubject','rfiQuestion','rfiFrom','rfiTo','rfiNeeded'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('rfiPriority').value = 'Medium';
-  persist();
-  renderRfis();
-});
-
-function rfiStatusTagClass(status){
-  if(status==='open') return 'tag-orange';
-  if(status==='answered') return 'tag-green';
-  return '';
-}
-
-function renderRfis(){
-  const wrapStats = document.getElementById('rfiStats');
-  const list = state.rfis.sort((a,b)=>b.dateSubmitted.localeCompare(a.dateSubmitted));
-  const open = list.filter(r=>r.status==='open').length;
-  const answered = list.filter(r=>r.status==='answered').length;
-  const closed = list.filter(r=>r.status==='closed').length;
-  wrapStats.innerHTML = `<span class="tag tag-orange">${open} open</span><span class="tag tag-green">${answered} answered</span><span class="tag">${closed} closed</span>`;
-
-  const el = document.getElementById('rfiList');
-  if(list.length===0){ el.innerHTML = '<div class="empty">No RFIs logged yet for this project.</div>'; return; }
-  el.innerHTML = list.map(r=>{
-    const overdue = r.status==='open' && r.dateNeeded && r.dateNeeded < todayStr();
-    const isOpenRow = openRfiId === r.id;
-    return `
-    <div class="list-row" style="flex-direction:column; align-items:stretch">
-      <div style="display:flex; align-items:center; gap:10px; width:100%">
-        <span class="grow"><b class="mono">${r.number}</b> — ${escapeHtml(r.subject)}</span>
-        <span class="tag">${r.priority}</span>
-        ${overdue ? '<span class="tag" style="background:rgba(201,74,59,0.12);color:var(--red)">Overdue</span>' : ''}
-        <span class="tag ${rfiStatusTagClass(r.status)}">${r.status}</span>
-        <button class="btn btn-ghost btn-sm" data-rfitoggle="${r.id}">${isOpenRow?'Close':'View'}</button>
-      </div>
-      ${isOpenRow ? renderRfiDetail(r) : ''}
-    </div>`;
-  }).join('');
-
-  el.querySelectorAll('[data-rfitoggle]').forEach(b=>b.addEventListener('click', ()=>{
-    openRfiId = openRfiId === b.dataset.rfitoggle ? null : b.dataset.rfitoggle;
-    renderRfis();
-  }));
-  el.querySelectorAll('[data-rfianswer]').forEach(b=>b.addEventListener('click', ()=>{
-    const r = state.rfis.find(x=>x.id===b.dataset.rfianswer);
-    const textarea = document.getElementById('rfiResponseInput-'+r.id);
-    const text = textarea.value.trim();
-    if(!text){ alert('Enter a response before submitting.'); return; }
-    r.response = text; r.status='answered'; r.responseDate = todayStr();
-    persist(); renderRfis();
-  }));
-  el.querySelectorAll('[data-rficlose]').forEach(b=>b.addEventListener('click', ()=>{
-    const r = state.rfis.find(x=>x.id===b.dataset.rficlose);
-    r.status='closed'; persist(); renderRfis();
-  }));
-  el.querySelectorAll('[data-rfiprint]').forEach(b=>b.addEventListener('click', ()=>printRfi(b.dataset.rfiprint)));
-}
-
-function renderRfiDetail(r){
-  return `
-    <div style="border-top:1px solid var(--line); margin-top:10px; padding-top:10px; font-size:13px">
-      <div class="stat-row" style="margin-bottom:8px">
-        <div class="stat">From<b>${escapeHtml(r.from||'—')}</b></div>
-        <div class="stat">To<b>${escapeHtml(r.to||'—')}</b></div>
-        <div class="stat">Submitted<b class="mono">${r.dateSubmitted}</b></div>
-        <div class="stat">Needed by<b class="mono">${r.dateNeeded||'—'}</b></div>
-      </div>
-      <p style="margin:6px 0"><b>Question:</b> ${escapeHtml(r.question)}</p>
-      ${r.status==='open' ? `
-        <textarea id="rfiResponseInput-${r.id}" rows="2" placeholder="Type response...">${escapeHtml(r.response||'')}</textarea>
-        <div class="btn-row">
-          <button class="btn btn-orange btn-sm" data-rfianswer="${r.id}">Submit answer</button>
-        </div>` : `
-        <p style="margin:6px 0"><b>Response (${r.responseDate}):</b> ${escapeHtml(r.response)}</p>
-        <div class="btn-row">
-          ${r.status==='answered' ? `<button class="btn btn-ghost btn-sm" data-rficlose="${r.id}">Mark closed</button>` : ''}
-          <button class="btn btn-ghost btn-sm" data-rfiprint="${r.id}">Print</button>
-        </div>`}
-    </div>`;
-}
-
-function printRfi(id){
-  const r = state.rfis.find(x=>x.id===id);
-  const proj = { name: projectMeta.name };
-  const html = `
-    <div class="print-doc">
-      <h1>RFI — ${r.number}</h1>
-      <div class="sub">${escapeHtml(proj?proj.name:'')} · Submitted ${r.dateSubmitted} · Priority: ${r.priority}</div>
-      <p><b>From:</b> ${escapeHtml(r.from||'—')} &nbsp; <b>To:</b> ${escapeHtml(r.to||'—')} &nbsp; <b>Needed by:</b> ${r.dateNeeded||'—'}</p>
-      <h3>Subject</h3><p>${escapeHtml(r.subject)}</p>
-      <h3>Question</h3><p>${escapeHtml(r.question)}</p>
-      <h3>Response</h3><p>${r.response ? escapeHtml(r.response) + ' (' + r.responseDate + ')' : 'Pending'}</p>
-    </div>`;
-  document.getElementById('printArea').innerHTML = html;
-  window.print();
-}
-
-/* ---------------------------------------------------------------
-   SUBMITTALS
---------------------------------------------------------------- */
-document.getElementById('addSubmittalBtn').addEventListener('click', ()=>{
-  const desc = document.getElementById('subDescField').value.trim();
-  const type = document.getElementById('subType').value;
-  const spec = document.getElementById('subSpec').value.trim();
-  const from = document.getElementById('subFrom').value.trim();
-  const revision = +document.getElementById('subRevision').value || 0;
-  if(!desc){ alert('Enter a description.'); return; }
-  const count = state.submittals.length;
-  const number = 'SUB-' + (count+1).toString().padStart(3,'0');
-  state.submittals.push({
-    id: uid(), number, desc, type, spec, from, revision,
-    dateSubmitted: todayStr(), status:'pending', reviewer:'', reviewDate:'', comments:''
-  });
-  ['subDescField','subSpec','subFrom'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('subRevision').value = '0';
-  persist();
-  renderSubmittals();
-});
-
-function submittalTagClass(status){
-  if(status==='pending') return 'tag-orange';
-  if(status==='approved') return 'tag-green';
-  if(status==='approved-as-noted') return 'tag-green';
-  return '';
-}
-function submittalStatusLabel(status){
-  return { pending:'Pending', approved:'Approved', 'approved-as-noted':'Approved as noted',
-    'revise-resubmit':'Revise & resubmit', rejected:'Rejected' }[status] || status;
-}
-
-function renderSubmittals(){
-  const wrapStats = document.getElementById('submittalStats');
-  const list = state.submittals.sort((a,b)=>b.dateSubmitted.localeCompare(a.dateSubmitted));
-  const pending = list.filter(s=>s.status==='pending').length;
-  const approved = list.filter(s=>s.status==='approved'||s.status==='approved-as-noted').length;
-  const flagged = list.filter(s=>s.status==='revise-resubmit'||s.status==='rejected').length;
-  wrapStats.innerHTML = `<span class="tag tag-orange">${pending} pending</span><span class="tag tag-green">${approved} approved</span><span class="tag" style="background:rgba(201,74,59,0.12);color:var(--red)">${flagged} flagged</span>`;
-
-  const el = document.getElementById('submittalList');
-  if(list.length===0){ el.innerHTML = '<div class="empty">No submittals logged yet for this project.</div>'; return; }
-  el.innerHTML = list.map(s=>{
-    const isOpenRow = openSubmittalId === s.id;
-    return `
-    <div class="list-row" style="flex-direction:column; align-items:stretch">
-      <div style="display:flex; align-items:center; gap:10px; width:100%">
-        <span class="grow"><b class="mono">${s.number}</b> — ${escapeHtml(s.desc)} <span class="tag">${s.type}</span></span>
-        <span class="tag ${submittalTagClass(s.status)}" ${['revise-resubmit','rejected'].includes(s.status)?'style="background:rgba(201,74,59,0.12);color:var(--red)"':''}>${submittalStatusLabel(s.status)}</span>
-        <button class="btn btn-ghost btn-sm" data-subtoggle="${s.id}">${isOpenRow?'Close':'View'}</button>
-      </div>
-      ${isOpenRow ? renderSubmittalDetail(s) : ''}
-    </div>`;
-  }).join('');
-
-  el.querySelectorAll('[data-subtoggle]').forEach(b=>b.addEventListener('click', ()=>{
-    openSubmittalId = openSubmittalId === b.dataset.subtoggle ? null : b.dataset.subtoggle;
-    renderSubmittals();
-  }));
-  el.querySelectorAll('[data-subsave]').forEach(b=>b.addEventListener('click', ()=>{
-    const s = state.submittals.find(x=>x.id===b.dataset.subsave);
-    const reviewer = document.getElementById('subReviewer-'+s.id).value.trim();
-    const status = document.getElementById('subStatusInput-'+s.id).value;
-    const comments = document.getElementById('subComments-'+s.id).value.trim();
-    s.reviewer = reviewer; s.status = status; s.comments = comments; s.reviewDate = todayStr();
-    persist(); renderSubmittals();
-  }));
-  el.querySelectorAll('[data-subprint]').forEach(b=>b.addEventListener('click', ()=>printSubmittal(b.dataset.subprint)));
-}
-
-function renderSubmittalDetail(s){
-  return `
-    <div style="border-top:1px solid var(--line); margin-top:10px; padding-top:10px; font-size:13px">
-      <div class="stat-row" style="margin-bottom:8px">
-        <div class="stat">Spec section<b>${escapeHtml(s.spec||'—')}</b></div>
-        <div class="stat">Submitted by<b>${escapeHtml(s.from||'—')}</b></div>
-        <div class="stat">Date submitted<b class="mono">${s.dateSubmitted}</b></div>
-        <div class="stat">Revision<b class="mono">${s.revision}</b></div>
-      </div>
-      <div class="row row-2" style="margin-bottom:8px">
-        <div class="field"><label>Reviewer</label><input type="text" id="subReviewer-${s.id}" value="${escapeHtml(s.reviewer||'')}" placeholder="Reviewer name"></div>
-        <div class="field"><label>Status</label>
-          <select id="subStatusInput-${s.id}">
-            <option value="pending" ${s.status==='pending'?'selected':''}>Pending</option>
-            <option value="approved" ${s.status==='approved'?'selected':''}>Approved</option>
-            <option value="approved-as-noted" ${s.status==='approved-as-noted'?'selected':''}>Approved as noted</option>
-            <option value="revise-resubmit" ${s.status==='revise-resubmit'?'selected':''}>Revise &amp; resubmit</option>
-            <option value="rejected" ${s.status==='rejected'?'selected':''}>Rejected</option>
-          </select>
-        </div>
-      </div>
-      <div class="field"><label>Review comments</label><textarea id="subComments-${s.id}" rows="2">${escapeHtml(s.comments||'')}</textarea></div>
-      ${s.reviewDate ? `<p class="hint">Last reviewed ${s.reviewDate}</p>` : ''}
-      <div class="btn-row">
-        <button class="btn btn-orange btn-sm" data-subsave="${s.id}">Save review</button>
-        <button class="btn btn-ghost btn-sm" data-subprint="${s.id}">Print transmittal</button>
-      </div>
-    </div>`;
-}
-
-function printSubmittal(id){
-  const s = state.submittals.find(x=>x.id===id);
-  const proj = { name: projectMeta.name };
-  const html = `
-    <div class="print-doc">
-      <h1>Submittal Transmittal — ${s.number}</h1>
-      <div class="sub">${escapeHtml(proj?proj.name:'')} · Submitted ${s.dateSubmitted} · Revision ${s.revision}</div>
-      <p><b>Description:</b> ${escapeHtml(s.desc)}</p>
-      <p><b>Type:</b> ${escapeHtml(s.type)} &nbsp; <b>Spec section:</b> ${escapeHtml(s.spec||'—')} &nbsp; <b>Submitted by:</b> ${escapeHtml(s.from||'—')}</p>
-      <h3>Review status</h3>
-      <p>${submittalStatusLabel(s.status)}${s.reviewer ? ' — reviewed by '+escapeHtml(s.reviewer) : ''}${s.reviewDate ? ' on '+s.reviewDate : ''}</p>
-      ${s.comments ? `<h3>Comments</h3><p>${escapeHtml(s.comments)}</p>` : ''}
-    </div>`;
-  document.getElementById('printArea').innerHTML = html;
-  window.print();
 }
 
 /* ---------------------------------------------------------------
