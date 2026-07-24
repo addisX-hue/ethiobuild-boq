@@ -116,6 +116,35 @@
 
   .divider{ height:1px; background:var(--border); margin:44px 0; }
 
+  /* Official requirements — bilingual permit-type cards */
+  .pr-card{
+    background:var(--ink-mid); border:1px solid var(--border);
+    border-radius:12px; margin:14px 0; overflow:hidden;
+  }
+  .pr-card > summary{
+    cursor:pointer; padding:14px 16px; list-style:none;
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .pr-card > summary::-webkit-details-marker{ display:none; }
+  .pr-card > summary::after{ content:"▾"; color:var(--text-muted); flex-shrink:0; }
+  .pr-card[open] > summary{ border-bottom:1px solid var(--border); }
+  .pr-card[open] > summary::after{ content:"▴"; }
+  .pr-card > summary:hover{ background:rgba(255,255,255,0.04); }
+  .pr-body{ padding:6px 18px 16px; }
+  .pr-body ol{ margin:8px 0 12px 0; padding-left:20px; }
+  .pr-body li{ font-size:14px; color:#c8d2dc; margin-bottom:10px; }
+  .pr-body .am{ display:block; font-size:12.5px; color:var(--text-muted); margin-top:2px; }
+  .pr-sub{
+    font-family:'Space Grotesk',sans-serif; font-size:12.5px; font-weight:600;
+    color:var(--gold-light); margin:14px 0 4px;
+  }
+  .pr-note{
+    background:rgba(200,146,42,0.08); border-left:3px solid var(--gold);
+    border-radius:0 10px 10px 0; padding:12px 14px; margin:12px 0 4px;
+    font-size:13.5px; color:#c8d2dc;
+  }
+
   .related-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
   .related-chip{
     display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
@@ -146,8 +175,36 @@
     "logo": { "@type": "ImageObject", "url": "https://addisboq.com/icon-512.jpg" }
   },
   "datePublished": "2026-07-22",
-  "dateModified": "2026-07-22",
+  "dateModified": "2026-07-24",
   "mainEntityOfPage": "https://addisboq.com/how-to-get-building-permit-in-ethiopia"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What documents are required for a new construction permit in Ethiopia?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Completed application forms, an environmental impact assessment letter, an insurance letter, a plan agreement and debt & encumbrance clearance both issued within 12 months, the lease contract if the plot is lease-held, a redevelopment-zone agreement where applicable, the service fee based on the gross cost estimate, professionals' licenses and TIN numbers, a bank consent letter if financed by loan, and the complete construction design starting with architectural drawings and site plan on CD. After architectural review, sanitary, electrical, mechanical (if applicable), and structural designs with calculations follow, plus a soil investigation for buildings of two floors or more." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is needed for a construction modification permit in Ethiopia?",
+      "acceptedAnswer": { "@type": "Answer", "text": "All the requirements of a new construction permit, plus the previously approved construction permit and its certificate. Every permit request must also be submitted with information from a recognized insurance company." }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I renew or extend a building permit in Ethiopia?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Submit a plan agreement, debt & encumbrance clearance, a site report letter from Construction Follow-up & Control, a copy of the previous permit certificate, the blueprint, the lease contract copy if lease-held, the application form in three copies, and design insurance." }
+    },
+    {
+      "@type": "Question",
+      "name": "What documents are required for a plan agreement in Ethiopia?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Two copies of the plan agreement form, the original title deed map plus two copies, two copies of the lease contract if lease-held, two copies of the power of attorney, and two copies of ID." }
+    }
+  ]
 }
 </script>
 </head>
@@ -174,9 +231,9 @@
   <div style="background:var(--ink-mid);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:40px;">
     <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">On This Page</div>
     <a href="#street-width" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Your Permitted Floor Count Depends on Your Street</a>
+    <a href="#requirements" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Documents You'll Need, by Permit Type (Official)</a>
     <a href="#process" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Step-by-Step: Getting Your Permit Approved</a>
     <a href="#timeline" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Realistic Approval Timeline</a>
-    <a href="#documents" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Documents You'll Need</a>
     <a href="#mistakes" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;">Common Mistakes</a>
   </div>
 
@@ -195,13 +252,98 @@
   <div class="divider"></div>
 
   <!-- ============================================ -->
+  <section class="topic" id="requirements">
+    <div class="topic-eyebrow">Official Checklists · በአማርኛ</div>
+    <h2>Documents You'll Need, by Permit Type</h2>
+    <p>These are the detailed prerequisites as issued by city administration permit offices, translated to English with the official Amharic wording kept for reference — so you can match each item exactly against what the desk officer asks for. Pick the card for the service you're applying for.</p>
+
+    <details class="pr-card" open>
+      <summary>1. New Construction Permit — አዲስ ግንባታ ፈቃድ</summary>
+      <div class="pr-body">
+        <ol>
+          <li>Completed construction permit application forms <span class="am" lang="am">የግንባታ ፈቃድ መጠየቂያ ፎርሞች ሞልቶ ማቅረብ</span></li>
+          <li>Environmental impact assessment letter from the Environmental Protection Authority (for Addis Ababa projects: Gurd Shola, behind the Athletics Federation, opposite Ethiopian Construction Corporation, 1st floor, Office No. 28 — Tel: 011 6 45 22 88) <span class="am" lang="am">የአካባቢ ተፅዕኖ ግምገማ ደብዳቤ /የአ.አ.አካባቢ ጥበቃ ባለሥልጣን/</span></li>
+          <li>Insurance letter attached <span class="am" lang="am">ኢንሹራንስ ደብዳቤ ይያያዝ</span></li>
+          <li>Plan agreement from the sub-city / local administration where the plot is located, issued within the last 12 months <span class="am" lang="am">የፕላን ስምምነት — 12 ወር ያላለፈው</span></li>
+          <li>Debt &amp; encumbrance clearance, issued within the last 12 months <span class="am" lang="am">እዳና እገዳ ማጣሪያ — 12 ወር ያላለፈው</span></li>
+          <li>If the plot is lease-held: copy of the lease contract, including any amendment <span class="am" lang="am">የሊዝ ውል ኮፒ፣ ማሻሻያ ካለው ጨምሮ</span></li>
+          <li>If the plot is in a redevelopment zone: agreement letter from the relevant body confirming you may develop it <span class="am" lang="am">በመልሶ ማልማት ክልል ከሆነ የስምምነት ውል ማቅረብ</span></li>
+          <li>Service fee, based on the gross cost estimate of the project <span class="am" lang="am">የአገልግሎት ክፍያ እንደ ጥቅል ግምቱ</span></li>
+          <li>Professionals' licenses and TIN numbers; if submitted at firm level, the firm's license as well <span class="am" lang="am">የባለሙያዎች ላይሰንስ፣ ቲን ቁጥር</span></li>
+          <li>If financed by a bank loan: consent letter from the bank authorizing construction <span class="am" lang="am">ከባንክ ግንባታ እንዲገነባ የሚያስችል የስምምነት ደብዳቤ</span></li>
+          <li>Complete construction design — architectural first, with the site plan, submitted on CD <span class="am" lang="am">የግንባታ ዲዛይን፣ አርክቴክቸራል ከሳይት ፕላን በሲዲ</span></li>
+        </ol>
+        <div class="pr-sub">To submit after the architectural review is completed · አርክቴክቸራል ምርመራ ካለቀ በኋላ</div>
+        <ol>
+          <li>Sanitary design and design report <span class="am" lang="am">ሳንቴሪ ዲዛይን እና የዲዛይን ሪፖርት</span></li>
+          <li>Electrical design and design report <span class="am" lang="am">ኤሌክትሪካል ዲዛይን እና የዲዛይን ሪፖርት</span></li>
+          <li>Mechanical design, if applicable <span class="am" lang="am">ሜካኒካል ዲዛይን /ካለ/</span></li>
+          <li>Structural design with static calculations for all building types, plus soil investigation for buildings of two floors or more <span class="am" lang="am">እስትራክቸራል ዲዛይን ከካልኩሌሽን፤ የአፈር ምርመራ ከ2 ወለል በላይ ለሆነ ህንፃ</span></li>
+          <li>For large manufacturing facilities: environmental safety certificate from the Environmental Protection Authority <span class="am" lang="am">የአካባቢ ደህንነት ሰርተፊኬት</span></li>
+        </ol>
+      </div>
+    </details>
+
+    <details class="pr-card">
+      <summary>2. Construction Modification Permit — የግንባታ ማሻሻያ ፈቃድ</summary>
+      <div class="pr-body">
+        <p style="font-size:14px;">All the requirements of a new construction permit above, <strong>plus</strong>:</p>
+        <ol>
+          <li>The previously approved construction permit and its certificate <span class="am" lang="am">የቀድሞ የተፈቀደ የግንባታ ፈቃድና የምስክር ወረቀት</span></li>
+        </ol>
+        <div class="pr-note">Any construction permit request must be submitted together with information from a recognized insurance company. <span class="am" lang="am">ከታወቀ የመድህን ድርጅት መረጃ ጋር ተያይዞ ይቅረብ።</span></div>
+      </div>
+    </details>
+
+    <details class="pr-card">
+      <summary>3. Permit Renewal (Extension) — ማራዘሚያ</summary>
+      <div class="pr-body">
+        <ol>
+          <li>Plan agreement <span class="am" lang="am">ፕላን ስምምነት</span></li>
+          <li>Debt &amp; encumbrance clearance <span class="am" lang="am">እዳ እገዳ</span></li>
+          <li>Site report letter from Construction Follow-up &amp; Control <span class="am" lang="am">ከግንባታ ክትትል ቁጥጥር የሳይት ሪፖርት ደብዳቤ</span></li>
+          <li>Copy of the previous permit certificate <span class="am" lang="am">የቀድሞ የግንባታ ፈቃድ የምስክር ወረቀት ኮፒ</span></li>
+          <li>Blueprint <span class="am" lang="am">ብሉፕሪንት</span></li>
+          <li>If the plot is lease-held: copy of the lease contract <span class="am" lang="am">የሊዝ ውሉ ኮፒ</span></li>
+          <li>Application form in three copies <span class="am" lang="am">የማመልከቻ ፎርም በ3 ኮፒ ማቅረብ</span></li>
+          <li>Design insurance <span class="am" lang="am">የዲዛይን ኢንሹራንስ</span></li>
+        </ol>
+      </div>
+    </details>
+
+    <details class="pr-card">
+      <summary>4. Plan Agreement — ፕላን ስምምነት</summary>
+      <div class="pr-body">
+        <ol>
+          <li>Plan agreement form — 2 copies <span class="am" lang="am">የፕላን ስምምነት ፎርም 2 ኮፒ</span></li>
+          <li>Title deed map — original plus 2 copies <span class="am" lang="am">ካርታ ዋና ኦሪጂናል እና 2 ኮፒ</span></li>
+          <li>If lease-held: lease contract — 2 copies <span class="am" lang="am">የሊዝ ውሉ 2 ኮፒ</span></li>
+          <li>Power of attorney — 2 copies <span class="am" lang="am">ውክልና 2 ኮፒ</span></li>
+          <li>ID — 2 copies <span class="am" lang="am">መታወቂያ 2 ኮፒ</span></li>
+        </ol>
+      </div>
+    </details>
+
+    <p>Since your permitted floor count depends on your plot's street width, confirm that constraint with your sub-city office <em>before</em> your architectural and structural drawings are finalized — not after. A professional <strong>Bill of Quantities (BOQ)</strong> also strengthens your application and supports accurate cost declaration for the service fee.</p>
+
+    <div class="related-row">
+      <a href="/?start=quick" class="related-chip">Generate a BOQ for your application →</a>
+      <a href="/ethiopian-construction-guide" class="related-chip alt">Common BOQ mistakes to avoid →</a>
+    </div>
+
+    <p style="font-size:12.5px;color:var(--text-muted);margin-top:14px;">Requirements and contact details may be updated over time — confirm with your local permit office before submitting.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================ -->
   <section class="topic" id="process">
     <div class="topic-eyebrow">The Process</div>
     <h2>Step-by-Step: Getting Your Permit Approved</h2>
     <ol>
       <li>
         <strong>Prepare your documents</strong>
-        <p>Gather ownership documents, architectural and structural drawings, soil investigation report, and your BOQ before starting the application — see the full list below.</p>
+        <p>Gather everything on the official checklist for your permit type — see the full list above — including ownership documents, architectural and structural drawings, soil investigation report, and your BOQ.</p>
       </li>
       <li>
         <strong>Submit your application</strong>
@@ -237,27 +379,7 @@
     <p>This is specifically the review-and-approval stage — Step 3 above. Missing or incorrect documents are what typically push this timeline out further, since an incomplete application has to be corrected and resubmitted rather than reviewed straight through.</p>
   </section>
 
-  <div class="divider"></div>
 
-  <!-- ============================================ -->
-  <section class="topic" id="documents">
-    <div class="topic-eyebrow">Preparation</div>
-    <h2>Documents You'll Need</h2>
-    <ul>
-      <li><strong>Ownership certificate or land title</strong> (or lease agreement, where applicable)</li>
-      <li><strong>Architectural drawings</strong> — floor plans, elevations, sections</li>
-      <li><strong>Structural drawings and calculations</strong>, stamped by a licensed engineer</li>
-      <li><strong>Soil investigation report</strong>, particularly for multi-storey buildings</li>
-      <li><strong>Bill of Quantities (BOQ)</strong> — strengthens your application and supports accurate cost declaration</li>
-      <li><strong>Completed application form</strong> from your city administration's building permit office</li>
-    </ul>
-    <p>Since the floor count itself depends on your specific plot's street width, it's worth confirming that constraint with your local municipality office <em>before</em> your architectural and structural drawings are finalized — not after.</p>
-
-    <div class="related-row">
-      <a href="/?start=quick" class="related-chip">Generate a BOQ for your application →</a>
-      <a href="/ethiopian-construction-guide" class="related-chip alt">Common BOQ mistakes to avoid →</a>
-    </div>
-  </section>
 
   <div class="divider"></div>
 
