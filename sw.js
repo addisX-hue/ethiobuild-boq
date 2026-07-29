@@ -1,4 +1,4 @@
-const CACHE_NAME = 'addisboq-v18';
+const CACHE_NAME = 'addisboq-v19';
 const ASSETS = [
   '/',
   '/index.html',

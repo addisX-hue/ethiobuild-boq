@@ -2034,15 +2034,24 @@ function calculateBOQ() {
   const fndColV   = floorArea * 0.031 * foundMultFinal;
   const rebarFoundKg = (footingV * 95 + gradeBeamV * 80) * rebarBoostFinal;
 
+  // Structured as: parent item carrying the full specification, followed by
+  // unnumbered lettered sub-items that each carry their own unit, qty and rate.
   const foundConc = [
-    { no:'2.01', desc:'5cm lean concrete C-5 (150 kg cement/m³) under foundation', unit:'m²', qty: leanConc, rate: R.concrete_c15 * 0.05 + 200 },
-    { no:'2.02', desc:'C-25 concrete to footing pad / mat foundation', unit:'m³', qty: footingV, rate: R.concrete_c25_foundation },
-    { no:'2.03', desc:'C-25 concrete to grade beams', unit:'m³', qty: gradeBeamV, rate: R.concrete_c25_beam },
-    { no:'2.04', desc:'C-25 concrete to foundation columns', unit:'m³', qty: fndColV, rate: R.concrete_c25_column },
-    { no:'2.05', desc:'Formwork to footing and grade beam', unit:'m²', qty: (footingV + gradeBeamV) * 4.2, rate: R.formwork },
-    { no:'2.06', desc:'Steel reinforcement bars 8mm (sub-structure)', unit:'kg', qty: rebarFoundKg * 0.55, rate: R.rebar_8mm },
-    { no:'2.07', desc:'Steel reinforcement bars 12mm (sub-structure)', unit:'kg', qty: rebarFoundKg * 0.25, rate: R.rebar_12mm },
-    { no:'2.08', desc:'Steel reinforcement bars 16mm (sub-structure)', unit:'kg', qty: rebarFoundKg * 0.20, rate: R.rebar_16mm },
+    { no:'2.10', desc:'5cm thick lean concrete class C-5 with minimum 150 kg cement/m³, cement type PPC, laid and levelled to receive foundation works.', unit:'m²', qty: leanConc, rate: R.concrete_c15 * 0.05 + 200 },
+
+    { no:'2.20', header:true, desc:'C-25 concrete with minimum 420 kg cement/m³, cement type PPC, cast into formwork and vibrated around reinforcement bars, cured as per specification, in:' },
+    { no:'', desc:'a)  Footing pad / mat foundation', unit:'m³', qty: footingV, rate: R.concrete_c25_foundation },
+    { no:'', desc:'b)  Grade beams', unit:'m³', qty: gradeBeamV, rate: R.concrete_c25_beam },
+    { no:'', desc:'c)  Foundation columns', unit:'m³', qty: fndColV, rate: R.concrete_c25_column },
+
+    { no:'2.30', header:true, desc:'Provide and fix 2.5cm thick wood / metal formwork, properly braced and supported, including striking after the specified curing period, to:' },
+    { no:'', desc:'a)  Footing pad / mat foundation', unit:'m²', qty: footingV * 4.2, rate: R.formwork },
+    { no:'', desc:'b)  Grade beams', unit:'m²', qty: gradeBeamV * 4.2, rate: R.formwork },
+
+    { no:'2.40', header:true, desc:'Supply and fix deformed steel reinforcement bars in position according to the structural drawings. Rate to include cutting, bending, placing, tying wires and all necessary spacers:' },
+    { no:'', desc:'a)  8mm deformed bars', unit:'kg', qty: rebarFoundKg * 0.55, rate: R.rebar_8mm },
+    { no:'', desc:'b)  12mm deformed bars', unit:'kg', qty: rebarFoundKg * 0.25, rate: R.rebar_12mm },
+    { no:'', desc:'c)  16mm deformed bars', unit:'kg', qty: rebarFoundKg * 0.20, rate: R.rebar_16mm },
   ];
   sections.push({ title: '2. Concrete Works', items: foundConc });
 
@@ -2063,27 +2072,40 @@ function calculateBOQ() {
   // Rebar quantity now driven by actual steel ratio (kg per m3 approximated from steelRatio × concrete density factor)
   const rebarSupKg = (colV * (superScale.steelRatio * 7850 / 10) + beamV * 110 + topTieBeamV * 110 + slabV * 85);
 
+  // Structured as: parent item carrying the full specification, followed by
+  // unnumbered lettered sub-items — grouped by operation (concrete, then formwork, then rebar).
   const superConc = [
-    { no:'1.01', desc:'C-25 concrete to elevation columns', unit:'m³', qty: colV, rate: R.concrete_c25_column },
-    { no:'1.02', desc:'C-25 concrete to floor beams', unit:'m³', qty: beamV, rate: R.concrete_c25_beam },
-    { no:'1.03', desc:'C-25 concrete to top-tie beam (roof level ring beam)', unit:'m³', qty: topTieBeamV, rate: R.concrete_c25_beam },
-    { no:'1.04', desc:'C-25 concrete to floor slabs (150mm)', unit:'m³', qty: slabV, rate: R.concrete_c25_slab },
-    { no:'1.05', desc:'C-25 concrete to staircase and landing', unit:'m³', qty: stairV, rate: R.concrete_c25_column },
-    { no:'1.06', desc:'Formwork to columns', unit:'m²', qty: colV * 16, rate: R.formwork },
-    { no:'1.07', desc:'Formwork to floor beams', unit:'m²', qty: beamV * 7.5, rate: R.formwork },
-    { no:'1.08', desc:'Formwork to top-tie beam', unit:'m²', qty: topTieBeamV * 7.5, rate: R.formwork },
-    { no:'1.09', desc:'Formwork to floor slabs', unit:'m²', qty: floorArea * floorsAbove, rate: R.formwork },
-    { no:'1.10', desc:'Rebar 8mm deformed bars (superstructure)', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d8, rate: R.rebar_8mm },
-    { no:'1.11', desc:'Rebar 10mm deformed bars', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d10, rate: R.rebar_10mm },
-    { no:'1.12', desc:'Rebar 14mm deformed bars', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d14, rate: R.rebar_14mm },
-    { no:'1.13', desc:'Rebar 16mm deformed bars', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d16, rate: R.rebar_16mm },
+    { no:'1.10', header:true, desc:'C-25 concrete with minimum 420 kg cement/m³, cement type PPC, cast into formwork and vibrated around reinforcement bars, cured as per specification, in:' },
+    { no:'', desc:'a)  Elevation columns', unit:'m³', qty: colV, rate: R.concrete_c25_column },
+    { no:'', desc:'b)  Floor beams', unit:'m³', qty: beamV, rate: R.concrete_c25_beam },
+    { no:'', desc:'c)  Top-tie beams (roof level ring beam)', unit:'m³', qty: topTieBeamV, rate: R.concrete_c25_beam },
+    { no:'', desc:'d)  Staircase and landing', unit:'m³', qty: stairV, rate: R.concrete_c25_column },
+    { no:'', desc:'e)  Floor slabs, 150mm thick', unit:'m³', qty: slabV, rate: R.concrete_c25_slab },
+
+    { no:'1.20', header:true, desc:'Provide and fix 2.5cm thick wood / metal formwork, properly braced and supported, including striking after the specified curing period, to:' },
+    { no:'', desc:'a)  Elevation columns', unit:'m²', qty: colV * 16, rate: R.formwork },
+    { no:'', desc:'b)  Floor beams', unit:'m²', qty: beamV * 7.5, rate: R.formwork },
+    { no:'', desc:'c)  Top-tie beams', unit:'m²', qty: topTieBeamV * 7.5, rate: R.formwork },
+    { no:'', desc:'d)  Floor slabs, 150mm thick', unit:'m²', qty: floorArea * floorsAbove, rate: R.formwork },
+
+    { no:'1.30', header:true, desc:'Supply and fix deformed steel reinforcement bars in position according to the structural drawings. Rate to include cutting, bending, placing, tying wires and all necessary spacers:' },
+  ];
+  // Rebar sub-items are lettered sequentially; 20mm and 24mm only appear on high-rise projects.
+  const superRebarBars = [
+    { label:'8mm deformed bars',  qty: rebarSupKg * rebarDiaSplit.d8,  rate: R.rebar_8mm },
+    { label:'10mm deformed bars', qty: rebarSupKg * rebarDiaSplit.d10, rate: R.rebar_10mm },
+    { label:'14mm deformed bars', qty: rebarSupKg * rebarDiaSplit.d14, rate: R.rebar_14mm },
+    { label:'16mm deformed bars', qty: rebarSupKg * rebarDiaSplit.d16, rate: R.rebar_16mm },
   ];
   if (rebarDiaSplit.d20 > 0) {
-    superConc.push({ no:'1.14', desc:'Rebar 20mm deformed bars (high-rise columns)', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d20, rate: R.rebar_20mm });
+    superRebarBars.push({ label:'20mm deformed bars (high-rise columns)', qty: rebarSupKg * rebarDiaSplit.d20, rate: R.rebar_20mm });
   }
   if (rebarDiaSplit.d24 > 0) {
-    superConc.push({ no:'1.15', desc:'Rebar 24mm deformed bars (high-rise columns)', unit:'kg', qty: rebarSupKg * rebarDiaSplit.d24, rate: R.rebar_24mm });
+    superRebarBars.push({ label:'24mm deformed bars (high-rise columns)', qty: rebarSupKg * rebarDiaSplit.d24, rate: R.rebar_24mm });
   }
+  superRebarBars.forEach((b, i) => {
+    superConc.push({ no:'', desc: String.fromCharCode(97 + i) + ')  ' + b.label, unit:'kg', qty: b.qty, rate: b.rate });
+  });
   sections.push({ title: '1. Concrete Works', items: superConc });
 
   // HCB / Wall material — separate external and internal
@@ -2102,15 +2124,21 @@ function calculateBOQ() {
   const roofItems = [];
   if (roofType === 'flat') {
     const roofSlabV = floorArea * 0.15;
-    roofItems.push({ no:'3.01', desc:'C-25 concrete flat roof slab (150mm)', unit:'m³', qty: roofSlabV, rate: R.concrete_c25_slab });
-    roofItems.push({ no:'3.02', desc:'Formwork to roof slab', unit:'m²', qty: floorArea, rate: R.formwork });
-    roofItems.push({ no:'3.03', desc:'Rebar for roof slab', unit:'kg', qty: roofSlabV * 80, rate: R.rebar_8mm });
-    roofItems.push({ no:'3.04', desc:'Waterproofing membrane to roof slab', unit:'m²', qty: floorArea, rate: 450 * cm });
+    roofItems.push({ no:'3.10', header:true, desc:'C-25 concrete with minimum 420 kg cement/m³, cement type PPC, cast into formwork and vibrated around reinforcement bars, laid to falls and cured as per specification, in:' });
+    roofItems.push({ no:'', desc:'a)  Flat roof slab, 150mm thick', unit:'m³', qty: roofSlabV, rate: R.concrete_c25_slab });
+    roofItems.push({ no:'3.20', header:true, desc:'Provide and fix 2.5cm thick wood / metal formwork, properly braced and supported, including striking after the specified curing period, to:' });
+    roofItems.push({ no:'', desc:'a)  Flat roof slab, 150mm thick', unit:'m²', qty: floorArea, rate: R.formwork });
+    roofItems.push({ no:'3.30', header:true, desc:'Supply and fix deformed steel reinforcement bars in position according to the structural drawings. Rate to include cutting, bending, placing, tying wires and all necessary spacers:' });
+    roofItems.push({ no:'', desc:'a)  Reinforcement to flat roof slab', unit:'kg', qty: roofSlabV * 80, rate: R.rebar_8mm });
+    roofItems.push({ no:'3.40', desc:'Apply waterproofing bituminous membrane to the roof slab, laid to a minimum 5% fall, over a primed and cleaned surface, with all laps sealed and turned up at upstands, applied strictly as per the manufacturer\u2019s instructions and approved by the Engineer.', unit:'m²', qty: floorArea, rate: 450 * cm });
   } else {
-    roofItems.push({ no:'3.01', desc:`${getRadioLabel('roof-type')} roof cover (horizontal projection)`, unit:'m²', qty: roofArea, rate: roofRateMap[roofType] });
-    roofItems.push({ no:'3.02', desc:'G-28 flat sheet flashing (900mm dev.)', unit:'ml', qty: perimeter * 0.55, rate: 1237 * cm });
-    roofItems.push({ no:'3.03', desc:'G-28 galvanized gutter (90cm dev.)', unit:'ml', qty: perimeter * 0.55, rate: 1016 * cm });
-    roofItems.push({ no:'3.04', desc:'Timber purlins and roof structure', unit:'m²', qty: roofArea, rate: 680 * cm });
+    roofItems.push({ no:'3.10', header:true, desc:`Supply and fix ${getRadioLabel('roof-type')} roof cover, including ridge covers, fixed to purlins at c/c 90cm with approved asphalted washers and fixing accessories, all as per drawing (roof cover measured on horizontal projection):` });
+    roofItems.push({ no:'', desc:`a)  ${getRadioLabel('roof-type')}`, unit:'m²', qty: roofArea, rate: roofRateMap[roofType] });
+    roofItems.push({ no:'3.20', header:true, desc:'Supply and fix G-28 galvanized flat metal sheet flashing, fixed as shown on drawing, spliced and welded at joints and finished with two coats of rust resisting paint. Development length:' });
+    roofItems.push({ no:'', desc:'a)  900mm development length', unit:'ml', qty: perimeter * 0.55, rate: 1237 * cm });
+    roofItems.push({ no:'3.30', header:true, desc:'Supply and fix G-28 galvanized flat metal sheet gutter, spliced and welded at joints and finished with two coats of rust resisting paint. Development length:' });
+    roofItems.push({ no:'', desc:'a)  900mm development length', unit:'ml', qty: perimeter * 0.55, rate: 1016 * cm });
+    roofItems.push({ no:'3.40', desc:'Supply and fix timber purlins and complete roof structure according to detail drawing, including all necessary bracing, fixing accessories and two coats of approved wood preservative.', unit:'m²', qty: roofArea, rate: 680 * cm });
   }
   sections.push({ title: '3. Roofing', items: roofItems });
   // 4. Steel Structure (optional - steel roof trusses)
@@ -2149,9 +2177,12 @@ const profileLabelMap = {
   emitation: 'Emitation',
 };
 const aluminumItems = [
-  { no:'6.01', desc:`${profileLabelMap[doorWindowProfile]} profile — external windows (supply & fix)`, unit:'m²', qty: extOpeningArea * 0.6, rate: profileRateMap[doorWindowProfile] },
-  { no:'6.02', desc:`${profileLabelMap[doorWindowProfile]} profile — external doors (supply & fix)`, unit:'m²', qty: extOpeningArea * 0.4, rate: profileRateMap[doorWindowProfile] * 1.15 },
-  { no:'6.03', desc:'Glass for windows (5mm clear, supply & fix)', unit:'m²', qty: extOpeningArea * 0.6, rate: R.window_glass || 2500 * cm },
+  { no:'6.10', header:true, desc:`Cut and assemble to size and shape doors and windows made of ${profileLabelMap[doorWindowProfile]} profile in alloy 60 x 60 T5 according to norm UNI 9006/1, suitable for anodization and painting, sealing system with a rigid central weather stripe on frame. Tubular dimensions of reversible base profiles 20x45 mm for windows and 40x50 mm for doors. Price shall include silicon sealant, ironmongery, cylindrical lock to the doors and all other necessary accessories of high quality, to be chosen and approved by the Consultant. Glazing measured separately:` },
+  { no:'', desc:'a)  Windows', unit:'m²', qty: extOpeningArea * 0.6, rate: profileRateMap[doorWindowProfile] },
+  { no:'', desc:'b)  Doors', unit:'m²', qty: extOpeningArea * 0.4, rate: profileRateMap[doorWindowProfile] * 1.15 },
+
+  { no:'6.20', header:true, desc:'Supply and fix 5 mm thick glazing, cut to size and bedded in the profile glazing system with silicon sealant and gaskets, including cleaning and replacement of any panes broken before handover. Quality to be chosen and approved by the Consultant:' },
+  { no:'', desc:'a)  5 mm clear glazing to windows', unit:'m²', qty: extOpeningArea * 0.6, rate: R.window_glass || 2500 * cm },
 ];
 sections.push({ title: '6. Aluminium Works', items: aluminumItems });
 
@@ -2164,14 +2195,21 @@ const intWallAreaFinish = (extWallArea + intWallArea) * 1.1;
 
 // 7. Plastering & Finishing
 const plasterItems = [
-  { no:'7.01', desc:'12mm cement plaster to external walls (2 coats)', unit:'m²', qty: extWallArea, rate: R.plaster_cement * 1.15 },
-  { no:'7.02', desc:'Pointing to external masonry above NGL', unit:'m²', qty: extWallArea * 0.3, rate: R.plaster_cement * 0.6 },
-  { no:'7.03', desc:'12mm cement plaster to internal walls (2 coats)', unit:'m²', qty: intWallAreaFinish * 0.7, rate: R.plaster_cement },
-  { no:'7.04', desc:'Gypsum skim coat to internal walls', unit:'m²', qty: intWallAreaFinish * 0.7, rate: R.plaster_gypsum },
-  { no:'7.05', desc:'Cement sand screed (40mm) base layer to floors', unit:'m²', qty: totalFloorArea, rate: 220 * cm },
-  { no:'7.06', desc:`${getRadioLabel('floor-finish')} floor finish`, unit:'m²', qty: totalFloorArea, rate: floorFinRateMap[floorFin] },
-  { no:'7.07', desc:'Marble to stair risers and treads', unit:'m²', qty: floorsAbove * 3.2, rate: R.floor_marble || 2200 * cm },
-  { no:'7.08', desc:'Ceramic wall tiles in wet areas (bathroom/kitchen)', unit:'m²', qty: totalFloorArea * 0.15, rate: 1400 * cm },
+  { no:'7.10', header:true, desc:'Apply 12mm thick cement sand plaster (1:3) in two coats, on a hacked, cleaned and wetted surface, finished smooth and true to line and level, including making good around openings and curing:' },
+  { no:'', desc:'a)  To external walls', unit:'m²', qty: extWallArea, rate: R.plaster_cement * 1.15 },
+  { no:'', desc:'b)  To internal walls', unit:'m²', qty: intWallAreaFinish * 0.7, rate: R.plaster_cement },
+
+  { no:'7.20', desc:'Rake out and point external masonry surfaces above N.G.L. in cement sand mortar (1:3), joints finished to the approved profile and the surface cleaned down on completion.', unit:'m²', qty: extWallArea * 0.3, rate: R.plaster_cement * 0.6 },
+
+  { no:'7.30', desc:'Apply gypsum skim coat to plastered internal wall surfaces, applied in thin coats and rubbed down to a smooth, even finish ready to receive paint.', unit:'m²', qty: intWallAreaFinish * 0.7, rate: R.plaster_gypsum },
+
+  { no:'7.40', desc:'Supply and lay 40mm thick cement sand screed (1:3) as base layer to floors, laid to correct level and falls, tamped, floated and cured ready to receive the floor finish.', unit:'m²', qty: totalFloorArea, rate: 220 * cm },
+
+  { no:'7.50', header:true, desc:'Supply and lay the following floor finishes on the prepared screed, including bedding mortar, jointing, grouting, skirting where applicable, cleaning and protection until handover:' },
+  { no:'', desc:`a)  ${getRadioLabel('floor-finish')} to floors`, unit:'m²', qty: totalFloorArea, rate: floorFinRateMap[floorFin] },
+  { no:'', desc:'b)  Marble to staircase risers and treads', unit:'m²', qty: floorsAbove * 3.2, rate: R.floor_marble || 2200 * cm },
+
+  { no:'7.60', desc:'Supply and fix ceramic wall tiles to wet areas (bathrooms and kitchen), bedded in approved adhesive on a rendered background, including grouting, cutting around fittings, edge trims and cleaning on completion.', unit:'m²', qty: totalFloorArea * 0.15, rate: 1400 * cm },
 ];
 sections.push({ title: '7. Plastering & Finishing', items: plasterItems });
 
@@ -2340,7 +2378,7 @@ if (withMechanical) {
   // ---- COMPUTE TOTALS ----
   sections.forEach(sec => {
     sec.items.forEach(item => {
-      item.amount = item.qty * item.rate;
+      item.amount = item.header ? 0 : item.qty * item.rate;
     });
     sec.subtotal = sec.items.reduce((s, i) => s + i.amount, 0);
   });
@@ -2457,7 +2495,12 @@ const costPerM2=grandTotal/totalArea;
           </tr>
         </thead>
         <tbody>
-          ${sec.items.map(item => `
+          ${sec.items.map(item => item.header ? `
+            <tr>
+              <td class="item-no">${item.no}</td>
+              <td colspan="5" style="white-space:pre-line">${item.desc}</td>
+            </tr>
+          ` : `
             <tr>
               <td class="item-no">${item.no}</td>
               <td style="white-space:pre-line">${item.desc}</td>
@@ -2805,12 +2848,14 @@ function doExportPDF(d){
     doc.text(sec.title, margin, y);
     y += 8;
 
-    const rows = sec.items.map(item => [
-      item.no, item.desc, item.unit,
-      Number(item.qty).toLocaleString('en-US', {maximumFractionDigits:2}),
-      Math.round(item.rate).toLocaleString('en-US'),
-      Math.round(item.amount).toLocaleString('en-US')
-    ]);
+    const rows = sec.items.map(item => item.header
+      ? [item.no, item.desc, '', '', '', '']
+      : [
+        item.no, item.desc, item.unit,
+        Number(item.qty).toLocaleString('en-US', {maximumFractionDigits:2}),
+        Math.round(item.rate).toLocaleString('en-US'),
+        Math.round(item.amount).toLocaleString('en-US')
+      ]);
     rows.push(['', 'Section Subtotal', '', '', '', Math.round(sec.subtotal).toLocaleString('en-US')]);
 
     doc.autoTable({
@@ -3024,7 +3069,21 @@ async function doExport(d) {
     // Track first item row for SUM range
     let firstItemRow = null;
 
+    let pricedIdx = 0; // counts only priced rows, so zebra striping ignores spec rows
     sec.items.forEach((item, itemIdx) => {
+      // Parent specification row: carries the description only, no unit/qty/rate/amount.
+      if (item.header) {
+        const hRow = ws.addRow([item.no, item.desc, '', '', '', '']);
+        if (!firstItemRow) firstItemRow = hRow.number;
+        ws.mergeCells(`B${hRow.number}:F${hRow.number}`);
+        styleRow(hRow, { border: dottedBorder });
+        hRow.getCell(2).alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
+        hRow.getCell(1).alignment = { vertical: 'top', horizontal: 'left' };
+        const hLines = Math.max(1, Math.ceil(String(item.desc).length / 95));
+        hRow.height = hLines * 14 + 4;
+        return;
+      }
+
       const row = ws.addRow([
         item.no,
         item.desc,
@@ -3036,7 +3095,8 @@ async function doExport(d) {
     row.getCell(6).value = { formula: `D${row.number}*E${row.number}` };
       
       if (!firstItemRow) firstItemRow = row.number;
-      const rowFill = itemIdx % 2 === 1 ? 'FFF7F5F0' : null;
+      const rowFill = pricedIdx % 2 === 1 ? 'FFF7F5F0' : null;
+      pricedIdx++;
       styleRow(row, { border: dottedBorder, fill: rowFill });
       const descLineCount = String(item.desc).split('\n').length;
       row.getCell(2).alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
