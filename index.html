@@ -615,6 +615,15 @@
     50% { transform: scale(1.035); box-shadow: 0 6px 22px rgba(45,106,79,0.5); }
   }
   .pulse-btn { animation: pulseBtn 1.4s ease-in-out infinite; }
+  .btn-calculate.is-loading { opacity: 0.75; cursor: wait; }
+.btn-spinner {
+  display: inline-block; width: 15px; height: 15px;
+  margin-right: 8px; vertical-align: -2px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff; border-radius: 50%;
+  animation: btn-spin 0.7s linear infinite;
+}
+@keyframes btn-spin { to { transform: rotate(360deg); } }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- jsPDF + autotable are lazy-loaded in exportPDF() only when a paid PDF export happens -->
@@ -625,7 +634,7 @@
   "name": "AddisBOQ",
   "alternateName": "AddisBOQ — Ethiopian Construction Cost Calculator",
   "url": "https://addisboq.com",
-  "description": "Component-based Bill of Quantities (BOQ) estimation engine for Ethiopian construction. Instead of a single cost-per-m² multiplier, AddisBOQ calculates substructure, superstructure, finishing, electrical and sanitary works as independent line items, scales structural quantities non-linearly with floor count, and adjusts rates for 9 Ethiopian cities. Exports a professional, formula-linked Excel BOQ with summary and signature sheets.",
+  "description": "Component-based Bill of Quantities (BOQ) estimation engine for Ethiopian construction. Instead of a single cost-per-m² multiplier, AddisBOQ calculates substructure, superstructure, finishing, electrical and sanitary works as independent line items, scales structural quantities non-linearly with floor count, and adjusts rates for 11 Ethiopian cities. Exports a professional, formula-linked Excel BOQ with summary and signature sheets.",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Any (web-based PWA); Android app available",
   "inLanguage": ["en", "am"],
@@ -638,7 +647,7 @@
   "featureList": [
     "Component-based cost estimation (not flat cost-per-m²)",
     "Non-linear structural scaling by floor count, including high-rise rebar diameter distribution",
-    "City-adjusted unit rates for 9 Ethiopian cities",
+    "City-adjusted unit rates for 11 Ethiopian cities",
     "Itemized BOQ across excavation, concrete, masonry, roofing, finishing, electrical and sanitary works",
     "Professional Excel export with live formulas, summary sheet and signature block",
     "Works offline as an installable PWA",
@@ -929,8 +938,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="welcome-title-am">የህንፃ ወጪ ግምት<br>በደቂቃዎች</div>
     <div class="welcome-title-en">Professional BOQ Calculator for Ethiopian Construction</div>
     <div style="display:flex;justify-content:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
-      <span style="font-size:12px;color:rgba(255,255,255,0.6);">🏙️ 9 ከተሞች</span>
-      <span style="font-size:12px;color:rgba(255,255,255,0.6);">🏗️ እስከ 10 ወለል</span>
+      <span style="font-size:12px;color:rgba(255,255,255,0.6);">🏙️ 11 ከተሞች</span>
+      <span style="font-size:12px;color:rgba(255,255,255,0.6);">🏗️ እስከ 15 ወለል</span>
       <span style="font-size:12px;color:rgba(255,255,255,0.6);">⚡ ከ 5 ደቂቃ በታች</span>
     </div>
     <div class="welcome-actions">
@@ -1071,6 +1080,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
             <option value="diredawa">Dire Dawa</option>
             <option value="harar">Harar</option>
             <option value="jigjiga">Jigjiga</option>
+            <option value="mekelle">Mekelle</option>
+            <option value="hossana">Hossana</option>
           </select>
         </div>
       </div>
@@ -1501,7 +1512,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 
   <div class="nav-buttons">
     <button class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
-    <button class="btn btn-calculate" onclick="calculateBOQ()">⚡ Generate BOQ</button>
+    <button id="btn-calculate" class="btn btn-calculate" onclick="calculateBOQ()">⚡ Generate BOQ</button>
   </div>
 </div>
 
@@ -1911,7 +1922,29 @@ function fmtN(n, dec=2) {
   return parseFloat(n.toFixed(dec)).toLocaleString('en-ET');
 }
 
-function calculateBOQ() {
+// ============================================================
+// CALCULATE BOQ  —  client side (inputs + render only)
+// The calculation engine now lives in a Cloud Function.
+// ============================================================
+
+const BOQ_ENGINE_URL = 'https://us-central1-addisboq.cloudfunctions.net/calculateBOQ';
+
+function setCalculateLoading(isLoading) {
+  const btn = document.getElementById('btn-calculate');
+  if (!btn) return;
+  if (isLoading) {
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    btn.dataset.originalLabel = btn.dataset.originalLabel || btn.innerHTML;
+    btn.innerHTML = '<span class="btn-spinner"></span> Generating BOQ\u2026';
+  } else {
+    btn.disabled = false;
+    btn.classList.remove('is-loading');
+    if (btn.dataset.originalLabel) btn.innerHTML = btn.dataset.originalLabel;
+  }
+}
+
+async function calculateBOQ() {
   // Re-lock the itemized BOQ for this new calculation (payment only unlocks the current one)
   const _lockContainer = document.getElementById('boq-scroll-container');
   const _lockOverlay = document.getElementById('boq-lock-overlay');
@@ -1919,477 +1952,75 @@ function calculateBOQ() {
   if (_lockOverlay) _lockOverlay.style.display = 'flex';
 
   // --- Gather inputs ---
-  const city        = document.getElementById('city').value;
-  const floorArea   = parseFloat(document.getElementById('floor-area').value) || 110;
   const floorsAboveRaw = parseInt(document.getElementById('floors-above').value);
-  const floorsAbove = isNaN(floorsAboveRaw) ? 3 : floorsAboveRaw;
-  const floorsBase  = parseInt(document.getElementById('floors-basement').value) || 0;
-  const floorH      = parseFloat(document.getElementById('floor-height').value) || 3.2;
-  const foundation  = getRadio('foundation');
-  const extWallMat  = getRadio('ext-wall-material');
-  const doorWindowProfile  = getRadio('door-window-profile');
-  const intWallMat  = getRadio('int-wall-material');
-  const roofType    = getRadio('roof-type');
-  const steelTruss   = getRadio('steel-truss') === 'yes';
-  const withMechanical  = getRadio('mechanical') === 'yes' && floorsAbove >=4;
-  const floorFin    = getRadio('floor-finish');
-  const extPaint    = getRadio('ext-paint');
-  const intPaint    = getRadio('int-paint');
-  const elecGrade   = getRadio('electrical-grade');
-  const withEarthing= getRadio('earthing') === 'yes';
-  const buildingUse = getRadio('building-use');
-  const sanitaryGrade = getRadio('sanitary-grade');
-  const wetRoomsRaw = parseInt(document.getElementById('wet-rooms').value);
-  const wetRooms = isNaN(wetRoomsRaw) ? 3 : wetRoomsRaw;
-  const withSeptic  = getRadio('septic') === 'yes';
-  const projName    = document.getElementById('project-name').value || 'Unnamed Project';
-  const cityLabel   = document.getElementById('city').options[document.getElementById('city').selectedIndex].text;
-  const subloc      = document.getElementById('sublocation').value;
+  const wetRoomsRaw    = parseInt(document.getElementById('wet-rooms').value);
+  const floorsAbove    = isNaN(floorsAboveRaw) ? 3 : floorsAboveRaw;
 
-  const cm = RATES.cityMultiplier[city] || 1.0;
-  const R  = {}; // city-adjusted rates
-  Object.keys(RATES).forEach(k => {
-    R[k] = typeof RATES[k] === 'number' ? RATES[k] * cm : RATES[k];
-  });
-
-  // ---- HEIGHT-BASED SCALING (foundation & superstructure grow non-linearly with floor count) ----
-  // Column volume + steel ratio + rebar diameter distribution, based on floorsAbove only
-  // As floors increase, weight shifts from thin bars (8/10mm) toward thick bars (16/20/24mm)
-  // (Rebar diameter distribution lives ONLY in getRebarDiaSplit below — single source of truth)
-  function getSuperstructureScale(floors) {
-    if (floors <= 3)  return { colMult: 1.0,  steelRatio: 0.015 };
-    if (floors <= 6)  return { colMult: 1.15, steelRatio: 0.020 };
-    if (floors <= 9)  return { colMult: 1.4,  steelRatio: 0.027 };
-    if (floors <= 12) return { colMult: 1.7,  steelRatio: 0.032 };
-    if (floors <= 15) return { colMult: 2.1,  steelRatio: 0.038 };
-    // Beyond G+15: continue the same growth rate per 3-floor band rather than flattening
-    const bandsBeyond = Math.ceil((floors - 15) / 3);
-    return {
-      colMult: 2.1 + bandsBeyond * 0.4,
-      steelRatio: 0.038 + bandsBeyond * 0.006
-    };
-  }
-  // Foundation volume + rebar increase multiplier, based on floorsAbove only
-  function getFoundationScale(floors) {
-    if (floors <= 3)  return { foundMult: 1.0,  rebarBoost: 1.0 };
-    if (floors <= 6)  return { foundMult: 1.25, rebarBoost: 1.20 };
-    if (floors <= 9)  return { foundMult: 1.6,  rebarBoost: 1.45 };
-    if (floors <= 12) return { foundMult: 2.0,  rebarBoost: 1.70 };
-    if (floors <= 15) return { foundMult: 2.5,  rebarBoost: 2.00 };
-    // Beyond G+15: continue the same growth rate per 3-floor band rather than flattening
-    const bandsBeyond = Math.ceil((floors - 15) / 3);
-    return { foundMult: 2.5 + bandsBeyond * 0.5, rebarBoost: 2.00 + bandsBeyond * 0.3 };
-  }
-  const superScale = getSuperstructureScale(floorsAbove);
-  const foundScale = getFoundationScale(floorsAbove);
-  // Basement adds +18% to foundation volume/rebar per basement level, on top of the floor-based curve
-  const basementFoundBoost = 1 + (floorsBase * 0.18);
-  const foundMultFinal  = foundScale.foundMult * basementFoundBoost;
-  const rebarBoostFinal = foundScale.rebarBoost * basementFoundBoost;
-
-  // Rebar diameter mix — shifts smoothly toward thicker bars (16/20/24mm) as floor count rises,
-  // matching the same 5-tier bands used for colMult/steelRatio/foundMult above.
-  function getRebarDiaSplit(floors) {
-    if (floors <= 3)  return { d8: 0.45, d10: 0.12, d14: 0.25, d16: 0.18, d20: 0,    d24: 0    };
-    if (floors <= 6)  return { d8: 0.40, d10: 0.12, d14: 0.26, d16: 0.22, d20: 0,    d24: 0    };
-    if (floors <= 9)  return { d8: 0.35, d10: 0.10, d14: 0.25, d16: 0.20, d20: 0.10, d24: 0    };
-    if (floors <= 12) return { d8: 0.28, d10: 0.09, d14: 0.22, d16: 0.18, d20: 0.15, d24: 0.08 };
-    if (floors <= 15) return { d8: 0.22, d10: 0.08, d14: 0.18, d16: 0.16, d20: 0.18, d24: 0.18 };
-    // Beyond G+15: keep shifting toward heavier bars
-    return                    { d8: 0.16, d10: 0.06, d14: 0.14, d16: 0.14, d20: 0.20, d24: 0.30 };
-  }
-  const rebarDiaSplit = getRebarDiaSplit(floorsAbove);
-
-  const totalFloors = floorsAbove + floorsBase + 1; // +1 for the ground floor itself
-  const totalArea   = floorArea * totalFloors;
-  const perimeter   = Math.sqrt(floorArea) * 4; // approx
-  const roofArea    = floorArea * 1.15; // 15% slope allowance
-
-  // ---- A. SUBSTRUCTURE ----
-  const sections = [];
-
-  // 1. Excavation
-  const bulkExcVol    = floorArea * 0.5;
-  const pitExcVol     = floorArea * 0.63;
-  const trenchVol     = perimeter * 0.5 * 0.5;
-  const fillVol       = pitExcVol * 0.8;
-  const cartVol       = bulkExcVol + pitExcVol + trenchVol;
-  const hardcoreVol   = floorArea * 0.25 * 0.1;
-
-  const excItems = [
-    { no:'1.01', desc:'Site clearing and removing top soil (20cm)', unit:'m²', qty: floorArea, rate: R.excavation_bulk * 0.14 },
-    { no:'1.02', desc:'Bulk excavation in ordinary soil (depth ≤ 1.5m)', unit:'m³', qty: bulkExcVol, rate: R.excavation_bulk },
-    { no:'1.03', desc:'Pit excavation in ordinary soil (depth ≤ 1.5m)', unit:'m³', qty: pitExcVol, rate: R.excavation_pit },
-    { no:'1.04', desc:'Trench excavation for foundation wall', unit:'m³', qty: trenchVol, rate: R.excavation_trench },
-    { no:'1.05', desc:'Fill and compact from granular material (quarry)', unit:'m³', qty: fillVol, rate: R.fill_compacted },
-    { no:'1.06', desc:'Load and cart away excavated material', unit:'m³', qty: cartVol, rate: R.cart_away },
-    { no:'1.07', desc:'25cm thick basaltic hardcore, well rolled', unit:'m³', qty: hardcoreVol, rate: R.hardcore },
-  ];
-  sections.push({ title: '1. Excavation & Earthwork', items: excItems });
-
-  // 2. Foundation Concrete
-  const leanConc  = floorArea * 0.18; // m2
-  const footingV  = ((floorsAbove === 0) ? 0 : ((foundation === 'mat') ? floorArea * 0.25 : floorArea * 0.095)) * foundMultFinal;
-  const gradeBeamV = floorArea * 0.053 * foundMultFinal;
-  const fndColV   = floorArea * 0.031 * foundMultFinal;
-  const rebarFoundKg = (footingV * 95 + gradeBeamV * 80) * rebarBoostFinal;
-
-  // Structured as: parent item carrying the full specification, followed by
-  // unnumbered lettered sub-items that each carry their own unit, qty and rate.
-  const foundConc = [
-    { no:'2.10', desc:'5cm thick lean concrete class C-5 with minimum 150 kg cement/m³, cement type PPC, laid and levelled to receive foundation works.', unit:'m²', qty: leanConc, rate: R.concrete_c15 * 0.05 + 200 },
-
-    { no:'2.20', header:true, desc:'C-25 concrete with minimum 420 kg cement/m³, cement type PPC, cast into formwork and vibrated around reinforcement bars, cured as per specification, in:' },
-    { no:'', desc:'a)  Footing pad / mat foundation', unit:'m³', qty: footingV, rate: R.concrete_c25_foundation },
-    { no:'', desc:'b)  Grade beams', unit:'m³', qty: gradeBeamV, rate: R.concrete_c25_beam },
-    { no:'', desc:'c)  Foundation columns', unit:'m³', qty: fndColV, rate: R.concrete_c25_column },
-
-    { no:'2.30', header:true, desc:'Provide and fix 2.5cm thick wood / metal formwork, properly braced and supported, including striking after the specified curing period, to:' },
-    { no:'', desc:'a)  Footing pad / mat foundation', unit:'m²', qty: footingV * 4.2, rate: R.formwork },
-    { no:'', desc:'b)  Grade beams', unit:'m²', qty: gradeBeamV * 4.2, rate: R.formwork },
-
-    { no:'2.40', header:true, desc:'Supply and fix deformed steel reinforcement bars in position according to the structural drawings. Rate to include cutting, bending, placing, tying wires and all necessary spacers:' },
-    { no:'', desc:'a)  8mm deformed bars', unit:'kg', qty: rebarFoundKg * 0.55, rate: R.rebar_8mm },
-    { no:'', desc:'b)  12mm deformed bars', unit:'kg', qty: rebarFoundKg * 0.25, rate: R.rebar_12mm },
-    { no:'', desc:'c)  16mm deformed bars', unit:'kg', qty: rebarFoundKg * 0.20, rate: R.rebar_16mm },
-  ];
-  sections.push({ title: '2. Concrete Works', items: foundConc });
-
-  // 3. Stone Masonry
-  const stoneVol = trenchVol * 0.85;
-  const stoneMas = [
-    { no:'3.01', desc:'Basaltic stone masonry (1:4 mortar) below NGL', unit:'m³', qty: stoneVol * 0.83, rate: R.stone_masonry_below },
-    { no:'3.02', desc:'Fair-faced dressed stone masonry above NGL', unit:'m³', qty: stoneVol * 0.17, rate: R.stone_masonry_above },
-  ];
-  sections.push({ title: '3. Masonry Works', items: stoneMas });
-
-  // ---- B. SUPERSTRUCTURE ----
-  const colV   = floorArea * (floorsAbove + 1) * 0.013 * superScale.colMult; // +1: every physical floor (incl. ground) needs columns
-  const beamV  = floorArea * floorsAbove * 0.031; // floor beams — one set per slab, correctly 0 for G+0
-  const topTieBeamV = floorArea * 0.031; // top-tie beam — always exactly 1 set, caps the topmost floor's walls
-  const slabV  = floorArea * floorsAbove * 0.15;
-  const stairV = floorsAbove * 1.575;
-  // Rebar quantity now driven by actual steel ratio (kg per m3 approximated from steelRatio × concrete density factor)
-  const rebarSupKg = (colV * (superScale.steelRatio * 7850 / 10) + beamV * 110 + topTieBeamV * 110 + slabV * 85);
-
-  // Structured as: parent item carrying the full specification, followed by
-  // unnumbered lettered sub-items — grouped by operation (concrete, then formwork, then rebar).
-  const superConc = [
-    { no:'1.10', header:true, desc:'C-25 concrete with minimum 420 kg cement/m³, cement type PPC, cast into formwork and vibrated around reinforcement bars, cured as per specification, in:' },
-    { no:'', desc:'a)  Elevation columns', unit:'m³', qty: colV, rate: R.concrete_c25_column },
-    { no:'', desc:'b)  Floor beams', unit:'m³', qty: beamV, rate: R.concrete_c25_beam },
-    { no:'', desc:'c)  Top-tie beams (roof level ring beam)', unit:'m³', qty: topTieBeamV, rate: R.concrete_c25_beam },
-    { no:'', desc:'d)  Staircase and landing', unit:'m³', qty: stairV, rate: R.concrete_c25_column },
-    { no:'', desc:'e)  Floor slabs, 150mm thick', unit:'m³', qty: slabV, rate: R.concrete_c25_slab },
-
-    { no:'1.20', header:true, desc:'Provide and fix 2.5cm thick wood / metal formwork, properly braced and supported, including striking after the specified curing period, to:' },
-    { no:'', desc:'a)  Elevation columns', unit:'m²', qty: colV * 16, rate: R.formwork },
-    { no:'', desc:'b)  Floor beams', unit:'m²', qty: beamV * 7.5, rate: R.formwork },
-    { no:'', desc:'c)  Top-tie beams', unit:'m²', qty: topTieBeamV * 7.5, rate: R.formwork },
-    { no:'', desc:'d)  Floor slabs, 150mm thick', unit:'m²', qty: floorArea * floorsAbove, rate: R.formwork },
-
-    { no:'1.30', header:true, desc:'Supply and fix deformed steel reinforcement bars in position according to the structural drawings. Rate to include cutting, bending, placing, tying wires and all necessary spacers:' },
-  ];
-  // Rebar sub-items are lettered sequentially; 20mm and 24mm only appear on high-rise projects.
-  const superRebarBars = [
-    { label:'8mm deformed bars',  qty: rebarSupKg * rebarDiaSplit.d8,  rate: R.rebar_8mm },
-    { label:'10mm deformed bars', qty: rebarSupKg * rebarDiaSplit.d10, rate: R.rebar_10mm },
-    { label:'14mm deformed bars', qty: rebarSupKg * rebarDiaSplit.d14, rate: R.rebar_14mm },
-    { label:'16mm deformed bars', qty: rebarSupKg * rebarDiaSplit.d16, rate: R.rebar_16mm },
-  ];
-  if (rebarDiaSplit.d20 > 0) {
-    superRebarBars.push({ label:'20mm deformed bars (high-rise columns)', qty: rebarSupKg * rebarDiaSplit.d20, rate: R.rebar_20mm });
-  }
-  if (rebarDiaSplit.d24 > 0) {
-    superRebarBars.push({ label:'24mm deformed bars (high-rise columns)', qty: rebarSupKg * rebarDiaSplit.d24, rate: R.rebar_24mm });
-  }
-  superRebarBars.forEach((b, i) => {
-    superConc.push({ no:'', desc: String.fromCharCode(97 + i) + ')  ' + b.label, unit:'kg', qty: b.qty, rate: b.rate });
-  });
-  sections.push({ title: '1. Concrete Works', items: superConc });
-
-  // HCB / Wall material — separate external and internal
-  const extWallArea = perimeter * floorH * (floorsAbove + 1) * 0.85; // +1: every physical floor needs walls, incl. ground
-  const intWallArea = extWallArea * 0.65; // internal partitions ~ 65% of ext wall area
-  const extWallRateMap = { hcb20: R.hcb_20cm, hcb15: R.hcb_15cm, stone: R.stone_wall_ext };
-  const intWallRateMap = { hcb15: R.hcb_15cm, hcb10: R.hcb_10cm, gypsum: R.gypsum_board };
-  const wallItems = [
-    { no:'2.01', desc:`${getRadioLabel('ext-wall-material')} — external walls`, unit:'m²', qty: extWallArea, rate: extWallRateMap[extWallMat] || R.hcb_20cm },
-    { no:'2.02', desc:`${getRadioLabel('int-wall-material')} — internal partitions`, unit:'m²', qty: intWallArea, rate: intWallRateMap[intWallMat] || R.hcb_15cm },
-  ];
-  sections.push({ title: '2. Block & Wall Works', items: wallItems });
-
-  // Roofing
-  const roofRateMap = { cis: R.roof_cis, ega: R.roof_ega, decra: R.roof_decra };
-  const roofItems = [];
-  if (roofType === 'flat') {
-    const roofSlabV = floorArea * 0.15;
-    roofItems.push({ no:'3.10', header:true, desc:'C-25 concrete with minimum 420 kg cement/m³, cement type PPC, cast into formwork and vibrated around reinforcement bars, laid to falls and cured as per specification, in:' });
-    roofItems.push({ no:'', desc:'a)  Flat roof slab, 150mm thick', unit:'m³', qty: roofSlabV, rate: R.concrete_c25_slab });
-    roofItems.push({ no:'3.20', header:true, desc:'Provide and fix 2.5cm thick wood / metal formwork, properly braced and supported, including striking after the specified curing period, to:' });
-    roofItems.push({ no:'', desc:'a)  Flat roof slab, 150mm thick', unit:'m²', qty: floorArea, rate: R.formwork });
-    roofItems.push({ no:'3.30', header:true, desc:'Supply and fix deformed steel reinforcement bars in position according to the structural drawings. Rate to include cutting, bending, placing, tying wires and all necessary spacers:' });
-    roofItems.push({ no:'', desc:'a)  Reinforcement to flat roof slab', unit:'kg', qty: roofSlabV * 80, rate: R.rebar_8mm });
-    roofItems.push({ no:'3.40', desc:'Apply waterproofing bituminous membrane to the roof slab, laid to a minimum 5% fall, over a primed and cleaned surface, with all laps sealed and turned up at upstands, applied strictly as per the manufacturer\u2019s instructions and approved by the Engineer.', unit:'m²', qty: floorArea, rate: 450 * cm });
-  } else {
-    roofItems.push({ no:'3.10', header:true, desc:`Supply and fix ${getRadioLabel('roof-type')} roof cover, including ridge covers, fixed to purlins at c/c 90cm with approved asphalted washers and fixing accessories, all as per drawing (roof cover measured on horizontal projection):` });
-    roofItems.push({ no:'', desc:`a)  ${getRadioLabel('roof-type')}`, unit:'m²', qty: roofArea, rate: roofRateMap[roofType] });
-    roofItems.push({ no:'3.20', header:true, desc:'Supply and fix G-28 galvanized flat metal sheet flashing, fixed as shown on drawing, spliced and welded at joints and finished with two coats of rust resisting paint. Development length:' });
-    roofItems.push({ no:'', desc:'a)  900mm development length', unit:'ml', qty: perimeter * 0.55, rate: 1237 * cm });
-    roofItems.push({ no:'3.30', header:true, desc:'Supply and fix G-28 galvanized flat metal sheet gutter, spliced and welded at joints and finished with two coats of rust resisting paint. Development length:' });
-    roofItems.push({ no:'', desc:'a)  900mm development length', unit:'ml', qty: perimeter * 0.55, rate: 1016 * cm });
-    roofItems.push({ no:'3.40', desc:'Supply and fix timber purlins and complete roof structure according to detail drawing, including all necessary bracing, fixing accessories and two coats of approved wood preservative.', unit:'m²', qty: roofArea, rate: 680 * cm });
-  }
-  sections.push({ title: '3. Roofing', items: roofItems });
-  // 4. Steel Structure (optional - steel roof trusses)
-if (steelTruss) {
-    const steelTrussWeight = roofArea * 12; // approx 12 kg/m2 for light steel trusses
-    const steelItems = [
-      { no:'4.01', desc:'Fabricated steel roof truss (angle/channel sections)', unit:'kg', qty: steelTrussWeight, rate: R.steel_truss },
-      { no:'4.02', desc:'Steel purlins (C or Z section)', unit:'kg', qty: roofArea * 4, rate: R.steel_purlin },
-      { no:'4.03', desc:'Anti-rust primer and protective paint to steel work', unit:'m²', qty: roofArea * 0.3, rate: 180 * cm },
-    ];
-    sections.push({ title: '4. Steel Structure', items: steelItems });
-}
-// 5. Carpentry & Joinery
-const carpItems = [];
-if (!steelTruss) {
-    const trussSpan = Math.sqrt(floorArea); // approx span
-    carpItems.push({ no:'5.01', desc:'Eucalyptus pole truss — main truss (120mm dia.)', unit:'ml', qty: roofArea * 0.8, rate: R.eucalyptus_120mm || 95 * cm });
-    carpItems.push({ no:'5.02', desc:'Eucalyptus pole — king post & intermediate posts (100mm dia.)', unit:'ml', qty: roofArea * 0.5, rate: R.eucalyptus_100mm || 75 * cm });
-    carpItems.push({ no:'5.03', desc:'Eucalyptus pole — diagonal bracing (80mm dia.)', unit:'ml', qty: roofArea * 0.4, rate: R.eucalyptus_80mm || 55 * cm });
-}
-carpItems.push({ no:'5.04', desc:'Chipboard ceiling — top floor (12mm, supply & fix)', unit:'m²', qty: floorArea, rate: R.chipboard_ceiling });
-carpItems.push({ no:'5.05', desc:'Wooden door frames (supply & fix)', unit:'No.', qty: Math.round(totalArea / 25), rate: R.door_frame_wood || 2800 * cm });
-carpItems.push({ no:'5.06', desc:'Wooden flush door leaves (supply & fix)', unit:'No.', qty: Math.round(totalArea / 25), rate: R.door_leaf_wood || 4500 * cm });
-sections.push({ title: '5. Carpentry & Joinery', items: carpItems });
-
-// 6. Aluminium Works (or LTZ / Emitation alternative)
-const extOpeningArea = extWallArea * 0.18; // approx 18% of ext wall area is openings (doors+windows)
-const profileRateMap = {
-  aluminum: R.aluminum_profile || 18000 * cm,
-  ltz: R.ltz_profile || 3200 * cm,
-  emitation: R.emitation_profile || 4000 * cm,
-};
-const profileLabelMap = {
-  aluminum: 'Aluminium',
-  ltz: 'LTZ Steel',
-  emitation: 'Emitation',
-};
-const aluminumItems = [
-  { no:'6.10', header:true, desc:`Cut and assemble to size and shape doors and windows made of ${profileLabelMap[doorWindowProfile]} profile in alloy 60 x 60 T5 according to norm UNI 9006/1, suitable for anodization and painting, sealing system with a rigid central weather stripe on frame. Tubular dimensions of reversible base profiles 20x45 mm for windows and 40x50 mm for doors. Price shall include silicon sealant, ironmongery, cylindrical lock to the doors and all other necessary accessories of high quality, to be chosen and approved by the Consultant. Glazing measured separately:` },
-  { no:'', desc:'a)  Windows', unit:'m²', qty: extOpeningArea * 0.6, rate: profileRateMap[doorWindowProfile] },
-  { no:'', desc:'b)  Doors', unit:'m²', qty: extOpeningArea * 0.4, rate: profileRateMap[doorWindowProfile] * 1.15 },
-
-  { no:'6.20', header:true, desc:'Supply and fix 5 mm thick glazing, cut to size and bedded in the profile glazing system with silicon sealant and gaskets, including cleaning and replacement of any panes broken before handover. Quality to be chosen and approved by the Consultant:' },
-  { no:'', desc:'a)  5 mm clear glazing to windows', unit:'m²', qty: extOpeningArea * 0.6, rate: R.window_glass || 2500 * cm },
-];
-sections.push({ title: '6. Aluminium Works', items: aluminumItems });
-
-  // ---- 7 & 8. PLASTERING, FINISHING & PAINTING ----
-const totalFloorArea = floorArea * (floorsAbove + floorsBase + 1); // +1 for the ground floor itself, same fix as totalArea
-const floorFinRateMap = { tiles: R.floor_tiles, marble: R.floor_marble, terrazzo: R.floor_terrazzo, screed: R.floor_screed };
-const extPaintRateMap = { local: R.paint_ext_local, medium: R.paint_ext_medium, premium: R.paint_ext_premium };
-const intPaintRateMap = { local: R.paint_int_local, medium: R.paint_int_medium, premium: R.paint_int_premium };
-const intWallAreaFinish = (extWallArea + intWallArea) * 1.1;
-
-// 7. Plastering & Finishing
-const plasterItems = [
-  { no:'7.10', header:true, desc:'Apply 12mm thick cement sand plaster (1:3) in two coats, on a hacked, cleaned and wetted surface, finished smooth and true to line and level, including making good around openings and curing:' },
-  { no:'', desc:'a)  To external walls', unit:'m²', qty: extWallArea, rate: R.plaster_cement * 1.15 },
-  { no:'', desc:'b)  To internal walls', unit:'m²', qty: intWallAreaFinish * 0.7, rate: R.plaster_cement },
-
-  { no:'7.20', desc:'Rake out and point external masonry surfaces above N.G.L. in cement sand mortar (1:3), joints finished to the approved profile and the surface cleaned down on completion.', unit:'m²', qty: extWallArea * 0.3, rate: R.plaster_cement * 0.6 },
-
-  { no:'7.30', desc:'Apply gypsum skim coat to plastered internal wall surfaces, applied in thin coats and rubbed down to a smooth, even finish ready to receive paint.', unit:'m²', qty: intWallAreaFinish * 0.7, rate: R.plaster_gypsum },
-
-  { no:'7.40', desc:'Supply and lay 40mm thick cement sand screed (1:3) as base layer to floors, laid to correct level and falls, tamped, floated and cured ready to receive the floor finish.', unit:'m²', qty: totalFloorArea, rate: 220 * cm },
-
-  { no:'7.50', header:true, desc:'Supply and lay the following floor finishes on the prepared screed, including bedding mortar, jointing, grouting, skirting where applicable, cleaning and protection until handover:' },
-  { no:'', desc:`a)  ${getRadioLabel('floor-finish')} to floors`, unit:'m²', qty: totalFloorArea, rate: floorFinRateMap[floorFin] },
-  { no:'', desc:'b)  Marble to staircase risers and treads', unit:'m²', qty: floorsAbove * 3.2, rate: R.floor_marble || 2200 * cm },
-
-  { no:'7.60', desc:'Supply and fix ceramic wall tiles to wet areas (bathrooms and kitchen), bedded in approved adhesive on a rendered background, including grouting, cutting around fittings, edge trims and cleaning on completion.', unit:'m²', qty: totalFloorArea * 0.15, rate: 1400 * cm },
-];
-sections.push({ title: '7. Plastering & Finishing', items: plasterItems });
-
-// 8. Painting
-const paintItems = [
-  { no:'8.01', desc:`External paint — ${getRadioLabel('ext-paint')} (2 coats)`, unit:'m²', qty: extWallArea, rate: extPaintRateMap[extPaint] },
-  { no:'8.02', desc:`Internal paint — ${getRadioLabel('int-paint')} (2 coats)`, unit:'m²', qty: intWallAreaFinish * 0.7, rate: intPaintRateMap[intPaint] },
-  { no:'8.03', desc:'Masonry paint to external masonry surface', unit:'m²', qty: extWallArea * 0.3, rate: extPaintRateMap[extPaint] * 0.85 },
-];
-sections.push({ title: '8. Painting', items: paintItems });
-
-  // ---- D. ELECTRICAL INSTALLATION ----
-  const elecRateMap = { basic: R.elec_basic, standard: R.elec_standard, premium: R.elec_premium };
-  const elecFloorCount = floorsAbove + floorsBase + 1; // +1 for ground floor (SDB/MLPP sizing)
-
-  // MLPP — 1 per project, MCCB rating varies by building type + total floor count
-  const mlppTierTable = {
-    villa:      [[3,'100A'], [6,'125A'], [Infinity,'125A']],
-    office:     [[3,'125A'], [6,'160A'], [10,'200A'], [Infinity,'250A']],
-    apartment:  [[3,'160A'], [6,'200A'], [10,'250A'], [Infinity,'300A']],
-    commercial: [[3,'160A'], [6,'200A'], [10,'250A'], [Infinity,'300A']],
+  const inputs = {
+    city:              document.getElementById('city').value,
+    floorArea:         parseFloat(document.getElementById('floor-area').value) || 110,
+    floorsAbove:       floorsAbove,
+    floorsBase:        parseInt(document.getElementById('floors-basement').value) || 0,
+    floorH:            parseFloat(document.getElementById('floor-height').value) || 3.2,
+    foundation:        getRadio('foundation'),
+    extWallMat:        getRadio('ext-wall-material'),
+    doorWindowProfile: getRadio('door-window-profile'),
+    intWallMat:        getRadio('int-wall-material'),
+    roofType:          getRadio('roof-type'),
+    steelTruss:        getRadio('steel-truss') === 'yes',
+    withMechanical:    getRadio('mechanical') === 'yes',
+    floorFin:          getRadio('floor-finish'),
+    extPaint:          getRadio('ext-paint'),
+    intPaint:          getRadio('int-paint'),
+    elecGrade:         getRadio('electrical-grade'),
+    withEarthing:      getRadio('earthing') === 'yes',
+    buildingUse:       getRadio('building-use'),
+    sanitaryGrade:     getRadio('sanitary-grade'),
+    wetRooms:          isNaN(wetRoomsRaw) ? 3 : wetRoomsRaw,
+    withSeptic:        getRadio('septic') === 'yes',
   };
-  const mlppTiers = mlppTierTable[buildingUse] || mlppTierTable.villa;
-  const mlppRating = mlppTiers.find(t => elecFloorCount <= t[0])[1];
-  const mlppRateKey = 'mlpp_' + mlppRating;
 
-  // Feeder cable base lengths (Commercial baseline) + building-use factor
-  const feederFactorMap = { villa: 0.5, office: 0.6, apartment: 0.8, commercial: 1.0 };
-  const feederFactor = feederFactorMap[buildingUse] ?? 1.0;
-  const feederBase = { c5x6: 25, c5x10: 30, c5x16: 40, c3x50_25: 90, c3x70_50: 130 };
-
-  const mlppSubSpecTable = {
-    '100A': '1 pc 100A main MCCB, 3 Phase\n2 pcs 32A MCB, 3 Phase\n1 pc ammeter (0-150A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
-    '125A': '1 pc 125A main MCCB, 3 Phase\n3 pcs 32A MCB, 3 Phase\n1 pc ammeter (0-200A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
-    '160A': '1 pc 160A main MCCB, 3 Phase\n3 pcs 50A MCB, 3 Phase\n1 pc ammeter (0-250A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
-    '200A': '1 pc 200A main MCCB, 3 Phase\n4 pcs 50A MCB, 3 Phase\n1 pc ammeter (0-320A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
-    '250A': '1 pc 250A main MCCB, 3 Phase\n4 pcs 63A MCB, 3 Phase\n1 pc ammeter (0-400A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
-    '300A': '1 pc 300A main MCCB, 3 Phase\n5 pcs 63A MCB, 3 Phase\n1 pc ammeter (0-500A) with CT\n1 pc voltmeter (0-500V), selector switch\n3 pcs pilot lamps',
+  // Human-readable labels used inside item descriptions
+  const labels = {
+    'ext-wall-material': getRadioLabel('ext-wall-material'),
+    'int-wall-material': getRadioLabel('int-wall-material'),
+    'roof-type':         getRadioLabel('roof-type'),
+    'floor-finish':      getRadioLabel('floor-finish'),
+    'ext-paint':         getRadioLabel('ext-paint'),
+    'int-paint':         getRadioLabel('int-paint'),
   };
-  const sdbSubSpec = '1 pc 50A main MCB, 3 Phase\n8 pcs 10A MCB, 1 Phase\n4 pcs 16A MCB, 1 Phase';
 
-  const elecItems = [
-    { no:'9.01', desc:'Main Lighting & Power Panel (MLPP), floor standing, sheet steel enclosure, lockable door, complete consisting of:\n' + mlppSubSpecTable[mlppRating], unit:'No.', qty: 1, rate: R[mlppRateKey] },
-    { no:'9.02', desc:'Sub Distribution Board (SDB), flush mounted, sheet steel enclosure, lockable door, complete consisting of:\n' + sdbSubSpec, unit:'No.', qty: elecFloorCount, rate: R.sdb_standard },
-    { no:'9.03', desc:'Feeder cable (5x16)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x16 * feederFactor), rate: R.feeder_5x16 },
-    { no:'9.04', desc:'Feeder cable (5x10)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x10 * feederFactor), rate: R.feeder_5x10 },
-    { no:'9.05', desc:'Feeder cable (5x6)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c5x6 * feederFactor), rate: R.feeder_5x6 },
-    { no:'9.06', desc:'Feeder cable (3x50/25+1x25)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c3x50_25 * feederFactor), rate: R.feeder_3x50_25 },
-    { no:'9.07', desc:'Feeder cable (3x70/50+1x50)mm² copper, PVC/PVC, in conduit', unit:'ml', qty: Math.round(feederBase.c3x70_50 * feederFactor), rate: R.feeder_3x70_50 },
-    { no:'9.08', desc:'PVC conduit 80mm diameter (feeder cable protection)', unit:'ml', qty: Math.round((feederBase.c5x16 + feederBase.c5x10) * feederFactor), rate: R.pvc_conduit_80 },
-    { no:'9.09', desc:'PVC conduit 110mm diameter (feeder cable protection)', unit:'ml', qty: Math.round((feederBase.c3x50_25 + feederBase.c3x70_50) * feederFactor), rate: R.pvc_conduit_110 },
-    { no:'9.10', desc:'PVC insulated wiring — lighting & power circuits, in conduit, complete', unit:'m²', qty: totalFloorArea, rate: elecRateMap[elecGrade] * 0.55 },
-    { no:'9.11', desc:'Flush mounted light switch points (single/double/2-way, complete)', unit:'No.', qty: Math.round(totalFloorArea / 12), rate: 850 * cm },
-    { no:'9.12', desc:'Flush mounted socket outlet points — 13A, 3-pin (complete)', unit:'No.', qty: Math.round(totalFloorArea / 8), rate: 950 * cm },
-    { no:'9.13', desc:'Fluorescent / LED light fittings (supply & fix)', unit:'No.', qty: Math.round(totalFloorArea / 10), rate: (elecGrade === 'premium' ? 1800 : elecGrade === 'standard' ? 1100 : 650) * cm },
-    { no:'9.14', desc:'External security / compound lighting', unit:'No.', qty: Math.round(perimeter / 8), rate: 2200 * cm },
-    { no:'9.15', desc:'Manhole in bricks, 600x600x600mm, with reinforced concrete cover', unit:'No.', qty: 1, rate: R.manhole_electrical },
-  ];
-  if (withEarthing) {
-    elecItems.push({ no:'9.16', desc:'Earthing system and lightning protection (complete)', unit:'Lump', qty: 1, rate: R.earthing_lump });
-  }
-  sections.push({ title: '9. ELECTRICAL INSTALLATION', items: elecItems });
+  // Presentation-only values (never sent to the server)
+  const projName  = document.getElementById('project-name').value || 'Unnamed Project';
+  const citySel   = document.getElementById('city');
+  const cityLabel = citySel.options[citySel.selectedIndex].text;
+  const subloc    = document.getElementById('sublocation').value;
 
-  // ---- E. SANITARY & PLUMBING WORKS ----
-  const fixturesPerRoom = (buildingUse === 'commercial' || buildingUse === 'apartment') ? 2 : 1;
-  const fixtureSetCount = wetRooms * fixturesPerRoom;
-  const sanFloorCount = floorsAbove + floorsBase + 1; // ground floor included, same convention as electrical
-
-  // Urinals: villa=1/floor, apartment=4/floor if floorArea>200 else 2/floor, commercial/office=2/floor
-  let urinalPerFloor;
-  if (buildingUse === 'villa') urinalPerFloor = 1;
-  else if (buildingUse === 'apartment') urinalPerFloor = floorArea > 200 ? 4 : 2;
-  else urinalPerFloor = 2; // commercial, office
-  const urinalQty = urinalPerFloor * sanFloorCount;
-
-  // Fire extinguisher: 1 per floor, excluded for residential
-  const includeFireExt = buildingUse !== 'villa';
-
-  // Lab sink & washing trough: commercial, office, apartment only (not residential)
-  const includeLabSink = buildingUse !== 'villa';
-
-  // Elevated water tank — fiber, capacity/price by building type + floor tier (no supporting structure)
-  let tankRateKey;
-  if (buildingUse === 'commercial') tankRateKey = 'san_tank_commercial';
-  else if (buildingUse === 'apartment' || buildingUse === 'office') tankRateKey = 'san_tank_apt_office';
-  else if (sanFloorCount === 1) tankRateKey = 'san_tank_res_1floor';
-  else if (sanFloorCount <= 3) tankRateKey = 'san_tank_res_g1g2'; // G+1, G+2 = 2-3 total floors
-  else tankRateKey = 'san_tank_res_above_g2';
-
-  // Water supply / waste pipe — same base-length x building-factor pattern as electrical feeder cables
-  const sanPipeFactorMap = { villa: 0.5, office: 0.6, apartment: 0.8, commercial: 1.0 };
-  const sanPipeFactor = sanPipeFactorMap[buildingUse] ?? 1.0;
-  const pprBase = { d20: 154, d25: 142, d32: 84, d40: 40 };
-  const wasteBase = { d50: 127, d75: 49, d110: 34 };
-  const stormBase = { d110: 232, d75: 223 };
-  const ditchBase = 45;
-
-  const tankCapacityLabel = {
-    san_tank_res_1floor: '2,000L', san_tank_res_g1g2: '3,000L', san_tank_res_above_g2: '5,000L',
-    san_tank_apt_office: '10,000L', san_tank_commercial: '20,000L',
-  }[tankRateKey];
-
-  const sanItems = [
-    // 10.1 Fixtures — per wet room set
-    { no:'10.01', desc:'Hand wash basin, vitreous china, complete with mixer tap, P-trap & accessories', unit:'No.', qty: fixtureSetCount, rate: R.san_basin },
-    { no:'10.02', desc:'Water closet (WC), low flush cistern, complete with seat & cover', unit:'No.', qty: fixtureSetCount, rate: R.san_wc },
-    { no:'10.03', desc:'Toilet paper holder', unit:'No.', qty: fixtureSetCount, rate: R.san_paper_holder },
-    { no:'10.04', desc:'Mirror, 6mm crystal glass, with clips', unit:'No.', qty: fixtureSetCount, rate: R.san_mirror },
-    { no:'10.05', desc:'Towel rail, chrome plated', unit:'No.', qty: fixtureSetCount, rate: R.san_towel_rail },
-    { no:'10.06', desc:'Soap holder, vitreous china', unit:'No.', qty: fixtureSetCount, rate: R.san_soap_holder },
-    { no:'10.07', desc:'Floor gully drain, uPVC, with P-trap & cover', unit:'No.', qty: wetRooms, rate: R.san_floor_gully },
-    { no:'10.08', desc:'Slab clean-out, screw type, Dia. 100mm', unit:'No.', qty: Math.ceil(wetRooms / 2), rate: R.san_cleanout_100 },
-    { no:'10.09', desc:'Slab clean-out, screw type, Dia. 75mm', unit:'No.', qty: Math.ceil(wetRooms / 2), rate: R.san_cleanout_75 },
-    { no:'10.10', desc:'Urinal, vitreous china, complete with cistern & flush valve', unit:'No.', qty: urinalQty, rate: R.san_urinal },
-    { no:'10.11', desc:'Electric water heater, 200L capacity, complete', unit:'No.', qty: wetRooms, rate: R.san_water_heater },
-    { no:'10.12', desc:'Elevated water storage tank, fiber, ' + tankCapacityLabel + ' capacity', unit:'No.', qty: 1, rate: R[tankRateKey] },
-  ];
-  if (includeLabSink) {
-    sanItems.push({ no:'10.13', desc:'Stainless steel laboratory sink, single bowl, complete with mixer', unit:'No.', qty: 1, rate: R.san_lab_sink });
-    sanItems.push({ no:'10.14', desc:'Washing trough, precast reinforced concrete, complete', unit:'No.', qty: 1, rate: R.san_washing_trough });
-  }
-  if (includeFireExt) {
-    sanItems.push({ no:'10.15', desc:'Fire extinguisher, 6kg chemical powder', unit:'No.', qty: sanFloorCount, rate: R.san_fire_ext });
-  }
-
-  // 10.2 Water supply pipe (PPR) + valves
-  sanItems.push(
-    { no:'10.16', desc:'PPR water supply pipe, PN-20, Dia. 20mm', unit:'ml', qty: Math.round(pprBase.d20 * sanPipeFactor), rate: R.san_ppr_20 },
-    { no:'10.17', desc:'PPR water supply pipe, PN-20, Dia. 25mm', unit:'ml', qty: Math.round(pprBase.d25 * sanPipeFactor), rate: R.san_ppr_25 },
-    { no:'10.18', desc:'PPR water supply pipe, PN-20, Dia. 32mm', unit:'ml', qty: Math.round(pprBase.d32 * sanPipeFactor), rate: R.san_ppr_32 },
-    { no:'10.19', desc:'PPR water supply pipe, PN-20, Dia. 40mm', unit:'ml', qty: Math.round(pprBase.d40 * sanPipeFactor), rate: R.san_ppr_40 },
-    { no:'10.20', desc:'Angle valve, Dia. 15mm, before fixtures', unit:'No.', qty: fixtureSetCount, rate: R.san_angle_valve },
-    { no:'10.21', desc:'Bronze service valve, Dia. 20mm', unit:'No.', qty: sanFloorCount * 3, rate: R.san_service_valve_20 },
-    { no:'10.22', desc:'Bronze service valve, Dia. 25mm', unit:'No.', qty: sanFloorCount * 2, rate: R.san_service_valve_25 },
-  );
-
-  // 10.3 Waste, vent & rainwater pipes
-  sanItems.push(
-    { no:'10.23', desc:'uPVC waste pipe, PN-6, Dia. 50mm', unit:'ml', qty: Math.round(wasteBase.d50 * sanPipeFactor), rate: R.san_waste_50 },
-    { no:'10.24', desc:'uPVC waste pipe, PN-6, Dia. 75mm', unit:'ml', qty: Math.round(wasteBase.d75 * sanPipeFactor), rate: R.san_waste_75 },
-    { no:'10.25', desc:'uPVC waste pipe, PN-6, Dia. 110mm', unit:'ml', qty: Math.round(wasteBase.d110 * sanPipeFactor), rate: R.san_waste_110 },
-    { no:'10.26', desc:'Vent cap, uPVC, Dia. 50mm', unit:'No.', qty: wetRooms, rate: R.san_vent_cap },
-    { no:'10.27', desc:'Storm water down pipe, uPVC, Dia. 110mm', unit:'ml', qty: Math.round(stormBase.d110 * sanPipeFactor), rate: R.san_storm_110 },
-    { no:'10.28', desc:'Storm water down pipe, uPVC, Dia. 75mm', unit:'ml', qty: Math.round(stormBase.d75 * sanPipeFactor), rate: R.san_storm_75 },
-    { no:'10.29', desc:'Galvanized grill covered drainage ditch', unit:'ml', qty: Math.round(ditchBase * sanPipeFactor), rate: R.san_drain_ditch },
-  );
-
-  if (withSeptic) {
-    sanItems.push({ no:'10.30', desc:'Septic tank and soakpit (complete — precast)', unit:'Lump', qty: 1, rate: R.septic_tank });
-  }
-  sections.push({ title: '10. SANITARY INSTALLATION', items: sanItems });
-
-  // 11. Mechanical Installation (G+4 and above only)
-if (withMechanical) {
-  const liftCapacity = floorsAbove >= 7 ? 2 : 1; // 2 lifts for G+7 and above
-  const mechItems = [
-    { no:'11.01', desc:`Passenger elevator — ${floorsAbove} stops (supply, install & commission)`, unit:'No.', qty: liftCapacity, rate: R.elevator_lump || 8850000 * cm },
-    { no:'11.02', desc:'Elevator shaft RC walls and pit construction', unit:'m³', qty: floorsAbove * 2.4, rate: R.concrete_c25_column || 12500 * cm },
-    { no:'11.03', desc:'Elevator machine room (top floor, complete)', unit:'Lump', qty: 1, rate: R.elevator_machine_room || 185000 * cm },
-    { no:'11.04', desc:'RC shear walls surrounding elevator shaft', unit:'m³', qty: floorsAbove * 3.8, rate: R.concrete_c25_column || 12500 * cm },
-    { no:'11.05', desc:'Mechanical ventilation — fans and ductwork (complete)', unit:'m²', qty: totalFloorArea, rate: R.mechanical_ventilation || 320 * cm },
-  ];
-  sections.push({ title: '11. Mechanical Installation', items: mechItems });
-}
-
-  // ---- COMPUTE TOTALS ----
-  sections.forEach(sec => {
-    sec.items.forEach(item => {
-      item.amount = item.header ? 0 : item.qty * item.rate;
+  // --- Call the server engine ---
+  setCalculateLoading(true);
+  let result;
+  try {
+    const res = await fetch(BOQ_ENGINE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inputs, labels, rates: RATES }),
     });
-    sec.subtotal = sec.items.reduce((s, i) => s + i.amount, 0);
-  });
+    if (!res.ok) throw new Error('Server returned ' + res.status);
+    result = await res.json();
+    if (!result || !result.sections) throw new Error('Malformed response');
+  } catch (err) {
+    console.error('BOQ calculation failed:', err);
+    setCalculateLoading(false);
+    alert('Could not generate the BOQ. Please check your internet connection and try again.\n\n\u1245\u123d\u1290\u1275 \u12a0\u120d\u1270\u1233\u12ab\u121d\u1362 \u12a2\u1295\u1270\u122d\u1294\u1275 \u12a5\u1295\u12f0\u1308\u1293 \u12ed\u121e\u12ad\u1229\u1362');
+    return;
+  }
+  setCalculateLoading(false);
 
-  const subtotalAll  = sections.reduce((s, sec) => s + sec.subtotal, 0);
-  const contingencyRate = floorsAbove > 5 ? 0.10 : 0.02;
-  const contingency  = subtotalAll * contingencyRate;
-  const subtotalPlusContingency = subtotalAll + contingency;
-  const vat           = subtotalPlusContingency * 0.15;
-  const grandTotal     = subtotalPlusContingency + vat;
-const costPerM2=grandTotal/totalArea;
+  // Unpack server result
+  const {
+    sections, subtotalAll, contingencyRate, contingency,
+    subtotalPlusContingency, vat, grandTotal, costPerM2, totalArea
+  } = result;
 
   // ---- RENDER OUTPUT ----
   document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
@@ -3370,9 +3001,9 @@ function recalculate() {
   const params = new URLSearchParams(window.location.search);
   const autopayType = params.get('autopay');
   if (!autopayType) return;
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     restoreFormStateFromParams(params);
-    calculateBOQ();
+    await calculateBOQ();
     openPaymentModal(autopayType);
     // Clean the URL so a refresh doesn't re-trigger this
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -3490,8 +3121,8 @@ function recalculate() {
     <div style="background:rgba(255,255,255,0.06);border-radius:14px;padding:18px;margin-bottom:16px;">
       <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">ባህሪያት / Features</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 9 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ) Cost calculation in 9 cities</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እስከ 10 ወለል ድረስ / Up to 10 floors above ground</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 11 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ) Cost calculation in 11 cities</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እስከ 15 ወለል ድረስ / Up to 15 floors above ground</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>Excel export with live formulas (BOQ + Materials)</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>ያለ Internet BOQ ማስላት ይቻላል / Works offline</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እንደ App ይወርዳል / Installable as a mobile app</span></div>
