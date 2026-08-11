@@ -1,8 +1,9 @@
-const CACHE_NAME = 'addisboq-v19';
+const CACHE_NAME = 'addisboq-v20';
 const ASSETS = [
   '/',
   '/index.html',
   '/sitelog.html',
+  '/formwork',
   '/ethiopian-construction-guide',
   '/how-to-get-building-permit-in-ethiopia',
   '/icon-192.jpg',
