@@ -61,7 +61,7 @@
     font-weight: 700; font-size: 18px; color: var(--ink);
   }
   .logo-text { flex: 1; }
-  .logo-text h1 {
+  .logo-text h1, .logo-text .app-header-title {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 18px; font-weight: 700; color: #fff;
     letter-spacing: -0.3px;
@@ -474,142 +474,13 @@
     .section-summary { grid-template-columns: 1fr; }
   }
 
-  /* ===== WELCOME SCREEN ===== */
+  /* ===== WELCOME SCREEN (base) ===== */
   #welcome-screen {
     display: block;
     min-height: 100vh;
-    background: var(--ink);
-    color: #fff;
-    padding: 0 0 40px 0;
   }
   #welcome-screen.hidden { display: none; }
 
-  .welcome-hero {
-    background: linear-gradient(160deg, #1a1a2e 60%, #2d2d4e 100%);
-    padding: 48px 24px 40px;
-    text-align: center;
-    border-bottom: 3px solid var(--gold);
-  }
-  .welcome-logo {
-    width: 80px; height: 80px;
-    background: linear-gradient(135deg, var(--gold), var(--gold-light));
-    border-radius: 20px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 36px; font-weight: 800;
-    color: var(--ink);
-    margin: 0 auto 20px;
-    font-family: 'Space Grotesk', sans-serif;
-    box-shadow: 0 8px 32px rgba(200,146,42,0.3);
-  }
-  .welcome-title-am {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--gold);
-    margin-bottom: 8px;
-    line-height: 1.3;
-  }
-  .welcome-title-en {
-    font-size: 14px;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 28px;
-    letter-spacing: 0.5px;
-  }
-  .welcome-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-width: 360px;
-    margin: 0 auto;
-  }
-  .btn-welcome-primary {
-    background: linear-gradient(135deg, var(--gold), var(--gold-light));
-    color: var(--ink);
-    border: none;
-    border-radius: 12px;
-    padding: 16px 24px;
-    font-size: 16px;
-    font-weight: 700;
-    font-family: 'Space Grotesk', sans-serif;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: opacity 0.2s, transform 0.1s;
-    box-shadow: 0 4px 16px rgba(200,146,42,0.3);
-  }
-  .btn-welcome-primary:active { transform: scale(0.98); }
-  .btn-welcome-secondary {
-    background: rgba(255,255,255,0.08);
-    color: #fff;
-    border: 1.5px solid rgba(255,255,255,0.2);
-    border-radius: 12px;
-    padding: 14px 24px;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-decoration: none;
-    transition: background 0.2s;
-  }
-  .btn-welcome-secondary:active { background: rgba(255,255,255,0.15); }
-
-  .welcome-section {
-    padding: 28px 20px 0;
-    max-width: 480px;
-    margin: 0 auto;
-  }
-  .welcome-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 14px;
-  }
-  .welcome-card {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    text-decoration: none;
-    color: #fff;
-    transition: background 0.2s;
-  }
-  .welcome-card:active { background: rgba(255,255,255,0.12); }
-  .welcome-card-icon {
-    width: 44px; height: 44px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-  }
-  .welcome-card-text h4 {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 2px;
-    font-family: 'Space Grotesk', sans-serif;
-  }
-  .welcome-card-text p {
-    font-size: 12px;
-    color: rgba(255,255,255,0.55);
-    line-height: 1.4;
-  }
-  .welcome-footer {
-    text-align: center;
-    padding: 32px 20px 0;
-    font-size: 12px;
-    color: rgba(255,255,255,0.35);
-  }
   @keyframes pulseBtn {
     0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(45,106,79,0.3); }
     50% { transform: scale(1.035); box-shadow: 0 6px 22px rgba(45,106,79,0.5); }
@@ -624,6 +495,299 @@
   animation: btn-spin 0.7s linear infinite;
 }
 @keyframes btn-spin { to { transform: rotate(360deg); } }
+
+/* ===== NEW HOME SCREEN (app-card style) ===== */
+#welcome-screen {
+  background:
+    linear-gradient(rgba(26,26,46,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,26,46,0.035) 1px, transparent 1px),
+    var(--surface);
+  background-size: 26px 26px, 26px 26px, 100% 100%;
+  color: var(--ink);
+  padding-bottom: 100px;
+}
+.home-topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:20px 20px 4px;
+}
+.home-brand{display:flex; align-items:center; gap:10px;}
+.home-brand-mark{
+  width:34px; height:34px; border-radius:8px;
+  background:linear-gradient(135deg, var(--ink), #2d2d4e);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px;
+  color:var(--gold-light);
+}
+.home-brand-name{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--ink);}
+.home-brand-name span{color:var(--gold);}
+.home-topbar-actions{display:flex; align-items:center; gap:8px;}
+.home-menu-btn{
+  width:34px; height:34px; border-radius:20px;
+  border:1px solid var(--border); background:var(--card);
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; color:var(--ink-light); cursor:pointer;
+}
+
+.home-cards-row{
+  display:flex; gap:12px; overflow-x:auto;
+  padding:18px 20px 8px;
+  scroll-snap-type:x mandatory;
+}
+.home-cards-row::-webkit-scrollbar{display:none;}
+.home-service-card{
+  flex:0 0 148px; height:186px; scroll-snap-align:start;
+  border-radius:var(--radius); padding:14px;
+  position:relative; overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(26,26,46,0.06);
+  text-decoration:none; color:inherit; cursor:pointer;
+  display:block;
+}
+.home-card-boq{ background:linear-gradient(155deg, #fbf3e2, #f3e3c1); }
+.home-card-sitelog{ background:linear-gradient(155deg, #eeecf4, #dedbe8); }
+.home-card-formwork{ background:linear-gradient(155deg, #e9f5ee, #d3ecdd); }
+.home-card-rebar{ background:linear-gradient(155deg, #fdeeea, #f7d9d0); }
+
+.home-card-bg-icon{
+  position:absolute; right:-18px; bottom:-22px;
+  font-size:130px; line-height:1; opacity:0.22;
+  transform:rotate(-6deg); pointer-events:none;
+}
+.home-card-content{ position:relative; z-index:1; display:flex; flex-direction:column; justify-content:space-between; height:100%; }
+.home-card-accent{ position:absolute; top:0; left:0; right:0; height:4px; z-index:1; }
+.home-card-boq .home-card-accent{ background:linear-gradient(90deg, var(--gold), var(--gold-light)); }
+.home-card-sitelog .home-card-accent{ background:var(--ink); }
+.home-card-formwork .home-card-accent{ background:linear-gradient(90deg, var(--green), var(--green-light)); }
+.home-card-rebar .home-card-accent{ background:linear-gradient(90deg, #c0392b, #e07a5f); }
+
+.home-card-label{font-family:'Inter',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:var(--ink-light); margin-top:6px;}
+.home-card-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; line-height:1.18; margin-top:5px; color:var(--ink);}
+.home-badge-new{
+  position:absolute; top:14px; right:14px; z-index:2;
+  background:var(--green); color:#fff;
+  font-family:'Inter',sans-serif; font-size:9px; font-weight:700;
+  padding:3px 7px; border-radius:20px; letter-spacing:0.4px;
+}
+.home-card-action-btn{
+  border-radius:7px; padding:8px 10px;
+  text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:12.5px;
+}
+.home-card-boq .home-card-action-btn{ background:var(--ink); color:#fff; }
+.home-card-sitelog .home-card-action-btn{ background:#ffffff; color:var(--ink); border:1px solid var(--border); }
+.home-card-formwork .home-card-action-btn{ background:var(--green); color:#fff; }
+.home-card-rebar .home-card-action-btn{ background:#ffffff; color:var(--ink); border:1px solid var(--border); }
+
+.home-hero{ text-align:center; padding:30px 28px 4px; }
+.home-hero-eyebrow-am{
+  font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700;
+  color:var(--gold); margin-bottom:4px;
+}
+.home-hero-title{
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:26px; line-height:1.2;
+  color:var(--ink);
+}
+.home-hero-sub{
+  font-size:13px; color:var(--ink-light); margin-top:10px; line-height:1.55;
+}
+.home-hero-stats{
+  display:flex; justify-content:center; gap:14px; margin-top:14px; flex-wrap:wrap;
+}
+.home-hero-stats span{ font-size:11.5px; color:var(--ink-light); }
+
+.home-cta-btn{
+  display:block; width:calc(100% - 56px); margin:24px auto 8px;
+  background:linear-gradient(135deg, var(--green), #245a41);
+  color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px;
+  text-align:center; padding:17px; border-radius:12px; border:none;
+  box-shadow:0 10px 22px rgba(45,106,79,0.22);
+  cursor:pointer;
+}
+.home-cta-sub{
+  text-align:center; font-family:'Inter',sans-serif; font-size:11px;
+  color:var(--ink-light); margin-bottom:8px;
+}
+
+.home-howto{ padding:30px 20px 10px; }
+.home-howto-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
+.home-howto-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; color:var(--ink); }
+.home-howto-head span{ color:var(--ink-light); font-family:'Inter',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:0.3px; }
+
+.home-tabs{ display:flex; gap:8px; overflow-x:auto; margin-bottom:16px; }
+.home-tabs::-webkit-scrollbar{display:none;}
+.home-tab{
+  flex:0 0 auto; font-family:'Inter',sans-serif; font-size:11.5px; font-weight:600;
+  padding:8px 13px; border-radius:20px; border:1px solid var(--border);
+  color:var(--ink-light); white-space:nowrap; background:var(--card); cursor:pointer;
+}
+.home-tab.active{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
+
+.home-tut-card{
+  border:1px solid var(--border); border-radius:10px; padding:18px;
+  background:var(--card);
+}
+.home-tut-step{ display:flex; gap:12px; padding:9px 0; }
+.home-tut-step:not(:last-child){ border-bottom:1px dashed var(--border); }
+.home-tut-num{
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; color:var(--gold);
+  flex:0 0 20px;
+}
+.home-tut-text{ font-size:13px; line-height:1.55; color:var(--ink); }
+.home-tut-text b{ color:var(--ink); font-weight:700; }
+
+.home-footer{
+  text-align:center; padding:32px 20px 0; font-size:11.5px; color:var(--ink-light);
+}
+
+.home-bottom-nav{
+  position:fixed; bottom:0; left:0; right:0;
+  background:rgba(255,255,255,0.94); backdrop-filter:blur(10px);
+  border-top:1px solid var(--border);
+  display:flex; justify-content:space-around; padding:12px 0 18px;
+  z-index:50;
+}
+.home-nav-item{
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  font-size:10.5px; color:var(--ink-light); font-family:'Inter',sans-serif; font-weight:500;
+  background:none; border:none; cursor:pointer; text-decoration:none;
+}
+.home-nav-item.active{ color:var(--ink); font-weight:700; }
+.home-nav-item.active .home-nav-icon{ color:var(--gold); }
+.home-nav-icon{ display:flex; align-items:center; justify-content:center; height:20px; }
+.home-nav-icon svg{ width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.home-nav-item.active .home-nav-icon svg{ stroke:var(--gold); }
+
+/* ---- Desktop container: keep the app-shell feel on wide screens ---- */
+.home-wrap{ max-width:680px; margin:0 auto; }
+.home-cta-btn{ max-width:624px; }
+.home-bottom-nav{
+  max-width:680px; margin:0 auto;
+  border-left:1px solid var(--border); border-right:1px solid var(--border);
+  border-radius:16px 16px 0 0;
+}
+
+/* ---- Card description line ---- */
+.home-card-desc{
+  font-family:'Inter',sans-serif; font-size:10.5px; line-height:1.4;
+  color:var(--ink-light); margin-top:5px;
+}
+.home-service-card{ flex:0 0 160px; height:208px; }
+
+/* ---- Hero heading resets (now real h1/h2) ---- */
+h1.home-hero-title{ margin:0; }
+h2.home-howto-title{ margin:0; }
+
+/* ---- Intro copy block (SEO + context) ---- */
+.home-intro{ padding:4px 20px 0; }
+.home-intro p{
+  font-size:12.5px; line-height:1.65; color:var(--ink-light);
+  margin-bottom:10px;
+}
+.home-intro p b{ color:var(--ink); font-weight:600; }
+
+/* ---- Toast ---- */
+.home-toast{
+  position:fixed; left:50%; bottom:96px; transform:translate(-50%, 12px);
+  background:var(--ink); color:#fff; font-family:'Inter',sans-serif;
+  font-size:12.5px; padding:11px 18px; border-radius:24px;
+  box-shadow:0 8px 24px rgba(26,26,46,0.28);
+  opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+  z-index:200; max-width:calc(100% - 40px); text-align:center;
+}
+.home-toast.show{ opacity:1; transform:translate(-50%, 0); }
+
+@media (max-width:380px){
+  .home-service-card{ flex:0 0 150px; }
+  .home-hero-title{ font-size:23px; }
+}
+
+/* =====================================================================
+   DESKTOP (≥900px) — a real layout, not a stretched phone.
+   Bottom nav becomes a sticky top bar; the card row becomes a grid;
+   the lower half splits into two columns.
+   ===================================================================== */
+@media (min-width:900px){
+  #welcome-screen{ padding-bottom:40px; display:flex; flex-direction:column; }
+
+  .home-wrap{ max-width:1080px; padding:0 32px; }
+
+  /* --- bottom nav -> top nav bar (same markup, restyled) --- */
+  .home-bottom-nav{
+    position:sticky; top:0; bottom:auto;
+    max-width:none; margin:0;
+    border:none; border-bottom:1px solid var(--border); border-radius:0;
+    justify-content:flex-end; gap:6px;
+    padding:0 40px; height:58px; align-items:center;
+    background:rgba(255,255,255,0.9);
+    order:-1;
+  }
+  .home-nav-item{
+    flex-direction:row; gap:7px; font-size:13px;
+    padding:8px 14px; border-radius:8px;
+  }
+  .home-nav-item:hover{ background:var(--surface); }
+  .home-nav-icon{ height:17px; }
+  .home-nav-icon svg{ width:17px; height:17px; }
+
+  /* --- topbar: bigger brand, sits under the nav --- */
+  .home-topbar{ padding:26px 0 0; }
+  .home-brand-mark{ width:40px; height:40px; font-size:16px; border-radius:10px; }
+  .home-brand-name{ font-size:21px; }
+  .home-menu-btn{ display:none; }   /* nav bar covers it */
+
+  /* --- hero first and large: strangers from Google land here --- */
+  .home-hero{ padding:44px 0 0; }
+  .home-hero-title{ font-size:40px; line-height:1.14; }
+  .home-hero-eyebrow-am{ font-size:19px; }
+  .home-hero-sub{ font-size:15px; max-width:620px; margin-left:auto; margin-right:auto; }
+  .home-hero-stats{ gap:26px; margin-top:18px; }
+  .home-hero-stats span{ font-size:13px; }
+
+  .home-cta-btn{
+    width:auto; max-width:none; display:inline-block;
+    padding:17px 44px; font-size:17px; margin:26px auto 8px;
+  }
+  .home-cta-wrap{ text-align:center; }
+
+  /* --- cards: grid, no horizontal scrolling on a mouse --- */
+  .home-cards-row{
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:18px; padding:34px 0 8px; overflow:visible;
+  }
+  .home-service-card{
+    flex:none; width:auto; height:auto; min-height:216px;
+    padding:18px; transition:transform .16s, box-shadow .16s;
+  }
+  .home-service-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 26px rgba(26,26,46,0.12);
+  }
+  .home-card-title{ font-size:19px; }
+  .home-card-desc{ font-size:11.5px; }
+  .home-card-bg-icon{ font-size:150px; }
+
+  /* --- intro + how-it-works side by side --- */
+  .home-lower{
+    display:grid; grid-template-columns:1.05fr 1fr;
+    gap:40px; align-items:start; margin-top:26px;
+  }
+  .home-intro{ padding:0; }
+  .home-intro p{ font-size:14px; line-height:1.75; }
+  .home-howto{ padding:0; }
+  .home-howto-title{ font-size:18px; }
+  .home-tut-text{ font-size:13.5px; }
+  .home-tab{ font-size:12.5px; padding:9px 15px; }
+  .home-tab:hover{ border-color:var(--gold); }
+
+  .home-footer{ padding:44px 0 0; font-size:12.5px; }
+  .home-toast{ bottom:32px; }
+}
+
+/* Wider still — let the text breathe rather than sprawl */
+@media (min-width:1320px){
+  .home-wrap{ max-width:1180px; }
+  .home-hero-title{ font-size:44px; }
+}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- jsPDF + autotable are lazy-loaded in exportPDF() only when a paid PDF export happens -->
@@ -685,6 +849,7 @@
 <a href='#' onclick="goHome(); toggleMenu()">Home</a>
 <a href='#' onclick="goHome(); toggleMenu()">New BOQ</a>
 <a href='sitelog.html'>📋 Site Log</a>
+<a href='/formwork'>🧱 Formwork Optimizer</a>
 <a href='/ethiopian-construction-guide'>📖 Builder's Guide</a>
 <a href='mailto:addiss1993@gmail.com?subject=Customer Support - AddisBOQ'>Customer Support</a>
 <a href='mailto:addiss1993@gmail.com?subject=Contact - AddisBOQ'>Contact Organization</a>
@@ -910,7 +1075,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 <button class="menu-btn" onclick="toggleMenu()">☰</button>
   <div class="logo-mark">EB</div>
   <div class="logo-text">
-    <h1>AddisBOQ</h1>
+    <div class="app-header-title">AddisBOQ</div>
     <p>Professional Construction Cost Estimation Platform</p>
   </div>
   <div class="header-badge">Pro version</div>
@@ -932,108 +1097,143 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 <!-- ===== WELCOME SCREEN ===== -->
 <div id="welcome-screen">
 
+  <div class="home-wrap">
+
+  <div class="home-topbar">
+    <div class="home-brand">
+      <div class="home-brand-mark">AB</div>
+      <div class="home-brand-name">Addis<span>BOQ</span></div>
+    </div>
+    <div class="home-topbar-actions">
+      <button class="home-menu-btn" onclick="toggleMenu()" aria-label="Menu">☰</button>
+    </div>
+  </div>
+
+  <!-- Service cards -->
+  <div class="home-cards-row">
+    <a class="home-service-card home-card-boq" href="javascript:void(0)" onclick="startCalculator()">
+      <div class="home-card-accent"></div>
+      <div class="home-card-bg-icon">📐</div>
+      <div class="home-card-content">
+        <div>
+          <div class="home-card-label">Free · Core Tool</div>
+          <div class="home-card-title">Calculate BOQ</div>
+          <div class="home-card-desc">Professional Bill of Quantities with Excel export.</div>
+        </div>
+        <div class="home-card-action-btn">Start →</div>
+      </div>
+    </a>
+
+    <a class="home-service-card home-card-formwork" href="/formwork">
+      <div class="home-card-accent"></div>
+      <div class="home-card-bg-icon">🧱</div>
+      <div class="home-badge-new">NEW</div>
+      <div class="home-card-content">
+        <div>
+          <div class="home-card-label">Free to calculate</div>
+          <div class="home-card-title">Formwork Optimizer</div>
+          <div class="home-card-desc">Cut plywood formwork with the least waste.</div>
+        </div>
+        <div class="home-card-action-btn">Open →</div>
+      </div>
+    </a>
+
+    <a class="home-service-card home-card-sitelog" href="sitelog.html">
+      <div class="home-card-accent"></div>
+      <div class="home-card-bg-icon">📋</div>
+      <div class="home-card-content">
+        <div>
+          <div class="home-card-label">14 days free</div>
+          <div class="home-card-title">Site Log</div>
+          <div class="home-card-desc">Daily site reports, subcontractor measurement and payment tracking.</div>
+        </div>
+        <div class="home-card-action-btn">Open →</div>
+      </div>
+    </a>
+
+    <a class="home-service-card home-card-rebar" href="https://play.google.com/store/apps/details?id=com.addisengineering.rebarcut" target="_blank">
+      <div class="home-card-accent"></div>
+      <div class="home-card-bg-icon">🔩</div>
+      <div class="home-card-content">
+        <div>
+          <div class="home-card-label">Play Store App</div>
+          <div class="home-card-title">Rebar Optimizer</div>
+          <div class="home-card-desc">Minimize steel wastage with smart cutting optimization.</div>
+        </div>
+        <div class="home-card-action-btn">Open →</div>
+      </div>
+    </a>
+  </div>
+
   <!-- Hero -->
-  <div class="welcome-hero">
-    <img src="/icon-512.jpg" alt="AddisBOQ" style="width:80px;height:80px;border-radius:20px;margin:0 auto 20px;display:block;box-shadow:0 8px 32px rgba(200,146,42,0.3);">
-    <div class="welcome-title-am">የህንፃ ወጪ ግምት<br>በደቂቃዎች</div>
-    <div class="welcome-title-en">Professional BOQ Calculator for Ethiopian Construction</div>
-    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
-      <span style="font-size:12px;color:rgba(255,255,255,0.6);">🏙️ 11 ከተሞች</span>
-      <span style="font-size:12px;color:rgba(255,255,255,0.6);">🏗️ እስከ 15 ወለል</span>
-      <span style="font-size:12px;color:rgba(255,255,255,0.6);">⚡ ከ 5 ደቂቃ በታች</span>
-    </div>
-    <div class="welcome-actions">
-      <button class="btn-welcome-primary" onclick="startCalculator()">
-        🏗️ ወጪ ለማስላት እዚህ ይጫኑ &nbsp;—&nbsp; Calculate BOQ
-      </button>
-      <a class="btn-welcome-secondary" href="https://play.google.com/store/apps/details?id=com.addisengineering.rebarcut" target="_blank">
-        ✂️ Rebar Cutting Optimizer — Play Store
-      </a>
-      <a class="btn-welcome-secondary" href="sitelog.html">
-        📋 Site Log — Daily Reports & Payments
-      </a>
+  <div class="home-hero">
+    <div class="home-hero-eyebrow-am">የህንፃ ወጪ ግምት በደቂቃዎች</div>
+    <h1 class="home-hero-title">Ethiopian BOQ &amp;<br>Construction Cost Calculator</h1>
+    <div class="home-hero-sub">Component-based building cost estimates for Ethiopian construction — multi-city unit rates, traditional BOQ structure, consultant-grade Excel export.</div>
+    <div class="home-hero-stats">
+      <span>🏙️ 11 cities</span>
+      <span>🏗️ up to 15 floors</span>
+      <span>⚡ under 5 min</span>
     </div>
   </div>
 
-  <!-- About card -->
-  <div class="welcome-section">
-    <div class="welcome-section-title">ስለ AddisBOQ / About</div>
-    <a class="welcome-card" href="javascript:void(0)" onclick="openAbout()">
-      <div class="welcome-card-icon" style="background:rgba(200,146,42,0.15);">📐</div>
-      <div class="welcome-card-text">
-        <h4>ስለ AddisBOQ እና Addis Engineering</h4>
-        <p>ስለ ድረ-ገጹ፣ እና ስለ አገልግሎቶቹ የበለጠ ይወቁ →</p>
-      </div>
-    </a>
+  <div class="home-cta-wrap">
+    <button class="home-cta-btn" onclick="startCalculator()">🏗️ ወጪ ለማስላት እዚህ ይጫኑ — Calculate BOQ</button>
+    <div class="home-cta-sub">Free to calculate · No sign-up needed to start</div>
   </div>
 
-  <!-- Our Tools -->
-  <div class="welcome-section">
-    <div class="welcome-section-title">የእኛ አገልግሎቶች / Our Tools</div>
-    <a class="welcome-card" href="javascript:void(0)" onclick="startCalculator()">
-      <div class="welcome-card-icon" style="background:rgba(200,146,42,0.15);">📊</div>
-      <div class="welcome-card-text">
-        <h4>AddisBOQ — BOQ Calculator</h4>
-        <p>Professional Bill of Quantities with Excel export.</p>
-      </div>
-    </a>
-    <a class="welcome-card" href="sitelog.html">
-      <div class="welcome-card-icon" style="background:rgba(200,146,42,0.15);">📋</div>
-      <div class="welcome-card-text">
-        <h4>Site Log</h4>
-        <p>Daily site reports, subcontractor measurement, and payment tracking. 14 days free.</p>
-      </div>
-    </a>
-    <a class="welcome-card" href="https://play.google.com/store/apps/details?id=com.addisengineering.rebarcut" target="_blank">
-      <div class="welcome-card-icon" style="background:rgba(45,106,79,0.3);">✂️</div>
-      <div class="welcome-card-text">
-        <h4>Rebar Cut Optimizer</h4>
-        <p>Minimize steel wastage with smart cutting optimization. Available on Google Play.</p>
-      </div>
-    </a>
+  <!-- Intro copy + How it works: two columns on desktop, stacked on mobile -->
+  <div class="home-lower">
+  <div class="home-intro">
+    <p>AddisBOQ estimates your building cost <b>component by component</b> — substructure, superstructure, finishing, electrical and sanitary works are each calculated as independent line items, instead of one flat cost-per-m² multiplier.</p>
+    <p>Structural quantities scale non-linearly with floor count, and unit rates adjust for <b>11 Ethiopian cities</b> — Addis Ababa, Hawassa, Bahir Dar, Adama, Dire Dawa, Mekelle, Hossana, Harar, Jigjiga, Arba Minch and Wolaita Sodo. Export a formula-linked <b>Excel Bill of Quantities</b> with summary and signature sheets, ready to hand to your contractor or consultant.</p>
   </div>
 
-  <!-- Community -->
-  <div class="welcome-section">
-    <div class="welcome-section-title">ማህበረሰብ / Community</div>
-    <a class="welcome-card" href="https://t.me/AddisBOQ" target="_blank" id="telegram-link">
-      <div class="welcome-card-icon" style="background:rgba(34,158,217,0.2);">✈️</div>
-      <div class="welcome-card-text">
-        <h4>Telegram Channel</h4>
-        <p>Join our channel for updates, tips and new features. ለዜናዎች እና አዲስ አፕዴቶች ቻናላችንን ይቀላቀሉ።</p>
-      </div>
-    </a>
+  <!-- How it works -->
+  <div class="home-howto">
+    <div class="home-howto-head">
+      <h2 class="home-howto-title">How it works</h2>
+      <span>TAP A TOOL</span>
+    </div>
+    <div class="home-tabs">
+      <button class="home-tab active" type="button" data-tab="0">Calculate BOQ</button>
+      <button class="home-tab" type="button" data-tab="1">Site Log</button>
+      <button class="home-tab" type="button" data-tab="2">Formwork Optimizer</button>
+      <button class="home-tab" type="button" data-tab="3">Rebar Optimizer</button>
+    </div>
+    <div class="home-tut-card" id="home-tut-card"></div>
   </div>
 
-  <div class="welcome-section">
-    <div class="welcome-section-title">እርዳታ / Help</div>
-    <a class="welcome-card" href="/ethiopian-construction-guide">
-      <div class="welcome-card-icon" style="background:rgba(200,146,42,0.15);">📖</div>
-      <div class="welcome-card-text">
-        <h4>Ethiopian Builder's Guide</h4>
-        <p>Real BOQ mistakes, daily reporting, variations, and EBCS / ES EN codes — lessons from actual sites.</p>
-      </div>
-    </a>
-    <a class="welcome-card" href="/how-to-get-building-permit-in-ethiopia">
-      <div class="welcome-card-icon" style="background:rgba(82,183,136,0.15);">📋</div>
-      <div class="welcome-card-text">
-        <h4>Building Permit Guide</h4>
-        <p>The street-width rule, required documents, and realistic timelines for getting your permit approved.</p>
-      </div>
-    </a>
-    <a class="welcome-card" href="/faq">
-      <div class="welcome-card-icon" style="background:rgba(200,146,42,0.15);">❓</div>
-      <div class="welcome-card-text">
-        <h4>Frequently Asked Questions</h4>
-        <p>BOQ basics, construction cost factors, and how AddisBOQ works.</p>
-      </div>
-    </a>
+  <!-- Compact resource links (guide / permit / FAQ / about) -->
+  <div class="home-howto" style="padding-top:8px;">
+    <div class="home-howto-head"><h2 class="home-howto-title">Resources</h2></div>
+    <div class="home-tut-card" style="padding:6px 18px;">
+      <div class="home-tut-step"><div class="home-tut-num">📖</div><div class="home-tut-text"><a href="/ethiopian-construction-guide" style="color:var(--ink);font-weight:600;">Ethiopian Builder's Guide</a></div></div>
+      <div class="home-tut-step"><div class="home-tut-num">📋</div><div class="home-tut-text"><a href="/how-to-get-building-permit-in-ethiopia" style="color:var(--ink);font-weight:600;">Building Permit Guide</a></div></div>
+      <div class="home-tut-step"><div class="home-tut-num">❓</div><div class="home-tut-text"><a href="/faq" style="color:var(--ink);font-weight:600;">FAQ</a></div></div>
+      <div class="home-tut-step"><div class="home-tut-num">✈️</div><div class="home-tut-text"><a href="https://t.me/AddisBOQ" target="_blank" style="color:var(--ink);font-weight:600;">Telegram Channel</a></div></div>
+    </div>
   </div>
 
-  <!-- Footer -->
-  <div class="welcome-footer">
-    © 2026 Addis Engineering · addisboq.com
-  </div>
+  </div><!-- /.home-lower -->
+
+  <div class="home-footer">© 2026 Addis Engineering · addisboq.com</div>
+
+  </div><!-- /.home-wrap -->
+
+  <!-- Bottom nav -->
+  <nav class="home-bottom-nav" aria-label="Main">
+    <button class="home-nav-item active" type="button" onclick="goHome()">
+      <span class="home-nav-icon"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span>Home</button>
+    <a class="home-nav-item" href="https://t.me/AddisBOQ" target="_blank" rel="noopener">
+      <span class="home-nav-icon"><svg viewBox="0 0 24 24"><path d="M21.5 4 2.8 11.2c-.7.3-.7 1.2 0 1.4l4.6 1.5 1.8 5.3c.2.6 1 .8 1.4.3l2.5-2.6 4.5 3.3c.5.4 1.3.1 1.4-.6L22.6 5c.2-.8-.5-1.3-1.1-1z"/><path d="M7.4 14.1 18.4 7"/></svg></span>Contact</a>
+    <button class="home-nav-item" type="button" onclick="openAbout()">
+      <span class="home-nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.8v.4"/></svg></span>About</button>
+    <button class="home-nav-item" type="button" onclick="homePersonalTap()">
+      <span class="home-nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20c.6-3.7 3.6-5.6 7.2-5.6s6.6 1.9 7.2 5.6"/></svg></span>Personal</button>
+  </nav>
+
+  <div class="home-toast" id="home-toast"></div>
 
 </div>
 
@@ -1811,6 +2011,67 @@ function goHome(skipPush) {
   document.getElementById('boq-output').style.display = 'none';
   if (!skipPush) history.pushState({ view: 'welcome' }, '', '');
 }
+
+function homePersonalTap(){
+  showHomeToast('Saved projects with Telegram login — coming soon.');
+}
+
+/* ---- Home screen: tool tutorial tabs ---- */
+const homeTutContent = {
+  0: [
+    ["01","Choose your <b>project type</b> and city — rates adjust automatically."],
+    ["02","Enter quantities in <b>Basic or Professional</b> mode."],
+    ["03","Export a formatted <b>BOQ in Excel</b>, ready to submit."]
+  ],
+  1: [
+    ["01","Create a <b>daily entry</b> — date, crew, weather, and progress."],
+    ["02","Attach <b>photos</b> and note material deliveries."],
+    ["03","Review your <b>site history</b> anytime, exportable as a report."]
+  ],
+  2: [
+    ["01","Enter your <b>column, beam and slab</b> sizes and plywood thickness."],
+    ["02","The tool works out the <b>panels needed</b> and nests them onto standard sheets."],
+    ["03","Get a <b>cutting diagram and sheet count</b> with minimum plywood waste. Coming soon."]
+  ],
+  3: [
+    ["01","Enter your <b>required rebar lengths</b> and stock bar size."],
+    ["02","The optimizer runs a <b>cutting-stock algorithm</b> automatically."],
+    ["03","Get the <b>minimum-waste cutting plan</b>, ready to print."]
+  ]
+};
+function renderHomeTut(i){
+  const tutCard = document.getElementById('home-tut-card');
+  if (!tutCard || !homeTutContent[i]) return;
+  tutCard.innerHTML = homeTutContent[i].map(([n,t]) => `
+        <div class="home-tut-step">
+          <div class="home-tut-num">${n}</div>
+          <div class="home-tut-text">${t}</div>
+        </div>`).join('');
+}
+document.addEventListener('DOMContentLoaded', function(){
+  const tabs = document.querySelectorAll('.home-tab');
+  if (!tabs.length) return;
+  renderHomeTut(0);   // single source of truth — no duplicated markup
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderHomeTut(tab.getAttribute('data-tab'));
+    });
+  });
+});
+
+/* ---- Home screen: Personal (Telegram login placeholder) ---- */
+let homeToastTimer = null;
+function showHomeToast(msg){
+  const t = document.getElementById('home-toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(homeToastTimer);
+  homeToastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
 
 window.addEventListener('popstate', function(e) {
   const state = e.state;
@@ -3107,6 +3368,15 @@ function recalculate() {
         </div>
       </div>
 
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="font-size:22px;">🧱</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:#fff;">Formwork Optimizer</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;margin-top:2px;">Work out how to cut plywood formwork for columns, beams and slabs with the least waste. Free to calculate sheet count and waste.</div>
+          <a href="/formwork" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:var(--gold);text-decoration:none;">Open Formwork Optimizer →</a>
+        </div>
+      </div>
+
       <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;">
         <div style="font-size:22px;">✂️</div>
         <div style="flex:1;">
@@ -3121,7 +3391,7 @@ function recalculate() {
     <div style="background:rgba(255,255,255,0.06);border-radius:14px;padding:18px;margin-bottom:16px;">
       <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">ባህሪያት / Features</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 11 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ) Cost calculation in 11 cities</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 11 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ መቀሌ፣ ሆሳዕና፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ) Cost calculation in 11 cities</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እስከ 15 ወለል ድረስ / Up to 15 floors above ground</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>Excel export with live formulas (BOQ + Materials)</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>ያለ Internet BOQ ማስላት ይቻላል / Works offline</span></div>

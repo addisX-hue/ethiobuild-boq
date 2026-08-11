@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formwork Optimizer — AddisBOQ</title>
+<meta name="description" content="Plywood formwork cutting optimizer for Ethiopian construction. Enter columns, beams and slab bays — get a sheet count, cut list and cutting diagrams.">
+<link rel="canonical" href="https://addisboq.com/formwork">
+<style>
+:root{
+  --ink:#12211c;
+  --ink-2:#3d5148;
+  --line:#dde5e0;
+  --paper:#f6f8f6;
+  --card:#ffffff;
+  --grain:#c9a227;
+  --grain-2:#e8d9a0;
+  --cut:#12211c;
+  --accent:#1b6b4a;
+  --accent-ink:#ffffff;
+  --warn:#a8541b;
+  --err:#b3261e;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  line-height:1.5;
+}
+header{background:var(--ink);color:#fff;padding:18px 20px}
+header h1{margin:0;font-size:1.35rem;letter-spacing:-.01em}
+header p{margin:4px 0 0;font-size:.85rem;opacity:.75}
+header a{color:#9fd9bf;font-size:.8rem;text-decoration:none;display:inline-block;margin-top:8px}
+.wrap{max-width:1000px;margin:0 auto;padding:20px}
+.card{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px;margin-bottom:16px;
+}
+h2{font-size:1rem;margin:0 0 14px;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-2)}
+label{display:block;font-size:.8rem;color:var(--ink-2);margin-bottom:4px;font-weight:600}
+.unit-wrap{position:relative}
+.unit-wrap input{padding-right:38px}
+.unit-wrap .unit{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  font-size:.78rem;color:var(--ink-2);pointer-events:none;font-weight:600;
+}
+input,select{
+  width:100%;padding:9px 10px;border:1px solid var(--line);
+  border-radius:6px;font-size:.95rem;font-family:inherit;background:#fff;
+}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+input.bad{border-color:var(--err);background:#fdf3f2}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.row{
+  border:1px solid var(--line);border-radius:8px;padding:12px;
+  margin-bottom:10px;background:#fbfdfc;position:relative;
+}
+.row .type-tag{
+  font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--accent);margin-bottom:8px;display:block;
+}
+.btn{border:0;border-radius:8px;padding:11px 16px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-add{background:#fff;border:1px solid var(--accent);color:var(--accent)}
+.btn-go{background:var(--accent);color:var(--accent-ink);width:100%;padding:14px;font-size:1.05rem}
+.btn-go:disabled{opacity:.7;cursor:wait}
+.btn-del{
+  position:absolute;top:8px;right:8px;background:transparent;border:0;
+  color:#b23;cursor:pointer;font-size:1.1rem;line-height:1;padding:4px 8px;
+}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.spin{
+  display:inline-block;width:15px;height:15px;margin-right:8px;
+  vertical-align:-2px;border:2px solid rgba(255,255,255,.35);
+  border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.stat .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+.stat .v{font-size:1.5rem;font-weight:700;margin-top:2px}
+.stat .v small{font-size:.8rem;font-weight:500;color:var(--ink-2)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;
+   color:var(--ink-2);border-bottom:2px solid var(--line);padding:8px 6px}
+td{padding:8px 6px;border-bottom:1px solid var(--line)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+svg{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:6px;background:#fff}
+.warn{background:#fdf4ec;border:1px solid #e8c9a8;color:var(--warn);
+      padding:10px 12px;border-radius:8px;font-size:.85rem;margin-bottom:12px}
+.errbox{background:#fdf3f2;border:1px solid #f0c4c0;color:var(--err);
+      padding:12px 14px;border-radius:8px;font-size:.88rem;margin-bottom:14px}
+.errbox strong{display:block;margin-bottom:6px}
+.errbox ul{margin:0;padding-left:18px}
+.errbox li{margin-bottom:3px}
+.hint{font-size:.78rem;color:var(--ink-2);margin-top:6px}
+.hidden{display:none}
+
+.picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.pick{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:14px 8px;border:1.5px solid var(--line);border-radius:10px;
+  background:#fff;cursor:pointer;font-family:inherit;font-size:.85rem;
+  font-weight:600;color:var(--ink-2);transition:all .12s;position:relative;
+}
+.pick:hover{border-color:var(--accent);color:var(--accent)}
+.pick.on{border-color:var(--accent);background:#f0f7f3;color:var(--accent)}
+.pick-ico{
+  display:flex;align-items:center;justify-content:center;
+  height:38px;line-height:1;
+}
+.iso{height:100%;width:auto;display:block;overflow:visible}
+.iso-col{height:38px}
+.iso-beam{height:30px}
+.iso-slab{height:28px}
+/* three faces, lightest on top — reads as a solid under one light source */
+.iso .f-top  {fill:#d8e6de;stroke:currentColor;stroke-width:.9;stroke-linejoin:round}
+.iso .f-left {fill:#b6cfc2;stroke:currentColor;stroke-width:.9;stroke-linejoin:round}
+.iso .f-right{fill:#93b8a6;stroke:currentColor;stroke-width:.9;stroke-linejoin:round}
+.pick.on .iso .f-top  {fill:#cfe8da}
+.pick.on .iso .f-left {fill:#a5d4bb}
+.pick.on .iso .f-right{fill:#7dbb9c}
+.pick-n{
+  position:absolute;top:6px;right:8px;font-size:.7rem;
+  background:var(--accent);color:#fff;border-radius:9px;
+  padding:1px 6px;min-width:18px;display:none;
+}
+.pick-n.show{display:block}
+
+.egroup{margin-bottom:14px}
+.egroup-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 13px;background:#f0f4f2;border:1px solid var(--line);
+  border-radius:8px;cursor:pointer;user-select:none;
+}
+.egroup-head:hover{background:#e8efeb}
+.egroup-head strong{font-size:.9rem}
+.egroup-head .chev{transition:transform .18s;font-size:.8rem;color:var(--ink-2)}
+.egroup.closed .chev{transform:rotate(-90deg)}
+.egroup.closed .egroup-body{display:none}
+.egroup-body{padding-top:10px}
+
+.resnav{
+  display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;
+  position:sticky;top:0;background:var(--paper);z-index:5;
+}
+.resnav a{
+  flex:0 0 auto;font-size:.8rem;padding:6px 12px;border-radius:20px;
+  background:#fff;border:1px solid var(--line);color:var(--ink-2);
+  text-decoration:none;font-weight:600;
+}
+.resnav a:hover{border-color:var(--accent);color:var(--accent)}
+
+.pattern{border:1px solid var(--line);border-radius:10px;background:#fff;padding:14px;margin-bottom:14px}
+.pattern-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.pattern-count{font-size:1.6rem;font-weight:800;line-height:1;color:var(--accent)}
+.pattern-count small{font-size:.75rem;font-weight:600;color:var(--ink-2);display:block;margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.pattern-meta{font-size:.8rem;color:var(--ink-2);text-align:right}
+.pattern-list{font-size:.8rem;color:var(--ink-2);margin-top:8px;line-height:1.6}
+.pattern-list b{color:var(--ink);font-variant-numeric:tabular-nums}
+.svg-wrap{max-width:340px;margin:0 auto}
+.sheetnums{font-size:.72rem;color:var(--ink-2);margin-top:8px;word-break:break-word;font-variant-numeric:tabular-nums}
+@media(max-width:640px){
+  .g2,.g3{grid-template-columns:1fr}
+  .wrap{padding:14px}
+}
+@media print{
+  header,.no-print{display:none}
+  body{background:#fff}
+  .card{break-inside:avoid;border:1px solid #999}
+  .pattern{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Formwork Optimizer</h1>
+  <p>Plywood cutting plan for columns, beams and slab bays</p>
+  <a href="/">&larr; Back to AddisBOQ</a>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ INPUTS ============ -->
+  <div class="card no-print">
+    <h2>Sheet &amp; material</h2>
+    <div class="grid g3">
+      <div>
+        <label for="thickness">Plywood thickness</label>
+        <div class="unit-wrap">
+          <input type="number" id="thickness" value="20" min="6" max="30" step="1">
+          <span class="unit">mm</span>
+        </div>
+      </div>
+      <div>
+        <label for="rate">Rate per sheet</label>
+        <div class="unit-wrap">
+          <input type="number" id="rate" value="4500" min="0" max="100000" step="100">
+          <span class="unit">ETB</span>
+        </div>
+      </div>
+      <div>
+        <label>Sheet size</label>
+        <input type="text" value="1220 × 2440 mm" disabled>
+      </div>
+    </div>
+    <p class="hint"><strong>All dimensions are in millimetres (mm).</strong> Thickness drives the corner lap: a 400 mm column face becomes 400 + 2 × thickness on two sides.</p>
+  </div>
+
+  <div class="card no-print">
+    <h2>Elements</h2>
+    <div class="picker">
+      <button class="pick" data-t="column" onclick="pick('column')">
+        <span class="pick-ico">
+          <svg class="iso iso-col" viewBox="0 0 19.6 43.6" aria-hidden="true">
+            <polygon class="f-top"   points="9.8,2.0 17.6,6.5 9.8,11.0 2.0,6.5"/>
+            <polygon class="f-left"  points="9.8,2.0 2.0,6.5 2.0,37.1 9.8,32.6"/>
+            <polygon class="f-right" points="2.0,6.5 9.8,11.0 9.8,41.6 2.0,37.1"/>
+          </svg>
+        </span><span>Column</span><span class="pick-n" id="n-column"></span>
+      </button>
+      <button class="pick" data-t="beam" onclick="pick('beam')">
+        <span class="pick-ico">
+          <svg class="iso iso-beam" viewBox="0 0 31.9 30.6" aria-hidden="true">
+            <polygon class="f-top"   points="8.1,2.0 29.9,14.6 23.8,18.1 2.0,5.5"/>
+            <polygon class="f-left"  points="8.1,2.0 2.0,5.5 2.0,16.0 8.1,12.5"/>
+            <polygon class="f-right" points="2.0,5.5 23.8,18.1 23.8,28.6 2.0,16.0"/>
+          </svg>
+        </span><span>Beam</span><span class="pick-n" id="n-beam"></span>
+      </button>
+      <button class="pick" data-t="slab" onclick="pick('slab')">
+        <span class="pick-ico">
+          <svg class="iso iso-slab" viewBox="0 0 44.2 29.6" aria-hidden="true">
+            <polygon class="f-top"   points="20.0,2.0 42.2,14.8 24.2,25.2 2.0,12.4"/>
+            <polygon class="f-left"  points="20.0,2.0 2.0,12.4 2.0,14.8 20.0,4.4"/>
+            <polygon class="f-right" points="2.0,12.4 24.2,25.2 24.2,27.6 2.0,14.8"/>
+          </svg>
+        </span><span>Slab bay</span><span class="pick-n" id="n-slab"></span>
+      </button>
+    </div>
+    <div id="rows"></div>
+    <p class="hint" id="empty-hint">Pick an element type above to start.</p>
+  </div>
+
+  <div id="errors" class="hidden no-print"></div>
+
+  <button class="btn btn-go no-print" id="btn-run" onclick="runOptimizer()">Generate cutting plan</button>
+
+  <!-- ============ RESULTS ============ -->
+  <div id="results" class="hidden" style="margin-top:20px"></div>
+
+</div>
+
+<script>
+/* ============================================================
+   The optimizer engine now runs server-side. This file only
+   collects input, validates it early, and renders the result.
+   ============================================================ */
+
+const ENGINE_URL = 'https://us-central1-addisboq.cloudfunctions.net/optimizeFormwork';
+
+let rowSeq = 0;
+
+/* Mirrors the server's LIMITS. Client-side checks are for fast
+   feedback only — the server validates again and is authoritative. */
+const LIMITS = {
+  thickness: { min: 6,  max: 30,   label: 'Plywood thickness' },
+  rate:      { min: 0,  max: 100000, label: 'Rate per sheet' },
+  column: { b:{min:100,max:2000}, d:{min:100,max:2000}, h:{min:500,max:8000}, qty:{min:1,max:2000} },
+  beam:   { w:{min:100,max:2000}, depth:{min:150,max:3000}, ts:{min:50,max:600},
+            span:{min:500,max:20000}, qty:{min:1,max:2000} },
+  slab:   { bayW:{min:500,max:30000}, bayL:{min:500,max:30000}, qty:{min:1,max:500} },
+};
+
+const FIELDS = {
+  column: [
+    { k:'name', l:'Mark',       v:'C1',  type:'text' },
+    { k:'b',    l:'Width b',    v:400,  unit:'mm' },
+    { k:'d',    l:'Depth d',    v:400,  unit:'mm' },
+    { k:'h',    l:'Height',     v:3000, unit:'mm' },
+    { k:'qty',  l:'Quantity',   v:12 },
+  ],
+  beam: [
+    { k:'name',  l:'Mark',            v:'B1', type:'text' },
+    { k:'w',     l:'Width',           v:300,  unit:'mm' },
+    { k:'depth', l:'Total depth',     v:500,  unit:'mm' },
+    { k:'ts',    l:'Slab thickness',  v:150,  unit:'mm' },
+    { k:'span',  l:'Span',            v:4000, unit:'mm' },
+    { k:'qty',   l:'Quantity',        v:8 },
+  ],
+  slab: [
+    { k:'name', l:'Mark',          v:'S1', type:'text' },
+    { k:'bayW', l:'Clear width',   v:3500, unit:'mm' },
+    { k:'bayL', l:'Clear length',  v:4000, unit:'mm' },
+    { k:'qty',  l:'Number of bays', v:2 },
+  ],
+};
+
+const TYPE_LABEL = { column:'Column', beam:'Beam', slab:'Slab bay' };
+
+function ensureGroup(type) {
+  let g = document.getElementById('g-' + type);
+  if (g) return g.querySelector('.egroup-body');
+  const html =
+    '<div class="egroup" id="g-' + type + '">' +
+      '<div class="egroup-head" onclick="toggleGroup(\'' + type + '\')">' +
+        '<strong>' + TYPE_LABEL[type] + 's</strong>' +
+        '<span><span class="gcount" id="gc-' + type + '"></span> ' +
+        '<span class="chev">&#9660;</span></span>' +
+      '</div>' +
+      '<div class="egroup-body" id="gb-' + type + '"></div>' +
+    '</div>';
+  document.getElementById('rows').insertAdjacentHTML('beforeend', html);
+  return document.getElementById('gb-' + type);
+}
+
+function toggleGroup(type) {
+  const g = document.getElementById('g-' + type);
+  if (g) g.classList.toggle('closed');
+}
+
+function pick(type) {
+  addRow(type);
+  const g = document.getElementById('g-' + type);
+  if (g) g.classList.remove('closed');
+}
+
+function addRow(type) {
+  const id = 'r' + (rowSeq++);
+  const fields = FIELDS[type];
+  const body = ensureGroup(type);
+  const lim = LIMITS[type];
+  const html =
+    '<div class="row" id="' + id + '" data-type="' + type + '">' +
+      '<button class="btn-del" onclick="delRow(\'' + id + '\')" title="Remove">&times;</button>' +
+      '<span class="type-tag">' + TYPE_LABEL[type] + '</span>' +
+      '<div class="grid g3">' +
+        fields.map(function (f) {
+          const isText = f.type === 'text';
+          const r = lim[f.k];
+          const attrs = isText ? '' :
+            ' min="' + (r ? r.min : 0) + '" max="' + (r ? r.max : 1000000) + '"';
+          const input =
+            '<input type="' + (isText ? 'text' : 'number') + '" data-k="' + f.k +
+            '" value="' + f.v + '"' + attrs + '>';
+          return '<div><label>' + f.l + (f.unit ? ' <span style="opacity:.7">(' + f.unit + ')</span>' : '') + '</label>' +
+                 (f.unit
+                   ? '<div class="unit-wrap">' + input + '<span class="unit">' + f.unit + '</span></div>'
+                   : input) +
+                 '</div>';
+        }).join('') +
+      '</div>' +
+      '<button class="btn btn-add" style="margin-top:10px;font-size:.82rem;padding:7px 12px" ' +
+        'onclick="addRow(\'' + type + '\')">+ Another ' + TYPE_LABEL[type].toLowerCase() + '</button>' +
+    '</div>';
+  body.insertAdjacentHTML('beforeend', html);
+  updateCounts();
+}
+
+function delRow(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const type = el.dataset.type;
+  el.remove();
+  const body = document.getElementById('gb-' + type);
+  if (body && !body.children.length) {
+    const g = document.getElementById('g-' + type);
+    if (g) g.remove();
+  }
+  updateCounts();
+}
+
+function updateCounts() {
+  let total = 0;
+  ['column','beam','slab'].forEach(function (t) {
+    const n = document.querySelectorAll('#rows .row[data-type="' + t + '"]').length;
+    total += n;
+    const badge = document.getElementById('n-' + t);
+    if (badge) { badge.textContent = n; badge.classList.toggle('show', n > 0); }
+    const btn = document.querySelector('.pick[data-t="' + t + '"]');
+    if (btn) btn.classList.toggle('on', n > 0);
+    const gc = document.getElementById('gc-' + t);
+    if (gc) gc.textContent = n + (n === 1 ? ' entry' : ' entries');
+  });
+  const hint = document.getElementById('empty-hint');
+  if (hint) hint.style.display = total ? 'none' : 'block';
+}
+
+function gatherInputs() {
+  const elements = [];
+  document.querySelectorAll('#rows .row').forEach(function (row) {
+    const obj = { type: row.dataset.type };
+    row.querySelectorAll('input').forEach(function (inp) {
+      obj[inp.dataset.k] = inp.type === 'number' ? (parseFloat(inp.value) || 0) : inp.value.trim();
+    });
+    elements.push(obj);
+  });
+  return {
+    thickness: parseFloat(document.getElementById('thickness').value) || 0,
+    ratePerSheet: parseFloat(document.getElementById('rate').value) || 0,
+    elements: elements,
+  };
+}
+
+/* Fast local check so users aren't waiting on a round trip to be told
+   they typed 40 instead of 400. The server checks again regardless. */
+function checkLocally(inputs) {
+  const errs = [];
+  document.querySelectorAll('#rows input').forEach(i => i.classList.remove('bad'));
+
+  const th = document.getElementById('thickness');
+  if (!(inputs.thickness >= LIMITS.thickness.min && inputs.thickness <= LIMITS.thickness.max)) {
+    errs.push('Plywood thickness must be between ' + LIMITS.thickness.min + ' and ' + LIMITS.thickness.max + ' mm.');
+    th.classList.add('bad');
+  }
+  if (inputs.ratePerSheet < 0 || inputs.ratePerSheet > LIMITS.rate.max) {
+    errs.push('Rate per sheet looks wrong. Enter the price of one plywood sheet in ETB.');
+    document.getElementById('rate').classList.add('bad');
+  }
+  if (!inputs.elements.length) {
+    errs.push('Add at least one column, beam or slab bay first.');
+    return errs;
+  }
+
+  document.querySelectorAll('#rows .row').forEach(function (row) {
+    const type = row.dataset.type;
+    const lim = LIMITS[type];
+    const name = (row.querySelector('input[data-k="name"]') || {}).value || TYPE_LABEL[type];
+    row.querySelectorAll('input[type="number"]').forEach(function (inp) {
+      const k = inp.dataset.k, r = lim[k];
+      if (!r) return;
+      const v = parseFloat(inp.value);
+      const fieldLabel = (FIELDS[type].find(f => f.k === k) || {}).l || k;
+      if (!(v > 0)) {
+        errs.push(name + ': ' + fieldLabel + ' must be greater than zero.');
+        inp.classList.add('bad');
+      } else if (v < r.min) {
+        errs.push(name + ': ' + fieldLabel + ' of ' + v + ' is too small (minimum ' + r.min + '). All dimensions are in mm.');
+        inp.classList.add('bad');
+      } else if (v > r.max) {
+        errs.push(name + ': ' + fieldLabel + ' of ' + v + ' is too large (maximum ' + r.max + '). Check for a typo.');
+        inp.classList.add('bad');
+      }
+    });
+
+    if (type === 'beam') {
+      const depth = parseFloat(row.querySelector('input[data-k="depth"]').value);
+      const ts    = parseFloat(row.querySelector('input[data-k="ts"]').value);
+      if (depth > 0 && ts > 0) {
+        if (ts >= depth) {
+          errs.push(name + ': slab thickness (' + ts + ' mm) must be less than the beam total depth (' + depth + ' mm). Total depth is measured from the top of the slab down to the beam soffit.');
+          row.querySelector('input[data-k="ts"]').classList.add('bad');
+          row.querySelector('input[data-k="depth"]').classList.add('bad');
+        } else if (depth - ts < 100) {
+          errs.push(name + ': the beam side would be only ' + (depth - ts) + ' mm deep. Check the total depth and slab thickness.');
+          row.querySelector('input[data-k="ts"]').classList.add('bad');
+        }
+      }
+    }
+  });
+  return errs;
+}
+
+function showErrors(list) {
+  const box = document.getElementById('errors');
+  if (!list.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="errbox"><strong>Please fix these before continuing:</strong><ul>' +
+    list.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul></div>';
+  box.classList.remove('hidden');
+  box.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function fmt(n) { return n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+
+function esc(str) {
+  return String(str).replace(/[&<>"]/g, function (c) {
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c];
+  });
+}
+
+function sheetSVG(sheet, idx, sw, sl) {
+  const PAD = 14, SC = 0.14;
+  const W = sw * SC, H = sl * SC;
+  let s = '<svg viewBox="0 0 ' + (W + PAD*2) + ' ' + (H + PAD*2) + '" role="img" ' +
+          'aria-label="Cutting plan for sheet ' + (idx+1) + '">';
+  s += '<rect x="' + PAD + '" y="' + PAD + '" width="' + W + '" height="' + H +
+       '" fill="#fdfaf0" stroke="#12211c" stroke-width="1.5"/>';
+  sheet.placements.forEach(function (p) {
+    const x = PAD + p.x*SC, y = PAD + p.y*SC;
+    const w = p.w*SC, h = p.len*SC;
+    s += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h +
+         '" fill="#c9a227" fill-opacity="0.55" stroke="#12211c" stroke-width="0.8"/>';
+    const dim = Math.round(p.w) + '\u00D7' + Math.round(p.len);
+    if (w > 34 && h > 16) {
+      s += '<text x="' + (x + w/2) + '" y="' + (y + h/2) +
+           '" font-size="7" text-anchor="middle" dominant-baseline="middle" ' +
+           'fill="#12211c" font-family="monospace">' + dim + '</text>';
+    }
+    if (w > 60 && h > 34) {
+      s += '<text x="' + (x + w/2) + '" y="' + (y + h/2 + 9) +
+           '" font-size="5" text-anchor="middle" fill="#3d5148">' +
+           esc(p.label.replace(/ —.*/, '')) + '</text>';
+    }
+  });
+  s += '<text x="' + (PAD + W/2) + '" y="' + (PAD - 4) +
+       '" font-size="7" text-anchor="middle" fill="#3d5148">' + sw + ' mm</text>';
+  s += '</svg>';
+  return s;
+}
+
+function stat(k, v) {
+  return '<div class="stat"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>';
+}
+
+function renderResults(r) {
+  const s = r.summary;
+  let h = '';
+
+  if (r.warnings && r.warnings.length) {
+    h += '<div class="warn"><strong>Check these:</strong><ul style="margin:6px 0 0;padding-left:18px">' +
+         r.warnings.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') + '</ul></div>';
+  }
+
+  h += '<div class="resnav no-print">' +
+       '<a href="#sec-cutlist">Cut list</a>' +
+       '<a href="#sec-diagrams">Cutting patterns</a></div>';
+
+  h += '<div class="stats">' +
+    stat('Sheets needed', fmt(s.sheetCount)) +
+    stat('Pieces to cut', fmt(s.pieceCount)) +
+    stat('Waste', s.wastePct.toFixed(1) + '<small> %</small>') +
+    (s.cost ? stat('Material cost', 'ETB ' + fmt(s.cost)) : '') +
+  '</div>';
+
+  h += '<div class="card" id="sec-cutlist"><h2>Cut list</h2><table><thead><tr>' +
+       '<th>Piece (mm)</th><th class="num">Qty</th><th>Used for</th>' +
+       '</tr></thead><tbody>' +
+       r.cutList.map(function (c) {
+         return '<tr><td><strong>' + Math.round(c.w) + ' \u00D7 ' + Math.round(c.len) +
+                '</strong></td><td class="num">' + c.qty + '</td><td>' +
+                esc(c.labels.join(', ')) + '</td></tr>';
+       }).join('') + '</tbody></table></div>';
+
+  h += '<div class="card" id="sec-diagrams"><h2>Cutting patterns</h2>' +
+       '<p class="hint" style="margin-bottom:14px">' + r.groups.length +
+       (r.groups.length === 1 ? ' pattern covers' : ' patterns cover') + ' all ' +
+       s.sheetCount + ' sheets. Sheet size 1220 \u00D7 2440 mm. Cuts run edge to edge, ' +
+       'so a circular saw can follow them in order. Pieces may be rotated.</p>';
+
+  r.groups.forEach(function (g, gi) {
+    const used = g.sheet.placements.reduce(function (a,p) { return a + p.w*p.len; }, 0);
+    const pct = (used / (r.sheetW * r.sheetL) * 100).toFixed(0);
+    const t = {};
+    g.sheet.placements.forEach(function (p) {
+      const k = Math.round(p.rot ? p.len : p.w) + ' \u00D7 ' + Math.round(p.rot ? p.w : p.len);
+      t[k] = (t[k] || 0) + 1;
+    });
+    const lines = Object.keys(t).map(function (k) {
+      return '<b>' + t[k] + '\u00D7</b> ' + k + ' mm';
+    }).join(' &nbsp;\u00B7&nbsp; ');
+
+    h += '<div class="pattern">' +
+      '<div class="pattern-head">' +
+        '<div><div class="pattern-count">' + g.count +
+          '<small>' + (g.count === 1 ? 'sheet' : 'sheets') + ' cut this way</small></div></div>' +
+        '<div class="pattern-meta">Pattern ' + (gi+1) + ' of ' + r.groups.length + '<br>' +
+          g.sheet.placements.length + ' pieces \u00B7 ' + pct + '% used</div>' +
+      '</div>' +
+      '<div class="svg-wrap">' + sheetSVG(g.sheet, gi, r.sheetW, r.sheetL) + '</div>' +
+      '<div class="pattern-list">' + lines + '</div>' +
+      (g.count > 1 && g.count <= 40
+        ? '<div class="sheetnums">Sheets: ' + g.nums.join(', ') + '</div>'
+        : (g.count > 40 ? '<div class="sheetnums">Sheets ' + g.nums[0] + '\u2013' +
+             g.nums[g.nums.length-1] + '</div>' : '')) +
+    '</div>';
+  });
+  h += '</div>';
+
+  h += '<button class="btn btn-add no-print" onclick="window.print()" ' +
+       'style="width:100%;padding:13px">Print cutting plan</button>';
+
+  const box = document.getElementById('results');
+  box.innerHTML = h;
+  box.classList.remove('hidden');
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function setLoading(on) {
+  const b = document.getElementById('btn-run');
+  if (on) {
+    b.disabled = true;
+    b.dataset.lab = b.dataset.lab || b.innerHTML;
+    b.innerHTML = '<span class="spin"></span> Optimizing\u2026';
+  } else {
+    b.disabled = false;
+    if (b.dataset.lab) b.innerHTML = b.dataset.lab;
+  }
+}
+
+async function runOptimizer() {
+  const inputs = gatherInputs();
+
+  const local = checkLocally(inputs);
+  if (local.length) { showErrors(local); return; }
+  showErrors([]);
+
+  setLoading(true);
+  try {
+    const res = await fetch(ENGINE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(inputs),
+    });
+    const data = await res.json().catch(function () { return {}; });
+
+    if (!res.ok) {
+      showErrors(data.errors && data.errors.length
+        ? data.errors
+        : ['Could not build the cutting plan. Please check your dimensions and try again.']);
+      document.getElementById('results').classList.add('hidden');
+      return;
+    }
+    renderResults(data);
+  } catch (err) {
+    console.error(err);
+    showErrors(['Could not reach the optimizer. Check your internet connection and try again.']);
+  } finally {
+    setLoading(false);
+  }
+}
+
+updateCounts();
+</script>
+</body>
+</html>
