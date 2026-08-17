@@ -798,7 +798,7 @@ h2.home-howto-title{ margin:0; }
   "name": "AddisBOQ",
   "alternateName": "AddisBOQ — Ethiopian Construction Cost Calculator",
   "url": "https://addisboq.com",
-  "description": "Component-based Bill of Quantities (BOQ) estimation engine for Ethiopian construction. Instead of a single cost-per-m² multiplier, AddisBOQ calculates substructure, superstructure, finishing, electrical and sanitary works as independent line items, scales structural quantities non-linearly with floor count, and adjusts rates for 11 Ethiopian cities. Exports a professional, formula-linked Excel BOQ with summary and signature sheets.",
+  "description": "Component-based Bill of Quantities (BOQ) estimation engine for Ethiopian construction. Instead of a single cost-per-m² multiplier, AddisBOQ calculates substructure, superstructure, finishing, electrical and sanitary works as independent line items, scales structural quantities non-linearly with floor count, and adjusts rates for 13 Ethiopian cities. Exports a professional, formula-linked Excel BOQ with summary and signature sheets.",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Any (web-based PWA); Android app available",
   "inLanguage": ["en", "am"],
@@ -811,7 +811,7 @@ h2.home-howto-title{ margin:0; }
   "featureList": [
     "Component-based cost estimation (not flat cost-per-m²)",
     "Non-linear structural scaling by floor count, including high-rise rebar diameter distribution",
-    "City-adjusted unit rates for 11 Ethiopian cities",
+    "City-adjusted unit rates for 13 Ethiopian cities",
     "Itemized BOQ across excavation, concrete, masonry, roofing, finishing, electrical and sanitary works",
     "Professional Excel export with live formulas, summary sheet and signature block",
     "Works offline as an installable PWA",
@@ -1171,7 +1171,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <h1 class="home-hero-title">Ethiopian BOQ &amp;<br>Construction Cost Calculator</h1>
     <div class="home-hero-sub">Component-based building cost estimates for Ethiopian construction — multi-city unit rates, traditional BOQ structure, consultant-grade Excel export.</div>
     <div class="home-hero-stats">
-      <span>🏙️ 11 cities</span>
+      <span>🏙️ 13 cities</span>
       <span>🏗️ up to 15 floors</span>
       <span>⚡ under 5 min</span>
     </div>
@@ -1186,7 +1186,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
   <div class="home-lower">
   <div class="home-intro">
     <p>AddisBOQ estimates your building cost <b>component by component</b> — substructure, superstructure, finishing, electrical and sanitary works are each calculated as independent line items, instead of one flat cost-per-m² multiplier.</p>
-    <p>Structural quantities scale non-linearly with floor count, and unit rates adjust for <b>11 Ethiopian cities</b> — Addis Ababa, Hawassa, Bahir Dar, Adama, Dire Dawa, Mekelle, Hossana, Harar, Jigjiga, Arba Minch and Wolaita Sodo. Export a formula-linked <b>Excel Bill of Quantities</b> with summary and signature sheets, ready to hand to your contractor or consultant.</p>
+    <p>Structural quantities scale non-linearly with floor count, and unit rates adjust for <b>13 Ethiopian cities</b> — Addis Ababa, Hawassa, Bahir Dar, Adama, Dire Dawa, Mekelle, Gondar, Jimma, Hossana, Harar, Jigjiga, Arba Minch and Wolaita Sodo. Export a formula-linked <b>Excel Bill of Quantities</b> with summary and signature sheets, ready to hand to your contractor or consultant.</p>
   </div>
 
   <!-- How it works -->
@@ -1282,6 +1282,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
             <option value="jigjiga">Jigjiga</option>
             <option value="mekelle">Mekelle</option>
             <option value="hossana">Hossana</option>
+            <option value="gondar">Gondar</option>
+            <option value="jimma">Jimma</option>
           </select>
         </div>
       </div>
@@ -1807,9 +1809,6 @@ function toggleWhatsComing(){
 // UNIT RATES (ETB) — Edit these to update for inflation
 // ============================================================
 const RATES = {
-  // City multipliers (relative to Hawassa = 1.0)
-  cityMultiplier: { hawassa: 1.0, addis: 1.18, bahirdar: 1.05, adama: 1.02, wolaitasodo: 0.98, arbaminch: 1.01, diredawa: 1.05, harar: 1.06, jigjiga: 1.09 },
-
   // Excavation (per m3)
   excavation_bulk: 452,
   excavation_pit: 462,
@@ -3391,7 +3390,7 @@ function recalculate() {
     <div style="background:rgba(255,255,255,0.06);border-radius:14px;padding:18px;margin-bottom:16px;">
       <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">ባህሪያት / Features</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 11 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ መቀሌ፣ ሆሳዕና፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ) Cost calculation in 11 cities</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 13 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ መቀሌ፣ ጎንደር፣ ጅማ፣ ሆሳዕና፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ) Cost calculation in 13 cities</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እስከ 15 ወለል ድረስ / Up to 15 floors above ground</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>Excel export with live formulas (BOQ + Materials)</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>ያለ Internet BOQ ማስላት ይቻላል / Works offline</span></div>
