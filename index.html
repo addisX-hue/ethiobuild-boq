@@ -1254,7 +1254,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="card-title">Project Details <span style="font-size:11px;color:var(--ink-light);">(የፕሮጀክት ዝርዝር)</span></div>
     <div class="field">
       <label>Project Name <span class="hint">(የፕሮጀክት ስም)</span></label>
-      <input type="text" id="project-name" autocomplete="off" placeholder="e.g. Villa G+3 — Hawassa">
+      <input type="text" id="project-name" autocomplete="off" placeholder="e.g. Commercial G+3 — Addis Ababa">
     </div>
     <div class="field-row">
       <div class="field">
@@ -1288,8 +1288,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
         </div>
       </div>
       <div class="field">
-        <label>Sub-location <span class="hint">(ሰፈር — optional)</span></label>
-        <input type="text" id="sublocation" autocomplete="off" placeholder="e.g. Alamura">
+        <label>Sub-location <span class="hint">(ክፍለ ከተማ — optional)</span></label>
+        <input type="text" id="sublocation" autocomplete="off" placeholder="e.g. Piyassa">
       </div>
     </div>
     <div class="field">
@@ -1709,7 +1709,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 
   <div class="rates-notice">
     <span class="rn-icon">📋</span>
-    <div>Unit rates are based on current Ethiopian market prices as of June 2026. Rates are updated periodically to reflect inflation. Always verify with local suppliers before procurement.</div>
+    <div>Unit rates are based on current Ethiopian market prices as of August 2026. Rates are updated periodically to reflect inflation. Always verify with local suppliers before procurement.</div>
   </div>
 
   <div class="nav-buttons">
@@ -1786,8 +1786,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 </div>
 
 <div class="footer">
-AddisBOQ Calculator. <br>
-Prices are based on June 2026. Final quantities must be verified by a licensed engineer.
+AddisBOQ Construction Cost Calculator. <br>
+Prices are based on August 2026. Final quantities must be verified by a licensed engineer.
 <div class="developer-credit">Developed by Addis Engineering.</div>
 
 </div></main>
@@ -1811,7 +1811,7 @@ function toggleWhatsComing(){
 const RATES = {
   // Excavation (per m3)
   excavation_bulk: 452,
-  excavation_pit: 462,
+  excavation_pit: 601,
   excavation_trench: 470,
   fill_compacted: 3026,
   cart_away: 412,
@@ -1840,16 +1840,16 @@ const RATES = {
 
   // HCB walls (per m2)
   hcb_20cm: 1970,
-  hcb_15cm: 1345,
-  hcb_10cm: 1112,
+  hcb_15cm: 1645,
+  hcb_10cm: 1645,
   gypsum_board: 720,
-  stone_wall_ext: 1450,
+  stone_wall_ext: 3450,
 
   // Roofing (per m2)
-  roof_cis: 1018,
+  roof_cis: 1118,
   roof_ega: 1610,
   steel_truss: 290,
-  steel_purlin: 290, // TODO: needs its own confirmed rate — currently mirroring truss
+  steel_purlin: 290, 
   roof_flat_slab: 18559, // per m3
   roof_decra: 2900,
 

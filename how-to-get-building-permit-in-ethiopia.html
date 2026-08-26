@@ -22,18 +22,25 @@
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   :root{
+    /* dark tones kept for the header, hero and dark accents */
     --ink:#0f1923; --ink-mid:#1a1a2e; --ink-light:#2e4057;
-    --gold:#c8922a; --gold-light:#e4b055;
-    --text:#e8edf2; --text-muted:#8a97a8;
-    --border:rgba(255,255,255,0.08);
+    --gold:#a8761c; --gold-light:#c8922a; --gold-dark:#8a5f14;
+    /* light article surface */
+    --surface:#faf8f4; --card:#ffffff;
+    --text:#1c2530; --text-muted:#5a6875;
+    --body:#33414f;
+    --border:#e6e0d6;
+    --dark-border:rgba(255,255,255,0.08);
   }
-  body{ font-family:'Inter',sans-serif; background:var(--ink); color:var(--text); line-height:1.7; }
+  body{ font-family:'Inter',sans-serif; background:var(--surface); color:var(--text); line-height:1.7; }
 
   header{
-    background:var(--ink-mid); border-bottom:1px solid var(--border);
+    background:var(--ink-mid); border-bottom:1px solid var(--dark-border);
     padding:14px 20px; display:flex; align-items:center; gap:12px;
     position:sticky; top:0; z-index:50;
   }
+  .back-btn{ color:#8a97a8; }
+  .h-title{ color:#e8edf2; }
   .back-btn{
     background:none;border:none;color:var(--text-muted);font-size:20px;
     cursor:pointer;padding:4px 8px;border-radius:8px;text-decoration:none;display:flex;align-items:center;
@@ -49,8 +56,13 @@
 
   .hero{
     padding:44px 20px 32px; text-align:center; border-bottom:1px solid var(--border);
-    background:radial-gradient(ellipse at top, rgba(200,146,42,0.08), transparent 60%);
+    background:var(--ink-mid);
+    background-image:radial-gradient(ellipse at top, rgba(200,146,42,0.12), transparent 60%);
+    color:#e8edf2;
   }
+  .hero .h1{ color:#fff; }
+  .hero .sub{ color:#8a97a8; }
+  .hero .eyebrow{ color:var(--gold-light); }
   .eyebrow{
     font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:700;
     letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:10px;
@@ -68,11 +80,11 @@
     color:var(--ink); font-weight:700; font-size:13px; padding:12px 20px;
     border-radius:10px; text-decoration:none; font-family:'Space Grotesk',sans-serif;
   }
-  .cta-btn.secondary{ background:rgba(255,255,255,0.06); color:var(--text); border:1px solid var(--border); }
+  .cta-btn.secondary{ background:rgba(255,255,255,0.08); color:#e8edf2; border:1px solid rgba(255,255,255,0.15); }
 
   main{ max-width:680px; margin:0 auto; padding:40px 20px 20px; }
 
-  .intro{ font-size:14.5px; color:#c8d2dc; max-width:680px; margin:0 auto 40px; text-align:center; }
+  .intro{ font-size:14.5px; color:var(--body); max-width:680px; margin:0 auto 40px; text-align:center; }
 
   section.topic{ margin-bottom:48px; }
   .topic-eyebrow{
@@ -85,20 +97,20 @@
   }
   .topic h3{
     font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:600;
-    color:var(--gold-light); margin:22px 0 10px;
+    color:var(--gold-dark); margin:22px 0 10px;
   }
-  .topic p{ font-size:14.5px; color:#c8d2dc; margin-bottom:14px; }
+  .topic p{ font-size:14.5px; color:var(--body); margin-bottom:14px; }
   .topic ul, .topic ol{ margin:0 0 16px 0; padding-left:20px; }
-  .topic li{ font-size:14.5px; color:#c8d2dc; margin-bottom:8px; }
+  .topic li{ font-size:14.5px; color:var(--body); margin-bottom:8px; }
   .topic strong{ color:var(--text); }
 
   .highlight-card{
-    background:var(--ink-mid); border-left:3px solid var(--gold);
+    background:rgba(200,146,42,0.08); border-left:3px solid var(--gold);
     border-radius:0 12px 12px 0; padding:20px 22px; margin:18px 0;
   }
   .highlight-label{
     font-family:'Space Grotesk',sans-serif; font-size:10px; font-weight:700;
-    letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;
+    letter-spacing:1.5px; text-transform:uppercase; color:var(--gold-dark); margin-bottom:8px;
   }
   .highlight-card p{ margin-bottom:0; font-size:14.5px; }
 
@@ -106,11 +118,12 @@
     display:flex; gap:12px; margin:20px 0; flex-wrap:wrap;
   }
   .stat-box{
-    flex:1; min-width:140px; background:var(--ink-mid); border:1px solid var(--border);
+    flex:1; min-width:140px; background:var(--card); border:1px solid var(--border);
     border-radius:12px; padding:16px; text-align:center;
+    box-shadow:0 1px 3px rgba(15,25,35,0.05);
   }
   .stat-num{
-    font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:var(--gold-light);
+    font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:var(--gold-dark);
   }
   .stat-label{ font-size:11.5px; color:var(--text-muted); margin-top:4px; }
 
@@ -118,8 +131,9 @@
 
   /* Official requirements — bilingual permit-type cards */
   .pr-card{
-    background:var(--ink-mid); border:1px solid var(--border);
+    background:var(--card); border:1px solid var(--border);
     border-radius:12px; margin:14px 0; overflow:hidden;
+    box-shadow:0 1px 3px rgba(15,25,35,0.05);
   }
   .pr-card > summary{
     cursor:pointer; padding:14px 16px; list-style:none;
@@ -130,19 +144,19 @@
   .pr-card > summary::after{ content:"▾"; color:var(--text-muted); flex-shrink:0; }
   .pr-card[open] > summary{ border-bottom:1px solid var(--border); }
   .pr-card[open] > summary::after{ content:"▴"; }
-  .pr-card > summary:hover{ background:rgba(255,255,255,0.04); }
+  .pr-card > summary:hover{ background:rgba(15,25,35,0.03); }
   .pr-body{ padding:6px 18px 16px; }
   .pr-body ol{ margin:8px 0 12px 0; padding-left:20px; }
-  .pr-body li{ font-size:14px; color:#c8d2dc; margin-bottom:10px; }
+  .pr-body li{ font-size:14px; color:var(--body); margin-bottom:10px; }
   .pr-body .am{ display:block; font-size:12.5px; color:var(--text-muted); margin-top:2px; }
   .pr-sub{
     font-family:'Space Grotesk',sans-serif; font-size:12.5px; font-weight:600;
-    color:var(--gold-light); margin:14px 0 4px;
+    color:var(--gold-dark); margin:14px 0 4px;
   }
   .pr-note{
-    background:rgba(200,146,42,0.08); border-left:3px solid var(--gold);
+    background:rgba(200,146,42,0.10); border-left:3px solid var(--gold);
     border-radius:0 10px 10px 0; padding:12px 14px; margin:12px 0 4px;
-    font-size:13.5px; color:#c8d2dc;
+    font-size:13.5px; color:var(--body);
   }
 
   .related-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
@@ -150,16 +164,17 @@
     display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
     color:var(--ink); background:var(--gold-light); padding:6px 12px; border-radius:20px; text-decoration:none;
   }
-  .related-chip.alt{ background:rgba(82,183,136,0.15); color:#7fd4a8; border:1px solid rgba(82,183,136,0.3); }
+  .related-chip.alt{ background:rgba(45,106,79,0.10); color:#2d6a4f; border:1px solid rgba(45,106,79,0.3); }
 
   .bottom-cta{ text-align:center; max-width:680px; margin:0 auto; padding:0 20px 60px; }
   .bottom-cta-card{
-    background:var(--ink-mid); border:1px solid var(--border); border-radius:18px; padding:32px 24px;
+    background:var(--ink-mid); border:1px solid var(--dark-border); border-radius:18px; padding:32px 24px;
+    color:#e8edf2;
   }
-  .bottom-cta-title{ font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; margin-bottom:8px; }
-  .bottom-cta-sub{ font-size:13px; color:var(--text-muted); margin-bottom:20px; }
+  .bottom-cta-title{ font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; margin-bottom:8px; color:#fff; }
+  .bottom-cta-sub{ font-size:13px; color:#8a97a8; margin-bottom:20px; }
 
-  footer{ text-align:center; padding:24px 20px 40px; font-size:11px; color:rgba(255,255,255,0.25); }
+  footer{ text-align:center; padding:24px 20px 40px; font-size:11px; color:var(--text-muted); }
 </style>
 <script type="application/ld+json">
 {
@@ -228,28 +243,14 @@
 <main>
   <p class="intro">A practical guide for homeowners, junior engineers, and first-time builders working through the Ethiopian permit process — for <a href="/ethiopian-construction-guide" style="color:var(--gold-light);">contract administrators and office engineers</a>, this connects directly to the estimating and documentation work covered in the Builder's Guide.</p>
 
-  <div style="background:var(--ink-mid);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:40px;">
-    <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">On This Page</div>
-    <a href="#street-width" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Your Permitted Floor Count Depends on Your Street</a>
-    <a href="#requirements" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Documents You'll Need, by Permit Type (Official)</a>
-    <a href="#process" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Step-by-Step: Getting Your Permit Approved</a>
-    <a href="#timeline" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Realistic Approval Timeline</a>
-    <a href="#mistakes" style="display:block;font-size:13.5px;color:var(--text);text-decoration:none;padding:6px 0;">Common Mistakes</a>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:40px;box-shadow:0 1px 3px rgba(15,25,35,0.05);">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-dark);margin-bottom:12px;">On This Page</div>
+    <a href="#requirements" style="display:block;font-size:13.5px;color:var(--body);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Documents You'll Need, by Permit Type (Official)</a>
+    <a href="#process" style="display:block;font-size:13.5px;color:var(--body);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Step-by-Step: Getting Your Permit Approved</a>
+    <a href="#timeline" style="display:block;font-size:13.5px;color:var(--body);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Realistic Approval Timeline</a>
+    <a href="#street-width" style="display:block;font-size:13.5px;color:var(--body);text-decoration:none;padding:6px 0;border-bottom:1px solid var(--border);">Things You Should Probably Know</a>
+    <a href="#mistakes" style="display:block;font-size:13.5px;color:var(--body);text-decoration:none;padding:6px 0;">Common Mistakes</a>
   </div>
-
-  <!-- ============================================ -->
-  <section class="topic" id="street-width">
-    <div class="topic-eyebrow">The Part Most People Miss</div>
-    <h2>Your Permitted Floor Count Depends on Your Street</h2>
-    <p>Most first-time builders assume the number of floors they can build is mainly a design or budget decision. In practice, it's also a <strong>site-specific constraint tied to the width of the street the plot faces.</strong></p>
-    <div class="highlight-card">
-      <div class="highlight-label">Why this matters before you design</div>
-      <p>Two plots with identical land area, in the same neighborhood, can have different maximum permitted floor counts simply because one faces a wider street than the other. This isn't something a generic construction budget or design brief will tell you — it's determined by the specific site conditions of the plot itself.</p>
-    </div>
-    <p>The practical implication: confirm the floor limit tied to your specific plot and street width <strong>before</strong> your architect finalizes a design or your engineer prices a structural system. Designing first and discovering the street-width restriction afterward means redoing work that could have been avoided.</p>
-  </section>
-
-  <div class="divider"></div>
 
   <!-- ============================================ -->
   <section class="topic" id="requirements">
@@ -257,7 +258,7 @@
     <h2>Documents You'll Need, by Permit Type</h2>
     <p>These are the detailed prerequisites as issued by city administration permit offices, translated to English with the official Amharic wording kept for reference — so you can match each item exactly against what the desk officer asks for. Pick the card for the service you're applying for.</p>
 
-    <details class="pr-card" open>
+    <details class="pr-card">
       <summary>1. New Construction Permit — አዲስ ግንባታ ፈቃድ</summary>
       <div class="pr-body">
         <ol>
@@ -380,6 +381,16 @@
   </section>
 
 
+
+  <div class="divider"></div>
+
+  <!-- ============================================ -->
+  <section class="topic" id="street-width">
+    <div class="topic-eyebrow">Good to Know</div>
+    <h2>Things You Should Probably Know</h2>
+    <!-- TODO: rewrite this section. Placeholder content below — replace before publishing. -->
+    <p>Section content coming soon.</p>
+  </section>
 
   <div class="divider"></div>
 
