@@ -828,6 +828,47 @@ h2.home-howto-title{ margin:0; }
 </head>
 <body>
 
+<!-- In-app browser notice: Facebook/Instagram/etc. in-app browsers block file
+     downloads and can break the payment return flow. Gently steer the user to
+     their real browser. Passive, non-alarming. -->
+<div id="inapp-banner" style="
+  display:none;
+  background:#e6f1fb; color:#0c447c; padding:12px 16px;
+  font-family:'Inter',sans-serif; font-size:13px; line-height:1.55;
+  text-align:center;
+">
+  <div>
+    ለተሻለ አጠቃቀም በ Chrome ወይም Safari ይክፈቱ።<br>
+    For the best experience, open this page in Chrome or Safari.
+  </div>
+  <a id="inapp-open-chrome" href="#" style="
+    display:none; margin-top:9px;
+    background:#fff; color:#0c447c; font-weight:600;
+    padding:7px 15px; border-radius:8px; text-decoration:none;
+    font-size:13px; border:1px solid #85b7eb;
+  ">Open in Chrome</a>
+</div>
+<script>
+(function () {
+  var ua = navigator.userAgent || navigator.vendor || '';
+  var inApp = /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Messenger|Line\/|Twitter|TikTok|Snapchat/i.test(ua);
+  if (!inApp) return;
+  var banner = document.getElementById('inapp-banner');
+  if (banner) banner.style.display = 'block';
+  // Android with Chrome installed: this intent link opens Chrome directly.
+  // iOS has no way to force another browser, so the button stays hidden there
+  // and those users follow the text instruction (in-app menu -> Open in Safari).
+  if (/Android/i.test(ua)) {
+    var btn = document.getElementById('inapp-open-chrome');
+    if (btn) {
+      var path = location.host + location.pathname + location.search;
+      btn.href = 'intent://' + path + '#Intent;scheme=https;package=com.android.chrome;end';
+      btn.style.display = 'inline-block';
+    }
+  }
+})();
+</script>
+
 <div id="update-banner" style="
   display:none;
   background:linear-gradient(135deg,#1a1a2e,#2d2d4e);
@@ -1058,6 +1099,13 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     ">
       📥 <span id="downloadBtnLabel">Download Excel</span>
     </button>
+    <!-- Fallback link: shown only if the automatic download may not have worked
+         (mainly some mobile phones). A direct tap here is never blocked. -->
+    <a id="excel-fallback-link" href="#" style="
+      display:none;margin-top:12px;
+      font-size:13px;font-weight:700;color:#2d6a4f;
+      text-decoration:underline;font-family:'Inter',sans-serif;
+    ">⬇️ ፋይሉ ካልወረደ እዚህ ይጫኑ / File didn't download? Tap here</a>
   </div>
 
   <!-- Footer note -->
@@ -3225,12 +3273,37 @@ async function doExport(d) {
   // ---- EXPORT ----
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const filename = (d.projName || 'AddisBOQ_BOQ').replace(/[^a-z0-9]/gi, '_') + '_BOQ.xlsx';
   const url = URL.createObjectURL(blob);
+
+  // Trigger the download. The anchor MUST be in the DOM for mobile Chrome,
+  // and the object URL must NOT be revoked immediately or mobile cancels the
+  // download before it starts.
   const a = document.createElement('a');
   a.href = url;
-  a.download = (d.projName || 'AddisBOQ_BOQ').replace(/[^a-z0-9]/gi, '_') + '_BOQ.xlsx';
+  a.download = filename;
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+
+  // Fallback: on some phones the auto-click still doesn't produce a file.
+  // Show a real, tappable link so the user can start the download with their
+  // own tap (a direct user gesture is never blocked). It stays valid because
+  // we delay revoking the URL.
+  const fb = document.getElementById('excel-fallback-link');
+  if (fb) {
+    fb.href = url;
+    fb.download = filename;
+    fb.style.display = 'inline-block';
+  }
+
+  // Clean up much later, after the download has had time to complete.
+  setTimeout(() => {
+    if (a.parentNode) a.parentNode.removeChild(a);
+    URL.revokeObjectURL(url);
+    if (fb) fb.style.display = 'none';
+  }, 60000); // 60s
 }
 
 // ============================================================
