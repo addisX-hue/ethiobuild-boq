@@ -828,6 +828,28 @@ h2.home-howto-title{ margin:0; }
 </head>
 <body>
 
+<!-- ===== Ethiopian New Year ribbon (diagonal, top-right, blocks nothing) ===== -->
+<div id="newyear-ribbon" style="
+  position:fixed; top:64px; right:-54px; z-index:9999;
+  transform:rotate(45deg);
+  background:linear-gradient(135deg,#c8922a,#f0c060);
+  color:#1a1a2e; font-family:'Space Grotesk',sans-serif;
+  font-weight:700; font-size:12.5px; letter-spacing:0.3px;
+  padding:6px 62px; text-align:center;
+  box-shadow:0 3px 12px rgba(0,0,0,0.28);
+  pointer-events:none; white-space:nowrap; user-select:none;
+">✨ መልካም አዲስ አመት</div>
+<script>
+(function () {
+  // New Year ribbon auto-hides after this date — change or remove freely.
+  var HIDE_AFTER = new Date('2026-09-21T00:00:00+03:00');
+  if (new Date() >= HIDE_AFTER) {
+    var r = document.getElementById('newyear-ribbon');
+    if (r) r.style.display = 'none';
+  }
+})();
+</script>
+
 <!-- In-app browser notice: Facebook/Instagram/etc. in-app browsers block file
      downloads and can break the payment return flow. Gently steer the user to
      their real browser. Passive, non-alarming. -->
@@ -959,11 +981,11 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     margin-bottom: 20px;
     overflow: visible;
   ">
-    <div id="modal-save-badge" style="display:none; position:absolute; top:-10px; right:-8px; background:#c0392b; color:#fff; font-size:11px; font-weight:800; padding:5px 10px; border-radius:20px; box-shadow:0 3px 8px rgba(0,0,0,0.25); letter-spacing:0.3px;">SAVE 17%</div>
+    <div id="modal-save-badge" style="display:none; position:absolute; top:-10px; right:-8px; background:#c0392b; color:#fff; font-size:11px; font-weight:800; padding:5px 10px; border-radius:20px; box-shadow:0 3px 8px rgba(0,0,0,0.25); letter-spacing:0.3px;">SAVE 14%</div>
     <p id="modal-offer-label" style="font-size: 10px; color: #f0c060; margin-bottom: 6px; letter-spacing: 0.5px; font-weight: 700; text-transform: uppercase; display:none;">🔥 Limited-Time Introductory Offer</p>
     <p style="font-size: 12px; color: #aaa; margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase;">One-time payment</p>
     <p id="modal-price-old" style="font-size: 15px; font-weight: 600; color: #8a8a9a; text-decoration: line-through; margin-bottom: 2px; display:none;"></p>
-    <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;" id="modal-price">250 ETB</p>
+    <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;" id="modal-price">300 ETB</p>
     <p id="modal-save-line" style="font-size: 12px; color: #6fcf97; font-weight: 600; margin-top: 2px; display:none;"></p>
     <p style="font-size: 12px; color: #aaa; margin-top: 4px;">via TeleBirr</p>
     <p id="modal-discount-countdown" style="font-size: 11px; color: #f0c060; margin-top: 8px; font-weight: 600; display:none;"></p>
@@ -981,7 +1003,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
       <div style="width:24px;height:24px;border-radius:50%;background:#c8922a;color:#1a1a2e;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
       <div style="flex:1;">
-        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;" id="modal-step1-text">Send 250 ETB via TeleBirr</p>
+        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;" id="modal-step1-text">Send 300 ETB via TeleBirr</p>
         <div style="border:2px dashed #c8922a;border-radius:8px;padding:10px 14px;background:rgba(200,146,42,0.05);text-align:center;">
           <p style="font-size:11px;color:#4a4a6a;margin-bottom:2px;">TeleBirr number</p>
           <p style="font-size:20px;font-weight:700;color:#1a1a2e;font-family:'Space Grotesk',sans-serif;letter-spacing:1px;">+251 913 265 488</p>
@@ -2507,11 +2529,11 @@ function restoreFormStateFromParams(params) {
 
 // ---- PRICING (single source of truth — edit here only) ----
 const PRICING = {
-  excelFull: 300,
-  excelDiscount: 250,
-  pdf: 150,
-  discountEndsAt: new Date('2026-07-30T23:59:59+03:00'), // East Africa Time
-  discountLabel: '⏳ Ends July 30',
+  excelFull: 350,     // price after Enkutatash (the strike-through anchor)
+  excelDiscount: 300, // New Year price shown until the deadline
+  pdf: 200,           // was 150
+  discountEndsAt: new Date('2026-09-11T00:00:00+03:00'), // Enkutatash — East Africa Time
+  discountLabel: '🎉 New Year price',
 };
 function excelDiscountActive() { return new Date() < PRICING.discountEndsAt; }
 function currentExcelPrice() { return excelDiscountActive() ? PRICING.excelDiscount : PRICING.excelFull; }
