@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personal — AddisBOQ</title>
+</head>
+<body style="font-family:system-ui,sans-serif;margin:0;padding:24px;line-height:1.6">
+
+<h1 style="font-size:20px;margin:0 0 4px">Personal</h1>
+<p style="font-size:13px;color:#666;margin:0 0 20px">
+  Telegram login test page. Not linked from the site yet.
+</p>
+
+<div id="tg-login"></div>
+
+<p id="tg-status" style="font-size:13px;color:#666;margin:20px 0 6px">
+  Waiting for login…
+</p>
+
+<pre id="tg-out" style="font-size:12px;white-space:pre-wrap;word-break:break-all;background:#f4f4f4;padding:12px;border-radius:8px;margin:0"></pre>
+
+<p style="font-size:12px;color:#999;margin-top:24px">
+  If no button appears above, the BotFather domain does not match the URL
+  you loaded (check www vs apex).
+</p>
+
+<script>
+window.onTelegramAuth = function (user) {
+  console.log('TG payload:', user);
+  document.getElementById('tg-status').textContent =
+    'Logged in as ' + (user.username ? '@' + user.username : user.first_name)
+    + ' — telegram id ' + user.id;
+  document.getElementById('tg-out').textContent =
+    JSON.stringify(user, null, 2);
+};
+</script>
+
+<script async
+  src="https://telegram.org/js/telegram-widget.js?22"
+  data-telegram-login="AddisEngBot"
+  data-size="large"
+  data-userpic="true"
+  data-radius="8"
+  data-onauth="onTelegramAuth(user)">
+</script>
+
+</body>
+</html>
