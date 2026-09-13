@@ -842,7 +842,7 @@ h2.home-howto-title{ margin:0; }
 <script>
 (function () {
   // New Year ribbon auto-hides after this date — change or remove freely.
-  var HIDE_AFTER = new Date('2026-09-21T00:00:00+03:00');
+  var HIDE_AFTER = new Date('2026-09-14T09:00:00+03:00');
   if (new Date() >= HIDE_AFTER) {
     var r = document.getElementById('newyear-ribbon');
     if (r) r.style.display = 'none';
@@ -1242,7 +1242,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="home-hero-sub">Component-based building cost estimates for Ethiopian construction — multi-city unit rates, traditional BOQ structure, consultant-grade Excel export.</div>
     <div class="home-hero-stats">
       <span>🏙️ 13 cities</span>
-      <span>🏗️ up to 15 floors</span>
+      <span>🏗️ up to 20 floors</span>
       <span>⚡ under 5 min</span>
     </div>
   </div>
@@ -1421,7 +1421,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
         <label>Basement Floors <span class="hint">(ምድር ቤት)</span></label>
         <div class="stepper">
           <button onclick="step('floors-basement', -1)">−</button>
-          <input type="number" id="floors-basement" autocomplete="off" value="0" min="0" max="5">
+          <input type="number" id="floors-basement" autocomplete="off" value="0" min="0" max="2">
           <button onclick="step('floors-basement', 1)">+</button>
         </div>
       </div>
@@ -1739,7 +1739,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       <label>Number of Wet Rooms <span class="hint">(ሽንት ቤት + ኩሽና ብዛት)</span></label>
       <div class="stepper">
         <button onclick="step('wet-rooms', -1)">−</button>
-        <input type="number" id="wet-rooms" autocomplete="off" value="3" min="1" max="20">
+        <input type="number" id="wet-rooms" autocomplete="off" value="3" min="0" max="16">
         <button onclick="step('wet-rooms', 1)">+</button>
       </div>
     </div>
@@ -1795,6 +1795,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <h2 id="boq-title">BOQ — Villa G+3</h2>
     <div class="boq-meta">
       <div class="boq-meta-item">Location: <span id="boq-location">—</span></div>
+      <div class="boq-meta-item">Building Level: <span id="boq-floors">—</span></div>
       <div class="boq-meta-item">Total Area: <span id="boq-area">—</span></div>
       <div class="boq-meta-item">Date: <span id="boq-date">—</span></div>
     </div>
@@ -2349,7 +2350,7 @@ async function calculateBOQ() {
   // Unpack server result
   const {
     sections, subtotalAll, contingencyRate, contingency,
-    subtotalPlusContingency, vat, grandTotal, costPerM2, totalArea
+    subtotalPlusContingency, vat, grandTotal, costPerM2, totalArea, floorLabel
   } = result;
 
   // ---- RENDER OUTPUT ----
@@ -2361,6 +2362,7 @@ async function calculateBOQ() {
   document.getElementById('boq-title').textContent = projName;
   const loc = [cityLabel, subloc].filter(Boolean).join(', ');
   document.getElementById('boq-location').textContent = loc;
+  document.getElementById('boq-floors').textContent = floorLabel || '—';
   document.getElementById('boq-area').textContent = fmtN(totalArea, 0) + ' m² total';
   document.getElementById('boq-date').textContent = new Date().toLocaleDateString('en-ET', { year:'numeric', month:'short', day:'numeric' });
 
@@ -3486,7 +3488,7 @@ function recalculate() {
       <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">ባህሪያት / Features</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 13 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ መቀሌ፣ ጎንደር፣ ጅማ፣ ሆሳዕና፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ) Cost calculation in 13 cities</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እስከ 15 ወለል ድረስ / Up to 15 floors above ground</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እስከ 20 ወለል ድረስ / Up to 20 floors above ground</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>Excel export with live formulas (BOQ + Materials)</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>ያለ Internet BOQ ማስላት ይቻላል / Works offline</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እንደ App ይወርዳል / Installable as a mobile app</span></div>
