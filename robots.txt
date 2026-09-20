@@ -1,3 +1,108 @@
+# addisboq.com
+# Policy: search indexing allowed (with link-back), AI model training refused,
+# real-time AI agent fetching refused.
+# Last updated: 2026-09-20
+
+# Default: everyone else is welcome.
 User-agent: *
 Allow: /
+
+
+# ---------------------------------------------------------------
+# TRAINING CRAWLERS — content not licensed for model training
+# ---------------------------------------------------------------
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: MistralAI-Training
+Disallow: /
+
+User-agent: DeepSeekBot
+Disallow: /
+
+
+# ---------------------------------------------------------------
+# REAL-TIME AGENTS — fetch pages live on a user's behalf
+# ---------------------------------------------------------------
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: Claude-User
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: MistralAI-User
+Disallow: /
+
+
+# ---------------------------------------------------------------
+# xAI / GROK
+# Tokens come from third-party directories; xAI publishes no crawler
+# documentation. Grok's live browsing reportedly arrives with an ordinary
+# Safari user-agent, which no robots.txt rule can match. Listed anyway —
+# costs nothing, and applies if xAI starts identifying itself.
+# ---------------------------------------------------------------
+
+User-agent: xAI-Bot
+Disallow: /
+
+User-agent: GrokBot
+Disallow: /
+
+User-agent: xAI-Grok
+Disallow: /
+
+User-agent: Grok-DeepSearch
+Disallow: /
+
+
+# ---------------------------------------------------------------
+# COMMERCIAL SCRAPING SERVICES
+# ---------------------------------------------------------------
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Webzio-Extended
+Disallow: /
+
+User-agent: omgilibot
+Disallow: /
+
+User-agent: TikTokSpider
+Disallow: /
+
+
+# ---------------------------------------------------------------
+# DELIBERATELY NOT BLOCKED — search retrieval, links back to the site.
+# Do not add these:
+#   OAI-SearchBot, Claude-SearchBot, DuckAssistBot
+#   Googlebot, Bingbot, Applebot
+# ---------------------------------------------------------------
+
 Sitemap: https://addisboq.com/sitemap.xml
