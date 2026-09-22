@@ -1796,7 +1796,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div class="boq-meta">
       <div class="boq-meta-item">Location: <span id="boq-location">—</span></div>
       <div class="boq-meta-item">Building Level: <span id="boq-floors">—</span></div>
-      <div class="boq-meta-item">Total Area: <span id="boq-area">—</span></div>
+      <div class="boq-meta-item">Floor Area: <span id="boq-floor-area">—</span></div>
+      <div class="boq-meta-item">Total Built-up Area: <span id="boq-area">—</span></div>
       <div class="boq-meta-item">Date: <span id="boq-date">—</span></div>
     </div>
   </div>
@@ -2350,7 +2351,7 @@ async function calculateBOQ() {
   // Unpack server result
   const {
     sections, subtotalAll, contingencyRate, contingency,
-    subtotalPlusContingency, vat, grandTotal, costPerM2, totalArea, floorLabel
+    subtotalPlusContingency, vat, grandTotal, costPerM2, totalArea, floorLabel, floorArea
   } = result;
 
   // ---- RENDER OUTPUT ----
@@ -2363,7 +2364,8 @@ async function calculateBOQ() {
   const loc = [cityLabel, subloc].filter(Boolean).join(', ');
   document.getElementById('boq-location').textContent = loc;
   document.getElementById('boq-floors').textContent = floorLabel || '—';
-  document.getElementById('boq-area').textContent = fmtN(totalArea, 0) + ' m² total';
+  document.getElementById('boq-floor-area').textContent = floorArea ? fmtN(floorArea, 0) + ' m²' : '—';
+  document.getElementById('boq-area').textContent = fmtN(totalArea, 0) + ' m²';
   document.getElementById('boq-date').textContent = new Date().toLocaleDateString('en-ET', { year:'numeric', month:'short', day:'numeric' });
 
   // Grand total
@@ -2483,7 +2485,7 @@ async function calculateBOQ() {
   `).join('');
 
   // Store data for export
-  window._boqData = { projName, loc, totalArea, sections, subtotalAll, contingency, contingencyRate, subtotalPlusContingency, vat, grandTotal, city: cityLabel };
+  window._boqData = { projName, loc, floorArea, totalArea, sections, subtotalAll, contingency, contingencyRate, subtotalPlusContingency, vat, grandTotal, city: cityLabel };
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2541,12 +2543,14 @@ function excelDiscountActive() { return new Date() < PRICING.discountEndsAt; }
 function currentExcelPrice() { return excelDiscountActive() ? PRICING.excelDiscount : PRICING.excelFull; }
 
 function updateExcelButtonLabels() {
-  const label = '📥 Full Itemized BOQ — ' + currentExcelPrice() + ' ETB';
-  const lockLabel = '📥 Get Full Itemized BOQ — ' + currentExcelPrice() + ' ETB';
+  const label = '📥 Full Itemized BOQ (Excel) — ' + currentExcelPrice() + ' ETB';
+  const lockLabel = '📥 Get Full Itemized BOQ (Excel) — ' + currentExcelPrice() + ' ETB';
   const topBtn = document.getElementById('excel-btn-top');
   const lockBtn = document.getElementById('excel-btn-lock');
   const bottomBtn = document.getElementById('excel-btn-bottom');
-  if (topBtn) topBtn.textContent = label;
+  // Top button stays price-free: the price is first shown at the blurred lock
+  // section, after the user has scrolled through the free results.
+  if (topBtn) topBtn.textContent = '📥 Full Itemized BOQ (Excel)';
   if (lockBtn) lockBtn.textContent = lockLabel;
   if (bottomBtn) bottomBtn.textContent = label;
 }
@@ -2786,6 +2790,9 @@ function doExportPDF(d){
   doc.setFont('helvetica', 'bold'); doc.text('Location:', margin, y);
   doc.setFont('helvetica', 'normal'); doc.text(String(d.loc || d.city || '—'), margin + 100, y);
   y += 16;
+  doc.setFont('helvetica', 'bold'); doc.text('Floor Area:', margin, y);
+  doc.setFont('helvetica', 'normal'); doc.text(d.floorArea ? String(d.floorArea) + ' m²' : '—', margin + 100, y);
+  y += 16;
   doc.setFont('helvetica', 'bold'); doc.text('Total Built-up Area:', margin, y);
   doc.setFont('helvetica', 'normal'); doc.text(String(d.totalArea) + ' m²', margin + 100, y);
   y += 16;
@@ -2974,6 +2981,7 @@ async function doExport(d) {
 
   ws.addRow(['Project Name:', d.projName, '', '', '', '']);
   ws.addRow(['Location:', d.loc, '', '', '', '']);
+  ws.addRow(['Floor Area:', d.floorArea ? d.floorArea + ' m²' : '—', '', '', '', '']);
   ws.addRow(['Total Built-up Area:', d.totalArea + ' m²', '', '', '', '']);
   ws.addRow(['Prepared Date:', today, '', '', '', '']);
 
