@@ -239,7 +239,7 @@
 
     <div class="card" id="landingCreateCard">
       <div class="card-head"><div><span class="eyebrow">New</span><h2>Create a Project</h2></div></div>
-      <div class="field"><label>Project name</label><input type="text" id="newProjNameInput" placeholder="e.g. Villa G+2 — Bole"></div>
+      <div class="field"><label>Project name</label><input autocomplete="off" type="text" id="newProjNameInput" placeholder="e.g. Villa G+2 — Bole"></div>
       <p class="hint" style="margin-bottom:12px;">You'll get a unique project code — save it, it's the only way to access your data. 14 days free, then 2,000 ETB / 30 days.</p>
       <button class="btn btn-orange" id="createProjectBtn" style="width:100%; justify-content:center;">Create Project</button>
     </div>
@@ -248,7 +248,7 @@
 
     <div class="card" id="landingEnterCard">
       <div class="card-head"><div><span class="eyebrow">Existing</span><h2>Enter Project Code</h2></div></div>
-      <div class="field"><input type="text" id="enterCodeInput" placeholder="e.g. SL-7X92-QK" class="mono" style="text-transform:uppercase;"></div>
+      <div class="field"><input autocomplete="off" type="text" id="enterCodeInput" name="siteLogProjectCode" spellcheck="false" placeholder="e.g. SL-7X92-QK" class="mono" style="text-transform:uppercase;"></div>
       <button class="btn btn-ghost" id="enterProjectBtn" style="width:100%; justify-content:center;">Open Project</button>
       <p class="hint" id="landingError" style="color:var(--red); display:none;"></p>
     </div>
@@ -341,10 +341,10 @@
           <div class="dim-divider">Work Completed</div>
           <div id="workItemsList"></div>
           <div class="row row-4">
-            <input type="text" id="wiActivity" placeholder="Activity, e.g. Column casting">
-            <input type="text" id="wiLocation" placeholder="Location / grid">
-            <input type="number" id="wiQty" placeholder="Qty">
-            <input type="text" id="wiUnit" placeholder="Unit">
+            <input autocomplete="off" type="text" id="wiActivity" placeholder="Activity, e.g. Column casting">
+            <input autocomplete="off" type="text" id="wiLocation" placeholder="Location / grid">
+            <input autocomplete="off" type="number" id="wiQty" placeholder="Qty">
+            <input autocomplete="off" type="text" id="wiUnit" placeholder="Unit">
           </div>
           <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="addWorkItem">+ Add work item</button>
 
@@ -356,19 +356,19 @@
               <option>Steel fixer</option><option>Electrician</option><option>Plumber</option>
               <option>Painter</option><option>Supervisor</option><option>Other</option>
             </select>
-            <input type="number" id="mpCount" placeholder="Count">
+            <input autocomplete="off" type="number" id="mpCount" placeholder="Count">
           </div>
           <div class="row row-2" style="margin-top:6px">
-            <input type="number" id="mpHours" placeholder="Hours worked" step="0.5">
-            <input type="number" id="mpWage" placeholder="Wage per hour (ETB)">
+            <input autocomplete="off" type="number" id="mpHours" placeholder="Hours worked" step="0.5">
+            <input autocomplete="off" type="number" id="mpWage" placeholder="Wage per hour (ETB)">
           </div>
           <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="addManpower">+ Add manpower</button>
 
           <div class="dim-divider">Delays / Issues</div>
           <div id="delaysList"></div>
           <div class="row row-2">
-            <input type="text" id="dlReason" placeholder="Reason, e.g. Late cement delivery">
-            <input type="number" id="dlHours" placeholder="Hours lost">
+            <input autocomplete="off" type="text" id="dlReason" placeholder="Reason, e.g. Late cement delivery">
+            <input autocomplete="off" type="number" id="dlHours" placeholder="Hours lost">
           </div>
           <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="addDelay">+ Add delay</button>
 
@@ -426,7 +426,7 @@
           <div id="boqTableWrap"><div class="empty">No BOQ items yet. Add one below.</div></div>
           <div class="dim-divider">Add BOQ Item</div>
           <div class="row row-2">
-            <input type="text" id="boqDesc" placeholder="Description, e.g. RCC Column M25">
+            <input autocomplete="off" type="text" id="boqDesc" placeholder="Description, e.g. RCC Column M25">
             <select id="boqUnit">
               <option value="m">m (length)</option>
               <option value="m2">m² (area)</option>
@@ -437,8 +437,8 @@
             </select>
           </div>
           <div class="row row-2" style="margin-top:10px">
-            <input type="number" id="boqRate" placeholder="Rate per unit (ETB)">
-            <input type="number" id="boqContracted" placeholder="Contracted quantity">
+            <input autocomplete="off" type="number" id="boqRate" placeholder="Rate per unit (ETB)">
+            <input autocomplete="off" type="number" id="boqContracted" placeholder="Contracted quantity">
           </div>
           <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="addBoqItem">+ Add BOQ item</button>
         </div>
@@ -451,7 +451,7 @@
           </div>
           <div id="measDimFields" class="row row-3" style="margin-bottom:10px"></div>
           <div class="row row-2">
-            <input type="text" id="measLocation" placeholder="Location, e.g. Grid A3–A5, 2nd floor">
+            <input autocomplete="off" type="text" id="measLocation" placeholder="Location, e.g. Grid A3–A5, 2nd floor">
             <input type="date" id="measDate">
           </div>
           <div class="stat-row" id="measCalcPreview" style="margin-top:8px"></div>
@@ -493,20 +493,20 @@
           <div class="card-head"><div><span class="eyebrow">Entry</span><h2>Record a Payment</h2></div></div>
           <div class="row row-2">
             <div class="field"><label>Date</label><input type="date" id="payDate"></div>
-            <div class="field"><label>Amount paid (ETB)</label><input type="number" id="payAmount" placeholder="0"></div>
+            <div class="field"><label>Amount paid (ETB)</label><input autocomplete="off" type="number" id="payAmount" placeholder="0"></div>
           </div>
           <div class="field">
             <label>Paid to (trade / subcontractor / person)</label>
-            <input type="text" id="payPayee" list="payeeSuggestions" placeholder="e.g. Carpentry crew, Reinforcement benders">
+            <input autocomplete="off" type="text" id="payPayee" list="payeeSuggestions" placeholder="e.g. Carpentry crew, Reinforcement benders">
             <datalist id="payeeSuggestions"></datalist>
           </div>
           <div class="row row-2">
-            <div class="field"><label>For work / reason</label><input type="text" id="payReason" placeholder="e.g. Shuttering — 3rd floor slab"></div>
+            <div class="field"><label>For work / reason</label><input autocomplete="off" type="text" id="payReason" placeholder="e.g. Shuttering — 3rd floor slab"></div>
             <div class="field"><label>Payment method</label>
               <select id="payMethod"><option>Cash</option><option>Bank transfer</option><option>Mobile money</option><option>Cheque</option></select>
             </div>
           </div>
-          <div class="field"><label>Notes (optional)</label><input type="text" id="payNotes" placeholder="Anything worth remembering"></div>
+          <div class="field"><label>Notes (optional)</label><input autocomplete="off" type="text" id="payNotes" placeholder="Anything worth remembering"></div>
           <button class="btn btn-orange" id="addPaymentBtn">+ Record payment</button>
         </div>
 
@@ -1269,23 +1269,23 @@ function renderMeasDimFields(){
     wrap.className = 'row';
     wrap.innerHTML = `
       <div style="flex:1">
-        <input type="number" id="dimTotal" placeholder="Total ${item.unit} (e.g. 30)">
+        <input autocomplete="off" type="number" id="dimTotal" placeholder="Total ${item.unit} (e.g. 30)">
         <div style="margin-top:6px"><a href="#" id="measModeToggle" class="hint" style="text-decoration:underline">↩ Switch back to Length${item.unit==='m3' ? ' × Width × Height' : ' × Width'}</a></div>
       </div>`;
   } else if(item.unit==='m'){
     wrap.className = 'row row-3';
-    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)">`;
+    wrap.innerHTML = `<input autocomplete="off" type="number" id="dimL" placeholder="Length (m)">`;
   } else if(item.unit==='m2'){
     wrap.className = 'row row-3';
-    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)"><input type="number" id="dimW" placeholder="Width (m)">
+    wrap.innerHTML = `<input autocomplete="off" type="number" id="dimL" placeholder="Length (m)"><input autocomplete="off" type="number" id="dimW" placeholder="Width (m)">
       <div style="grid-column:1/-1;margin-top:2px"><a href="#" id="measModeToggle" class="hint" style="text-decoration:underline">Enter total m² directly instead</a></div>`;
   } else if(item.unit==='m3'){
     wrap.className = 'row row-3';
-    wrap.innerHTML = `<input type="number" id="dimL" placeholder="Length (m)"><input type="number" id="dimW" placeholder="Width (m)"><input type="number" id="dimH" placeholder="Height/Depth (m)">
+    wrap.innerHTML = `<input autocomplete="off" type="number" id="dimL" placeholder="Length (m)"><input autocomplete="off" type="number" id="dimW" placeholder="Width (m)"><input autocomplete="off" type="number" id="dimH" placeholder="Height/Depth (m)">
       <div style="grid-column:1/-1;margin-top:2px"><a href="#" id="measModeToggle" class="hint" style="text-decoration:underline">Enter total m³ directly instead</a></div>`;
   } else {
     wrap.className = 'row row-3';
-    wrap.innerHTML = `<input type="number" id="dimCount" placeholder="Count / quantity">`;
+    wrap.innerHTML = `<input autocomplete="off" type="number" id="dimCount" placeholder="Count / quantity">`;
   }
 
   const toggle = document.getElementById('measModeToggle');
