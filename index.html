@@ -798,7 +798,7 @@ h2.home-howto-title{ margin:0; }
   "name": "AddisBOQ",
   "alternateName": "AddisBOQ — Ethiopian Construction Cost Calculator",
   "url": "https://addisboq.com",
-  "description": "Component-based Bill of Quantities (BOQ) estimation engine for Ethiopian construction. Instead of a single cost-per-m² multiplier, AddisBOQ calculates substructure, superstructure, finishing, electrical and sanitary works as independent line items, scales structural quantities non-linearly with floor count, and adjusts rates for 13 Ethiopian cities. Exports a professional, formula-linked Excel BOQ with summary and signature sheets.",
+  "description": "Component-based Bill of Quantities (BOQ) estimation engine for Ethiopian construction. Instead of a single cost-per-m² multiplier, AddisBOQ calculates substructure, superstructure, finishing, electrical and sanitary works as independent line items, scales structural quantities non-linearly with floor count, and adjusts rates for 14 Ethiopian cities. Exports a professional, formula-linked Excel BOQ with summary and signature sheets.",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Any (web-based PWA); Android app available",
   "inLanguage": ["en", "am"],
@@ -811,7 +811,7 @@ h2.home-howto-title{ margin:0; }
   "featureList": [
     "Component-based cost estimation (not flat cost-per-m²)",
     "Non-linear structural scaling by floor count, including high-rise rebar diameter distribution",
-    "City-adjusted unit rates for 13 Ethiopian cities",
+    "City-adjusted unit rates for 14 Ethiopian cities",
     "Itemized BOQ across excavation, concrete, masonry, roofing, finishing, electrical and sanitary works",
     "Professional Excel export with live formulas, summary sheet and signature block",
     "Works offline as an installable PWA",
@@ -933,10 +933,11 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 <div class="payment-modal" id="paymentModal" style="
   background: #ffffff;
   border-radius: 16px;
-  padding: 32px 28px;
+  padding: 20px 18px 14px;
   max-width: 420px;
-  width: 90%;
+  width: 92%;
   max-height: 88vh;
+  max-height: calc(100dvh - 32px);
   overflow-y: auto;
   position: fixed;
   top: 50%;
@@ -947,24 +948,24 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
   font-family: 'Inter', sans-serif;
 ">
   <!-- Header -->
-  <div style="text-align:center; margin-bottom: 24px;">
+  <div style="text-align:center; margin-bottom: 14px;">
     <div style="
-      width: 56px; height: 56px;
+      width: 40px; height: 40px;
       background: linear-gradient(135deg, #c8922a, #f0c060);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px;
-      font-size: 24px;
+      margin: 0 auto 8px;
+      font-size: 18px;
     ">📊</div>
     <h3 style="
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
       color: #1a1a2e;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     " id="modal-title">Unlock Excel Export</h3>
-    <p style="font-size: 13px; color: #4a4a6a;" id="modal-desc">
-      Get your full professional BOQ in Excel format
+    <p style="font-size: 12.5px; color: #4a4a6a; line-height: 1.45;" id="modal-desc">
+      Itemized BOQ, summary and signature sheets — formula-linked and editable in Excel
     </p>
   </div>
 
@@ -976,38 +977,40 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     position: relative;
     background: linear-gradient(135deg, #1a1a2e, #2d2d4e);
     border-radius: 12px;
-    padding: 16px;
+    padding: 10px 12px;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
     overflow: visible;
   ">
     <div id="modal-save-badge" style="display:none; position:absolute; top:-10px; right:-8px; background:#c0392b; color:#fff; font-size:11px; font-weight:800; padding:5px 10px; border-radius:20px; box-shadow:0 3px 8px rgba(0,0,0,0.25); letter-spacing:0.3px;">SAVE 14%</div>
     <p id="modal-offer-label" style="font-size: 10px; color: #f0c060; margin-bottom: 6px; letter-spacing: 0.5px; font-weight: 700; text-transform: uppercase; display:none;">🔥 Limited-Time Introductory Offer</p>
-    <p style="font-size: 12px; color: #aaa; margin-bottom: 4px; letter-spacing: 1px; text-transform: uppercase;">One-time payment</p>
     <p id="modal-price-old" style="font-size: 15px; font-weight: 600; color: #8a8a9a; text-decoration: line-through; margin-bottom: 2px; display:none;"></p>
-    <p style="font-size: 36px; font-weight: 700; color: #c8922a; font-family: 'Space Grotesk', sans-serif;" id="modal-price">300 ETB</p>
+    <p style="font-size: 30px; font-weight: 700; line-height: 1.15; color: #c8922a; font-family: 'Space Grotesk', sans-serif;" id="modal-price">300 ETB</p>
     <p id="modal-save-line" style="font-size: 12px; color: #6fcf97; font-weight: 600; margin-top: 2px; display:none;"></p>
-    <p style="font-size: 12px; color: #aaa; margin-top: 4px;">via TeleBirr</p>
+    <p style="font-size: 12px; color: #aaa; margin-top: 0;">via TeleBirr</p>
     <p id="modal-discount-countdown" style="font-size: 11px; color: #f0c060; margin-top: 8px; font-weight: 600; display:none;"></p>
-    <div id="modal-trust-icons" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.12); justify-content:space-between; gap:6px;">
-      <span style="font-size:10px; color:rgba(255,255,255,0.65);">⚡ Instant verification</span>
-      <span style="font-size:10px; color:rgba(255,255,255,0.65);">✔️ One-time payment</span>
-      <span style="font-size:10px; color:rgba(255,255,255,0.65);">🚫 No subscription</span>
+    <div id="modal-trust-icons" style="display:none; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.12); justify-content:space-between; gap:6px;">
+      <span style="font-size:10.5px; color:rgba(255,255,255,0.65); white-space:nowrap;">⚡ Instant</span>
+      <span style="font-size:10.5px; color:rgba(255,255,255,0.65); white-space:nowrap;">✔️ One-time</span>
+      <span style="font-size:10.5px; color:rgba(255,255,255,0.65); white-space:nowrap;">🚫 No subscription</span>
     </div>
   </div>
 
   <!-- Steps -->
-  <div style="margin-bottom: 20px;">
+  <div style="margin-bottom: 8px;">
 
     <!-- Step 1 -->
-    <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:14px;">
+    <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
       <div style="width:24px;height:24px;border-radius:50%;background:#c8922a;color:#1a1a2e;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
       <div style="flex:1;">
         <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;" id="modal-step1-text">Send 300 ETB via TeleBirr</p>
-        <div style="border:2px dashed #c8922a;border-radius:8px;padding:10px 14px;background:rgba(200,146,42,0.05);text-align:center;">
-          <p style="font-size:11px;color:#4a4a6a;margin-bottom:2px;">TeleBirr number</p>
-          <p style="font-size:20px;font-weight:700;color:#1a1a2e;font-family:'Space Grotesk',sans-serif;letter-spacing:1px;">+251 913 265 488</p>
-        </div>
+        <button type="button" id="telebirr-copy" onclick="copyTelebirrNumber()" aria-label="Copy TeleBirr number" style="width:100%;border:2px dashed #c8922a;border-radius:8px;padding:8px 12px;background:rgba(200,146,42,0.05);display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;font-family:inherit;text-align:left;box-sizing:border-box;min-width:0;">
+          <span>
+            <span style="display:block;font-size:11px;color:#4a4a6a;margin-bottom:1px;">TeleBirr number</span>
+            <span style="display:block;font-size:clamp(14px, 4.6vw, 17px);font-weight:700;color:#1a1a2e;font-family:'Space Grotesk',sans-serif;letter-spacing:0.5px;white-space:nowrap;">+251 913 265 488</span>
+          </span>
+          <span id="telebirr-copy-label" style="flex-shrink:0;font-size:12px;font-weight:700;color:#1a1a2e;background:#f0c060;border-radius:6px;padding:7px 9px;white-space:nowrap;">📋 Copy</span>
+        </button>
       </div>
     </div>
 
@@ -1015,7 +1018,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <div style="display:flex; gap:12px; align-items:flex-start;">
       <div style="width:24px;height:24px;border-radius:50%;background:#c8922a;color:#1a1a2e;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
       <div style="flex:1;">
-        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">Enter your TeleBirr transaction ID below and click Unlock</p>
+        <p style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">Enter the transaction ID from your TeleBirr SMS</p>
       </div>
     </div>
 
@@ -1023,15 +1026,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 
   <!-- Transaction ID Input -->
   <div style="margin-bottom: 8px;">
-    <label style="
-      font-size: 12px;
-      font-weight: 600;
-      color: #4a4a6a;
-      display: block;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-    ">TeleBirr Transaction ID</label>
+    <label for="transactionId" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">TeleBirr Transaction ID</label>
     <input 
       type="text" 
       id="transactionId" 
@@ -1041,6 +1036,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
       spellcheck="false"
       placeholder="e.g. DFN76I7LTE"
       style="
+        margin: 0;
         width: 100%;
         padding: 12px 16px;
         border: 1.5px solid #e2ddd6;
@@ -1080,7 +1076,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     color: #1a1a2e;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
     transition: opacity 0.2s;
   " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
     🔓 Unlock & Download
@@ -1088,17 +1084,16 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 
   <button onclick="closePaymentModal()" style="
     width: 100%;
-    padding: 12px;
+    padding: 8px;
     background: transparent;
-    border: 1.5px solid #e2ddd6;
+    border: none;
     border-radius: 10px;
     font-size: 14px;
     font-weight: 600;
-    color: #4a4a6a;
+    color: #6a6a8a;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
-    transition: all 0.2s;
-  " onmouseover="this.style.background='#f7f5f0'" onmouseout="this.style.background='transparent'">
+  ">
     Cancel
   </button>
 
@@ -1130,14 +1125,6 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     ">⬇️ ፋይሉ ካልወረደ እዚህ ይጫኑ / File didn't download? Tap here</a>
   </div>
 
-  <!-- Footer note -->
-  <p style="
-    text-align: center;
-    font-size: 11px;
-    color: #aaa;
-    margin-top: 16px;
-    line-height: 1.5;
-  ">🔒 Your payment is verified instantly and securely. Your BOQ data stays private on your device.</p>
 
 </div>
 
@@ -1241,7 +1228,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
     <h1 class="home-hero-title">Ethiopian BOQ &amp;<br>Construction Cost Calculator</h1>
     <div class="home-hero-sub">Component-based building cost estimates for Ethiopian construction — multi-city unit rates, traditional BOQ structure, consultant-grade Excel export.</div>
     <div class="home-hero-stats">
-      <span>🏙️ 13 cities</span>
+      <span>🏙️ 14 cities</span>
       <span>🏗️ up to 20 floors</span>
       <span>⚡ under 5 min</span>
     </div>
@@ -1256,7 +1243,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
   <div class="home-lower">
   <div class="home-intro">
     <p>AddisBOQ estimates your building cost <b>component by component</b> — substructure, superstructure, finishing, electrical and sanitary works are each calculated as independent line items, instead of one flat cost-per-m² multiplier.</p>
-    <p>Structural quantities scale non-linearly with floor count, and unit rates adjust for <b>13 Ethiopian cities</b> — Addis Ababa, Hawassa, Bahir Dar, Adama, Dire Dawa, Mekelle, Gondar, Jimma, Hossana, Harar, Jigjiga, Arba Minch and Wolaita Sodo. Export a formula-linked <b>Excel Bill of Quantities</b> with summary and signature sheets, ready to hand to your contractor or consultant.</p>
+    <p>Structural quantities scale non-linearly with floor count, and unit rates adjust for <b>14 Ethiopian cities</b> — Addis Ababa, Hawassa, Bahir Dar, Adama, Dire Dawa, Mekelle, Gondar, Jimma, Hossana, Harar, Jigjiga, Arba Minch, Wolaita Sodo and Gambella. Export a formula-linked <b>Excel Bill of Quantities</b> with summary and signature sheets, ready to hand to your contractor or consultant.</p>
   </div>
 
   <!-- How it works -->
@@ -1354,6 +1341,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
             <option value="hossana">Hossana</option>
             <option value="gondar">Gondar</option>
             <option value="jimma">Jimma</option>
+            <option value="gambella">Gambella</option>
           </select>
         </div>
       </div>
@@ -1421,7 +1409,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
         <label>Basement Floors <span class="hint">(ምድር ቤት)</span></label>
         <div class="stepper">
           <button onclick="step('floors-basement', -1)">−</button>
-          <input type="number" id="floors-basement" autocomplete="off" value="0" min="0" max="2">
+          <input type="number" id="floors-basement" autocomplete="off" value="0" min="0" max="4">
           <button onclick="step('floors-basement', 1)">+</button>
         </div>
       </div>
@@ -2575,7 +2563,7 @@ function openPaymentModal(type){
   document.getElementById('modal-title').textContent = isPdf ? 'Unlock PDF Export' : 'Unlock Excel Export';
   document.getElementById('modal-desc').textContent = isPdf
     ? 'Get your full professional BOQ as a formatted PDF'
-    : 'Get your full professional BOQ in Excel format';
+    : 'Itemized BOQ, summary and signature sheets — formula-linked and editable in Excel';
 
   const discountEndsAt = PRICING.discountEndsAt;
   const discountActive = !isPdf && excelDiscountActive();
@@ -2638,6 +2626,35 @@ function openPaymentModal(type){
   }
 document.getElementById('paymentModal').style.display='block';
 document.getElementById('paymentOverlay').style.display='block';
+}
+
+// Copies the local-format number (what the TeleBirr app expects), with a
+// fallback for in-app browsers where the Clipboard API is blocked.
+function copyTelebirrNumber(){
+  const num = '0913265488';
+  const label = document.getElementById('telebirr-copy-label');
+  const done = (ok) => {
+    label.textContent = ok ? '✓ Copied' : num;
+    label.style.background = ok ? '#6fcf97' : '#f0c060';
+    clearTimeout(window._copyLabelTimer);
+    window._copyLabelTimer = setTimeout(() => {
+      label.textContent = '📋 Copy';
+      label.style.background = '#f0c060';
+    }, 2000);
+  };
+  const legacy = () => {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = num; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta); done(ok);
+    } catch (e) { done(false); }
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(num).then(() => done(true), legacy);
+  } else { legacy(); }
 }
 
 function closePaymentModal(){
@@ -3495,7 +3512,7 @@ function recalculate() {
     <div style="background:rgba(255,255,255,0.06);border-radius:14px;padding:18px;margin-bottom:16px;">
       <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">ባህሪያት / Features</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 13 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ መቀሌ፣ ጎንደር፣ ጅማ፣ ሆሳዕና፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ) Cost calculation in 13 cities</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>በ 14 ከተሞች (አዲስ አበባ፣ ሃዋሳ፣ አዳማ፣ ባህርዳር፣ ድሬዳዋ፣ መቀሌ፣ ጎንደር፣ ጅማ፣ ሆሳዕና፣ ሀረር፣ ጅጅጋ፣ አርባምንጭ፣ ወላይታ ሶዶ፣ ጋምቤላ) Cost calculation in 14 cities</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>እስከ 20 ወለል ድረስ / Up to 20 floors above ground</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>Excel export with live formulas (BOQ + Materials)</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.8);">✅ <span>ያለ Internet BOQ ማስላት ይቻላል / Works offline</span></div>
