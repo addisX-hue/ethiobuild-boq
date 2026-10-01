@@ -2339,7 +2339,7 @@ async function calculateBOQ() {
   // Unpack server result
   const {
     sections, subtotalAll, contingencyRate, contingency,
-    subtotalPlusContingency, vat, grandTotal, costPerM2, totalArea, floorLabel, floorArea
+    subtotalPlusContingency, vat, grandTotal, costPerM2, totalArea, floorLabel, floorArea, omittedSections
   } = result;
 
   // ---- RENDER OUTPUT ----
@@ -2473,7 +2473,7 @@ async function calculateBOQ() {
   `).join('');
 
   // Store data for export
-  window._boqData = { projName, loc, floorArea, totalArea, sections, subtotalAll, contingency, contingencyRate, subtotalPlusContingency, vat, grandTotal, city: cityLabel };
+  window._boqData = { projName, loc, floorArea, totalArea, omittedSections, sections, subtotalAll, contingency, contingencyRate, subtotalPlusContingency, vat, grandTotal, city: cityLabel };
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -3189,7 +3189,39 @@ async function doExport(d) {
   s2.height = 20;
 
   const sumGroupHeaders = { 0: 'A. SUBSTRUCTURE', 3: 'B. SUPERSTRUCTURE' };
-  d.sections.forEach((sec, i) => {
+  // Section 0-2 = A (substructure, always 3 sections). Everything from 3 on is B,
+  // including Steel Structure and Mechanical Installation when present.
+  const SUB_A_LAST = 2;
+  const groupRows = { A: [], B: [] };
+  const subTotalRows = {};
+
+  function addSubTotalRow(letter) {
+    const rows = groupRows[letter];
+    const r = ws2.addRow(['', 'Sub-Total for ' + letter,
+      { formula: `SUM(C${rows[0]}:C${rows[rows.length - 1]})` }
+    ]);
+    r.eachCell({ includeEmpty: true }, cell => {
+      cell.font = { name: tnr, bold: true, size: 10 };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E0C8' } };
+      cell.border = thinBorder;
+      cell.alignment = { vertical: 'middle' };
+    });
+    r.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+    r.height = 18;
+    subTotalRows[letter] = r.number;
+  }
+
+  // Real sections link to the BOQ sheet. Omitted optional sections (steel,
+  // mechanical) are slotted into B by their section number and shown at 0.00.
+  // The BOQ sheet itself never sees them.
+  const secNum = t => parseInt(t, 10) || 0;
+  const sumRows = d.sections.map((sec, i) => ({ title: sec.title, idx: i }));
+  const bRows = sumRows.slice(SUB_A_LAST + 1)
+    .concat((d.omittedSections || []).map(t => ({ title: t, idx: null })))
+    .sort((x, y) => secNum(x.title) - secNum(y.title));
+  const orderedRows = sumRows.slice(0, SUB_A_LAST + 1).concat(bRows);
+
+  orderedRows.forEach((sec, i) => {
     if (sumGroupHeaders[i]) {
       const gRow = ws2.addRow([sumGroupHeaders[i], '', '']);
       ws2.mergeCells(`A${gRow.number}:C${gRow.number}`);
@@ -3199,23 +3231,31 @@ async function doExport(d) {
       gRow.height = 18;
     }
     // Link to the "Total Carried To Summary" row in BOQ sheet
-    const boqTotRowNum = sectionTotRowNums[i];
-    const row = ws2.addRow(['', sec.title,
-      { formula: `'Bill of Quantities'!F${boqTotRowNum}` }
+    // Section number goes in the NO. column, the name in DESCRIPTION.
+    const m = sec.title.match(/^(\d+)\.\s*(.*)$/);
+    const row = ws2.addRow([m ? Number(m[1]) : '', m ? m[2] : sec.title,
+      sec.idx === null ? 0 : { formula: `'Bill of Quantities'!F${sectionTotRowNums[sec.idx]}` }
     ]);
     row.eachCell({ includeEmpty: true }, cell => {
       cell.font = { name: tnr, size: 10 };
       cell.border = dottedBorder;
       cell.alignment = { vertical: 'middle' };
     });
+    row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
     row.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
     row.height = 16;
+
+    groupRows[i <= SUB_A_LAST ? 'A' : 'B'].push(row.number);
+    if (i === SUB_A_LAST) addSubTotalRow('A');
   });
+  addSubTotalRow('B');
 
   ws2.addRow([]);
 
-  const subRow2 = ws2.addRow(['', 'TOTAL (Excl. VAT)',
-    { formula: `'Bill of Quantities'!F${subRow.number}` }
+  // The Summary computes its own roll-up from the two subtotals, using the same
+  // chain as the BOQ sheet: total -> contingency -> VAT on (total + contingency).
+  const subRow2 = ws2.addRow(['', 'TOTAL (Excl. VAT) (A+B)',
+    { formula: `C${subTotalRows.A}+C${subTotalRows.B}` }
   ]);
   subRow2.eachCell({ includeEmpty: true }, cell => {
     cell.font = { name: tnr, bold: true, size: 10 };
@@ -3224,7 +3264,7 @@ async function doExport(d) {
   subRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
 
   const contRow2 = ws2.addRow(['', `CONTINGENCY @ ${((d.contingencyRate||0.02)*100).toFixed(0)}%`,
-    { formula: `'Bill of Quantities'!F${contRow.number}` }
+    { formula: `C${subRow2.number}*${d.contingencyRate||0.02}` }
   ]);
   contRow2.eachCell({ includeEmpty: true }, cell => {
     cell.font = { name: tnr, bold: true, size: 10 };
@@ -3233,7 +3273,7 @@ async function doExport(d) {
   contRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
 
   const vatRow2 = ws2.addRow(['', 'VAT @ 15%',
-    { formula: `'Bill of Quantities'!F${vatRow.number}` }
+    { formula: `(C${subRow2.number}+C${contRow2.number})*0.15` }
   ]);
   vatRow2.eachCell({ includeEmpty: true }, cell => {
     cell.font = { name: tnr, bold: true, size: 10 };
@@ -3242,7 +3282,7 @@ async function doExport(d) {
   vatRow2.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
 
   const grandRow2 = ws2.addRow(['', 'GRAND TOTAL (Incl. VAT)',
-    { formula: `'Bill of Quantities'!F${grandRow.number}` }
+    { formula: `C${subRow2.number}+C${contRow2.number}+C${vatRow2.number}` }
   ]);
   grandRow2.eachCell({ includeEmpty: true }, cell => {
     cell.font = { name: tnr, bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
@@ -3295,13 +3335,12 @@ async function doExport(d) {
   n1.height = 26;
   ws3.addRow([]);
   const notes = [
-    '1. This Bill of Quantities has been prepared based on the project parameters entered by the user (floor area, number of floors, materials, and finishes grade) and standard construction rates for the specified city.',
-    '2. All quantities are estimated using standard engineering formulas and typical construction ratios. They have not been measured from architectural or structural drawings and must be verified by a licensed engineer before use in tendering, procurement, or construction.',
-    '3. All rates are current as of the preparation date shown on the Summary sheet and are subject to market fluctuation. Rates should be re-verified against current supplier and contractor quotations before use.',
-    '4. Preliminaries (site mobilization, temporary facilities, insurance, etc.) are listed for completeness but left unpriced — to be priced by the appointed Contractor based on project-specific conditions.',
-    `5. A contingency allowance of ${((d.contingencyRate||0.02)*100).toFixed(0)}% has been included on the total construction cost to account for unforeseen items. This is indicative and may be adjusted based on project risk and complexity.`,
-    '6. VAT has been calculated at the standard Ethiopian rate of 15%, applied to the construction cost inclusive of contingency.',
-    '7. This document is generated by AddisBOQ.com and is intended as a preliminary cost estimation tool. It does not replace a full quantity survey or detailed design-stage BOQ prepared by a licensed Quantity Surveyor or Structural Engineer.',
+    '1. This Bill of Quantities is prepared from the project parameters provided — floor area, number of floors, materials and finishes grade — and current construction rates for the specified city.',
+    '2. Quantities are derived from standard engineering formulas and construction ratios for the building type and size. Before tendering, procurement or construction, quantities shall be confirmed against the approved architectural and structural drawings.',
+    '3. Rates are current as of the preparation date shown on the Summary sheet. For tendering, rates shall be confirmed against current supplier and contractor quotations.',
+    '4. Preliminaries (site mobilization, temporary facilities, insurance, etc.) are listed and are to be priced by the appointed Contractor according to project-specific conditions.',
+    `5. A contingency of ${((d.contingencyRate||0.02)*100).toFixed(0)}% is included on the total construction cost to cover unforeseen items, and may be adjusted to suit project risk and complexity.`,
+    '6. VAT is calculated at the standard Ethiopian rate of 15% on the construction cost inclusive of contingency.',
   ];
   notes.forEach(text => {
     const r = ws3.addRow([text]);
