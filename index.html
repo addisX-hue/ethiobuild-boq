@@ -2338,7 +2338,7 @@ async function calculateBOQ() {
   // Unpack server result
   const {
     sections, subtotalAll, contingencyRate, contingency,
-    subtotalPlusContingency, vat, grandTotal, costPerM2, totalArea, floorLabel, floorArea, omittedSections
+    subtotalPlusContingency, vat, grandTotal, costPerM2, totalArea, floorLabel, floorArea, omittedSections, materials
   } = result;
 
   // ---- RENDER OUTPUT ----
@@ -2472,7 +2472,7 @@ async function calculateBOQ() {
   `).join('');
 
   // Store data for export
-  window._boqData = { projName, loc, floorArea, totalArea, omittedSections, sections, subtotalAll, contingency, contingencyRate, subtotalPlusContingency, vat, grandTotal, city: cityLabel };
+  window._boqData = { projName, loc, floorArea, totalArea, omittedSections, materials, sections, subtotalAll, contingency, contingencyRate, subtotalPlusContingency, vat, grandTotal, city: cityLabel };
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2939,6 +2939,141 @@ function numberToWordsETB(amount) {
   return 'Birr ' + convert(rounded) + ' Only';
 }
 
+// ============================================================
+// MATERIALS SHEET — quantities come from the server (d.materials);
+// this function only lays them out. Grand-total block is live formulas.
+// ============================================================
+function addMaterialsSheet(workbook, d, today) {
+  const m = d.materials;
+  const ws = workbook.addWorksheet('Materials');
+  ws.columns = [{ width: 8 }, { width: 44 }, { width: 10 }, { width: 14 }];
+  const tnr = 'Times New Roman';
+  const dotted = { style: 'dotted', color: { argb: 'FF000000' } };
+  const thin   = { style: 'thin',   color: { argb: 'FF000000' } };
+  const medium = { style: 'medium', color: { argb: 'FF000000' } };
+  const box = (top, bottom) => ({ top: top || dotted, bottom: bottom || dotted, left: medium, right: medium });
+  const cellBorder = (c, isFirst, isLast) => {
+    const b = { top: dotted, bottom: dotted, left: dotted, right: dotted };
+    if (isFirst) b.left = medium;
+    if (isLast)  b.right = medium;
+    return b;
+  };
+
+  function styled(vals, o = {}) {
+    if (o.center) vals = [vals[1], '', '', ''];   // a merge keeps only cell A
+    const r = ws.addRow(vals);
+    for (let i = 1; i <= 4; i++) {
+      const c = r.getCell(i);
+      c.font = { name: tnr, size: o.size || 10, bold: !!o.bold, underline: !!o.underline, color: { argb: o.color || 'FF000000' } };
+      c.border = cellBorder(c, i === 1, i === 4);
+      c.alignment = { vertical: 'middle', horizontal: i === 1 || i === 3 ? 'center' : (i === 4 ? 'right' : 'left') };
+      if (o.fill) c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: o.fill } };
+    }
+    if (o.center) { ws.mergeCells(`A${r.number}:D${r.number}`); r.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }; }
+    if (typeof vals[3] === 'number' || (vals[3] && vals[3].formula)) r.getCell(4).numFmt = o.int ? '#,##0' : '#,##0.00';
+    r.height = o.height || 16;
+    return r;
+  }
+  function header() {
+    const r = styled(['Item', 'Description', 'Unit', 'Quantity'], { bold: true, color: 'FFFFFFFF', fill: 'FF1a1a2e', height: 20 });
+    r.eachCell(c => { c.border = { top: medium, bottom: thin, left: thin, right: thin }; c.alignment = { horizontal: 'center', vertical: 'middle' }; });
+    r.getCell(1).border.left = medium; r.getCell(4).border.right = medium;
+  }
+  function closeTable(lastRow) {
+    for (let i = 1; i <= 4; i++) {
+      const c = lastRow.getCell(i);
+      c.border = Object.assign({}, c.border, { bottom: medium });
+    }
+  }
+
+  const DIAS = ['d8', 'd10', 'd12', 'd14', 'd16', 'd20', 'd24'];
+  const rows = {};   // key -> [{ row, val }], feeds the grand-total formulas
+  const track = (key, r) => { (rows[key] = rows[key] || []).push({ row: r.number, val: Number(r.getCell(4).value) || 0 }); return r; };
+  let n = 0;
+  const item = (key, desc, unit, qty, int) => track(key, styled([++n, desc, unit, qty], { int }));
+  function rebarBlock(prefix, bars) {
+    styled([++n, 'Rebar', '', '']);
+    DIAS.forEach((dk, i) => track(prefix + dk,
+      styled(['', `${String.fromCharCode(97 + i)})  ${dk.slice(1)}mm deformed bars`, 'Berga', bars[dk] || 0], { int: true })));
+  }
+
+  // Title
+  const t = ws.addRow(['MATERIALS SCHEDULE — STRUCTURAL & MASONRY WORKS', '', '', '']);
+  ws.mergeCells(`A${t.number}:D${t.number}`);
+  t.getCell(1).font = { name: tnr, bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+  t.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1a1a2e' } };
+  t.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+  t.height = 26;
+  ws.addRow([]);
+  [['Project:', d.projName], ['Location:', d.loc], ['Date:', today]].forEach(([k, v]) => {
+    const r = ws.addRow([k, v]); r.getCell(1).font = { name: tnr, bold: true, size: 10 }; r.getCell(2).font = { name: tnr, size: 10 };
+  });
+  ws.addRow([]);
+
+  header();
+  styled(['', 'A. SUBSTRUCTURE', '', ''], { bold: true, center: true, size: 11 });
+  item('sel',   'Selected material',  'm³',      m.sub.selectedMaterial);
+  item('hcore', 'Stone for hardcore', 'm³',      m.sub.hardcoreStone);
+  item('cem',   'Cement',             'Quintal', m.sub.cement);
+  item('sand',  'Sand',               'm³',      m.sub.sand);
+  item('agg',   'Aggregate 02',       'm³',      m.sub.aggregate);
+  rebarBlock('rb', m.sub.rebar);
+  item('stone', 'Masonry stone',      'm³',      m.sub.masonryStone);
+
+  styled(['', 'B. SUPERSTRUCTURE', '', ''], { bold: true, center: true, size: 11 });
+  styled(['', '1. CONCRETE WORK', '', ''], { bold: true, underline: true, center: true });
+  item('cem',   'Cement',       'Quintal', m.super.cement);
+  item('sand',  'Sand',         'm³',      m.super.sand);
+  item('agg',   'Aggregate 02', 'm³',      m.super.aggregate);
+  rebarBlock('rb', m.super.rebar);
+  styled(['', '2. HCB WORK', '', ''], { bold: true, underline: true, center: true });
+  item('h20',  '20 cm thick HCB', 'Pcs',     m.super.hcb20, true);
+  item('h15',  '15 cm thick HCB', 'Pcs',     m.super.hcb15, true);
+  item('h10',  '10 cm thick HCB', 'Pcs',     m.super.hcb10, true);
+  item('cem',  'Cement (mortar 1:4)', 'Quintal', m.super.hcbCement);
+  closeTable(item('sand', 'Sand (mortar 1:4)', 'm³', m.super.hcbSand));
+
+  const gtGap = ws.addRow([]);
+  gtGap.addPageBreak();   // grand total always starts on its own printed page
+  const gt = ws.addRow(['GRAND TOTAL DEMAND — STRUCTURAL & MASONRY WORKS', '', '', '']);
+  ws.mergeCells(`A${gt.number}:D${gt.number}`);
+  gt.getCell(1).font = { name: tnr, bold: true, size: 11 };
+  gt.height = 20;
+  header();
+
+  // Cached result is stored with each formula: phone viewers don't recalculate
+  // on open and would otherwise show a blank grand total.
+  const sum = key => ({
+    formula: rows[key].map(r => `D${r.row}`).join('+'),
+    result: Math.round(rows[key].reduce((s, r) => s + r.val, 0) * 100) / 100,
+  });
+  let g = 0;
+  const gItem = (desc, unit, key, int) => styled([++g, desc, unit, sum(key)], { int, bold: false });
+  gItem('Selected material',  'm³',      'sel');
+  gItem('Stone for hardcore', 'm³',      'hcore');
+  gItem('Masonry stone',      'm³',      'stone');
+  gItem('Cement',             'Quintal', 'cem');
+  gItem('Sand',               'm³',      'sand');
+  gItem('Aggregate 02',       'm³',      'agg');
+  styled([++g, 'Rebar', '', '']);
+  DIAS.forEach((dk, i) => styled(['', `${String.fromCharCode(97 + i)})  ${dk.slice(1)}mm deformed bars`, 'Berga', sum('rb' + dk)], { int: true }));
+  gItem('20 cm thick HCB', 'Pcs', 'h20', true);
+  gItem('15 cm thick HCB', 'Pcs', 'h15', true);
+  const last = gItem('10 cm thick HCB', 'Pcs', 'h10', true);
+  closeTable(last);
+
+
+  ws.views = [{ state: 'normal' }];
+  ws.pageSetup = {
+    paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+    margins: { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 },
+    printArea: `A1:D${ws.rowCount}`,
+  };
+  ws.headerFooter = {
+    oddFooter: '&L' + (d.projName || 'BOQ') + ' — AddisBOQ.com &C&P of &N &R Generated ' + new Date().toLocaleDateString(),
+  };
+}
+
 async function doExport(d) {
   const workbook = new ExcelJS.Workbook();
   const ws = workbook.addWorksheet('Bill of Quantities');
@@ -3324,7 +3459,10 @@ async function doExport(d) {
     oddFooter: '&L' + (d.projName || 'BOQ') + ' — AddisBOQ.com &C&P of &N &R Generated ' + new Date().toLocaleDateString(),
   };
 
-  // ---- SHEET 3: NOTES ----
+  // ---- SHEET 3: MATERIALS (only when the engine returned it) ----
+  if (d.materials) addMaterialsSheet(workbook, d, today);
+
+  // ---- SHEET 4: NOTES ----
   const ws3 = workbook.addWorksheet('Notes');
   ws3.columns = [{ width: 100 }];
   const n1 = ws3.addRow(['NOTES & GENERAL PREAMBLES']);
@@ -3340,6 +3478,7 @@ async function doExport(d) {
     '4. Preliminaries (site mobilization, temporary facilities, insurance, etc.) are listed and are to be priced by the appointed Contractor according to project-specific conditions.',
     `5. A contingency of ${((d.contingencyRate||0.02)*100).toFixed(0)}% is included on the total construction cost to cover unforeseen items, and may be adjusted to suit project risk and complexity.`,
     '6. VAT is calculated at the standard Ethiopian rate of 15% on the construction cost inclusive of contingency.',
+    '7. Rebar quantities in the Materials sheet include 5% waste; 1 berga = one 12 m bar.',
   ];
   notes.forEach(text => {
     const r = ws3.addRow([text]);
