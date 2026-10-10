@@ -1869,8 +1869,11 @@ function toggleWhatsComing(){
 // ============================================================
 const RATES = {
   // Excavation (per m3)
-  excavation_bulk: 452,
-  excavation_pit: 601,
+  excavation_bulk: 604,
+  site_clearing: 104,
+  excavation_1_5_to_3: 805,
+  excavation_over_3: 1011,
+  excavation_pit: 604,
   excavation_trench: 470,
   fill_compacted: 3026,
   cart_away: 412,
@@ -1882,7 +1885,7 @@ const RATES = {
   concrete_c25_column: 20100,
   concrete_c25_beam: 19125,
   concrete_c25_slab: 19125,
-  formwork: 1254,
+  formwork: 1900,
 
   // Rebar (per kg)
   rebar_8mm: 257,
@@ -3070,7 +3073,7 @@ function addMaterialsSheet(workbook, d, today) {
     printArea: `A1:D${ws.rowCount}`,
   };
   ws.headerFooter = {
-    oddFooter: '&L' + (d.projName || 'BOQ') + ' — AddisBOQ.com &C&P of &N &R Generated ' + new Date().toLocaleDateString(),
+    oddFooter: '&CPage &P of &N',
   };
 }
 
@@ -3099,7 +3102,7 @@ async function doExport(d) {
     margins: { left: 0.4, right: 0.4, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 },
   };
   ws.headerFooter = {
-    oddFooter: '&L' + (d.projName || 'BOQ') + ' — AddisBOQ.com &C&P of &N &R Generated ' + new Date().toLocaleDateString(),
+    oddFooter: '&CPage &P of &N',
   };
 
   // Border styles
@@ -3456,7 +3459,7 @@ async function doExport(d) {
     margins: { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 },
   };
   ws2.headerFooter = {
-    oddFooter: '&L' + (d.projName || 'BOQ') + ' — AddisBOQ.com &C&P of &N &R Generated ' + new Date().toLocaleDateString(),
+    oddFooter: '&CPage &P of &N',
   };
 
   // ---- SHEET 3: MATERIALS (only when the engine returned it) ----
