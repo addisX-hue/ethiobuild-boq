@@ -1,4 +1,4 @@
-const CACHE_NAME = 'addisboq-v34';
+const CACHE_NAME = 'addisboq-v36';
 const ASSETS = [
   '/',
   '/index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   '/formwork',
   '/ethiopian-construction-guide',
   '/how-to-get-building-permit-in-ethiopia',
+  '/terms',
   '/icon-192.jpg',
   '/icon-512.jpg',
   '/manifest.json'

@@ -454,11 +454,12 @@
   
 /* HAMBURGER MENU */
 .menu-btn{background:none;border:none;color:#fff;font-size:24px;cursor:pointer}
-.side-menu{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#fff;z-index:999;padding:20px;box-shadow:2px 0 20px rgba(0,0,0,.2);transition:.3s}
-.side-menu.open{left:0}
+.side-menu{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#fff;z-index:999;padding:20px;transition:.3s}
+.side-menu.open{left:0;box-shadow:2px 0 20px rgba(0,0,0,.2)}
 .side-menu a{display:block;padding:12px 0;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--border)}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;z-index:998}
 .footer{margin-top:40px;padding:20px;text-align:center;color:var(--ink-light);font-size:12px}
+.footer p{line-height:1.6;text-wrap:balance;}
 .developer-credit{display: inline-block;margin-top: 10px;padding:4px 12px;background:#f5f5f5; border-radius: 6px;font-size: 11px;color: var(--ink-light); font-family: Georgia, 'Times New Roman', Times, serif;}
 
 .payment-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:1001;width:90%;max-width:360px;display:none}
@@ -917,16 +918,9 @@ h2.home-howto-title{ margin:0; }
 <a href='mailto:addiss1993@gmail.com?subject=Customer Support - AddisBOQ'>Customer Support</a>
 <a href='mailto:addiss1993@gmail.com?subject=Contact - AddisBOQ'>Contact Organization</a>
 <a href='mailto:addiss1993@gmail.com?subject=Bug Report - AddisBOQ'>Report a Bug</a>
-<a href='#' onclick="toggleWhatsComing()">What's Coming</a>
-<a href='#'>Request a Feature</a>
+<a href='mailto:addiss1993@gmail.com?subject=Feature Request - AddisBOQ'>Request a Feature</a>
 <a href='#' onclick="openAbout(); toggleMenu()">About</a>
-<a href='#'>Terms & Disclaimer</a>
-</div>
-<div class="overlay" id="whatsComingOverlay" onclick="toggleWhatsComing()"></div>
-<div class="side-menu" id="whatsComingModal" style="left:-280px;">
-<h3>Upcoming Professional Features</h3>
-<p>Traditional Ethiopian BOQ Structure, Consultant-Grade Excel Export, PDF Reports,
-Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works, and Glazing Sections.</p>
+<a href='/terms'>Terms & Disclaimer</a>
 </div>
 
 <div class="payment-modal-overlay" id="paymentOverlay" onclick="closePaymentModal()"></div>
@@ -1096,6 +1090,10 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
   ">
     Cancel
   </button>
+
+  <p style="text-align:center;font-size:11px;color:#6a6a8a;margin-top:6px;">
+    By paying you agree to our <a href="/terms#payments" target="_blank" rel="noopener" style="color:#4a4a6a;font-weight:600;">Terms &amp; refund policy</a>
+  </p>
 
   <!-- End pre-payment content wrapper -->
   </div>
@@ -1766,7 +1764,7 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 
   <div class="rates-notice">
     <span class="rn-icon">📋</span>
-    <div>Unit rates are based on current Ethiopian market prices as of September 2026. Rates are updated periodically to reflect inflation. Always verify with local suppliers before procurement.</div>
+    <div>Unit rates are based on current Ethiopian market prices as of November 2026. Rates are updated periodically to reflect inflation. Always verify with local suppliers before procurement.</div>
   </div>
 
   <div class="nav-buttons">
@@ -1845,8 +1843,8 @@ Mechanical Installation (Elevator for G+5 and above), Carpentry, Aluminium Works
 </div>
 
 <div class="footer">
-AddisBOQ Construction Cost Calculator. <br>
-Prices are based on September 2026 market rates across 14 Ethiopian cities.
+<p>AddisBOQ Construction Cost Calculator.</p>
+<p>Prices are based on November 2026 market rates across 14&nbsp;Ethiopian&nbsp;cities.</p>
 <div class="developer-credit">Developed by Addis Engineering.</div>
 
 </div></main>
@@ -1857,11 +1855,6 @@ function toggleMenu(){
 document.getElementById('sideMenu').classList.toggle('open');
 document.getElementById('overlay').style.display=
 document.getElementById('sideMenu').classList.contains('open')?'block':'none';
-}
-function toggleWhatsComing(){
-  document.getElementById('whatsComingModal').classList.toggle('open');
-  document.getElementById('whatsComingOverlay').style.display=
-  document.getElementById('whatsComingModal').classList.contains('open')?'block':'none';
 }
 
 // ============================================================
